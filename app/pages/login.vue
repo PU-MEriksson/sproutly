@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import Button from "~/components/ui/button/Button.vue";
 const supabase = useSupabaseClient();
 const email = ref("");
 
@@ -14,7 +15,9 @@ const signInWithOtp = async () => {
 </script>
 <template>
   <div>
-    <button @click="signInWithOtp">Sign In with E-Mail</button>
+    <Button @click="signInWithOtp" variant="default" size="lg">
+      Sign In with E-Mail
+    </Button>
     <input v-model="email" type="email" />
   </div>
 </template>

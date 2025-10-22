@@ -1,7 +1,7 @@
 <template>
   <div>
-    <h1>Welcome to SupportiveToDo</h1>
-    <p>Here are some links!</p>
+    <h1>All tasks</h1>
+    <p>Links:</p>
     <NuxtLink to="/about">About</NuxtLink>
     <NuxtLink to="/settings">Settings</NuxtLink>
     <NuxtLink to="/today">Today</NuxtLink>
