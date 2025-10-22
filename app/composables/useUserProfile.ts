@@ -20,6 +20,14 @@ export const useUserProfile = () => {
   const loading = ref(false);
   const error = ref<ProfileError | null>(null);
 
+  // Helper: robustly get the authenticated user's id
+  const getUserId = async (): Promise<string | null> => {
+    if (user.value?.id) return user.value.id;
+    // Fallback: query auth directly (handles cases where the ref hasn't populated yet)
+    const { data } = await supabase.auth.getUser();
+    return data.user?.id ?? null;
+  };
+
   // Computed - check if user has a username
   const hasUsername = computed(() => {
     return (
@@ -31,8 +39,9 @@ export const useUserProfile = () => {
 
   // Fetch user profile
   const fetchProfile = async () => {
-    if (!user.value?.id) {
-      error.value = { message: "Ingen användare inloggad" };
+    const userId = await getUserId();
+    if (!userId) {
+      error.value = { message: "No user is logged in" };
       return null;
     }
 
@@ -43,7 +52,7 @@ export const useUserProfile = () => {
       const { data, error: fetchError } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", user.value.id)
+        .eq("id", userId)
         .single();
 
       if (fetchError) {
@@ -54,7 +63,7 @@ export const useUserProfile = () => {
       return data;
     } catch (err: any) {
       error.value = {
-        message: err.message || "Kunde inte hämta profil",
+        message: err.message || "Could not fetch profile",
         code: err.code,
       };
       return null;
@@ -65,27 +74,15 @@ export const useUserProfile = () => {
 
   // Update username
   const updateUsername = async (username: string) => {
-    if (!user.value) {
-      error.value = { message: "Ingen användare inloggad" };
+    const userId = await getUserId();
+    if (!userId) {
+      error.value = { message: "No user is logged in" };
       return false;
     }
 
     // Validation
     if (!username || username.trim() === "") {
-      error.value = { message: "Användarnamn kan inte vara tomt" };
-      return false;
-    }
-
-    // Additional validation rules can be added here
-    if (username.length < 3) {
-      error.value = { message: "Användarnamn måste vara minst 3 tecken" };
-      return false;
-    }
-
-    if (username.length > 30) {
-      error.value = {
-        message: "Användarnamn kan inte vara längre än 30 tecken",
-      };
+      error.value = { message: "Your name cannot be empty" };
       return false;
     }
 
@@ -96,17 +93,9 @@ export const useUserProfile = () => {
       const { data, error: updateError } = await supabase
         .from("profiles")
         .update({ username: username.trim() })
-        .eq("id", user.value.id)
+        .eq("id", userId)
         .select()
         .single();
-
-      if (updateError) {
-        // Kolla om det är en unique constraint-fel
-        if (updateError.code === "23505") {
-          throw new Error("Användarnamnet är redan taget");
-        }
-        throw updateError;
-      }
 
       // Update local profile state
       profile.value = data;
