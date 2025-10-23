@@ -1,3 +1,84 @@
+<script setup lang="ts">
+import { toTypedSchema } from '@vee-validate/zod'
+import * as z from 'zod'
+import { useForm } from 'vee-validate'
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from '@/components/ui/form'
+import { Textarea } from "@/components/ui/textarea"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import type { DateValue } from "@internationalized/date"
+import {
+  DateFormatter,
+  getLocalTimeZone,
+} from "@internationalized/date"
+import { CalendarIcon } from "lucide-vue-next"
+import { ref, watch } from "vue"
+import { cn } from "@/lib/utils"
+import { Input } from '@/components/ui/input'
+
+const df = new DateFormatter("sv-SE", {
+  dateStyle: "long",
+})
+
+const startDateValue = ref<DateValue | undefined>()
+const endDateValue = ref<DateValue | undefined>()
+const deadlineValue = ref<DateValue | undefined>()
+
+
+
+const taskSchema = toTypedSchema(z.object({
+  title: z.string(),
+  description: z.string().optional(),
+  startdate: z.string().datetime().optional(),
+  enddate: z.string().datetime().optional(),
+  deadline: z.string().datetime().optional(),   
+}))
+
+const form = useForm({
+  validationSchema: taskSchema,
+})
+
+const { addTask } = useTasks()
+
+watch(endDateValue, (val) => {
+  if (val) {
+    form.setFieldValue('enddate', val.toDate(getLocalTimeZone()).toISOString())
+  } else {
+    form.setFieldValue('enddate', undefined)
+  }
+})
+
+watch(deadlineValue, (val) => {
+  if (val) {
+    form.setFieldValue('deadline', val.toDate(getLocalTimeZone()).toISOString())
+  } else {
+    form.setFieldValue('deadline', undefined)
+  }
+})
+
+watch(startDateValue, (val) => {
+  if (val) {
+    form.setFieldValue('startdate', val.toDate(getLocalTimeZone()).toISOString())
+  } else {
+    form.setFieldValue('startdate', undefined)
+  }
+})
+
+const onSubmit = form.handleSubmit(async (values) => {
+  console.log('Form submitted!', values)
+  await addTask(values.title, values.description, values.startdate, values.enddate, values.deadline)
+})
+
+
+</script>
+
 <template>
   <form @submit.prevent="onSubmit">
     <FormField v-slot="{ componentField }" name="title">
@@ -124,82 +205,3 @@
   </form>
 </template>
 
-<script setup lang="ts">
-import { toTypedSchema } from '@vee-validate/zod'
-import * as z from 'zod'
-import { useForm } from 'vee-validate'
-import {
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from '@/components/ui/form'
-import { Textarea } from "@/components/ui/textarea"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import type { DateValue } from "@internationalized/date"
-import {
-  DateFormatter,
-  getLocalTimeZone,
-} from "@internationalized/date"
-import { CalendarIcon } from "lucide-vue-next"
-import { ref, watch } from "vue"
-import { cn } from "@/lib/utils"
-import { Input } from '@/components/ui/input'
-
-const df = new DateFormatter("sv-SE", {
-  dateStyle: "long",
-})
-
-const startDateValue = ref<DateValue | undefined>()
-const endDateValue = ref<DateValue | undefined>()
-const deadlineValue = ref<DateValue | undefined>()
-
-
-
-const taskSchema = toTypedSchema(z.object({
-  title: z.string(),
-  description: z.string().optional(),
-  startdate: z.string().datetime().optional(),
-  enddate: z.string().datetime().optional(),
-  deadline: z.string().datetime().optional(),   
-}))
-
-const form = useForm({
-  validationSchema: taskSchema,
-})
-
-watch(endDateValue, (val) => {
-  if (val) {
-    form.setFieldValue('enddate', val.toDate(getLocalTimeZone()).toISOString())
-  } else {
-    form.setFieldValue('enddate', undefined)
-  }
-})
-
-watch(deadlineValue, (val) => {
-  if (val) {
-    form.setFieldValue('deadline', val.toDate(getLocalTimeZone()).toISOString())
-  } else {
-    form.setFieldValue('deadline', undefined)
-  }
-})
-
-watch(startDateValue, (val) => {
-  if (val) {
-    form.setFieldValue('startdate', val.toDate(getLocalTimeZone()).toISOString())
-  } else {
-    form.setFieldValue('startdate', undefined)
-  }
-})
-
-const onSubmit = form.handleSubmit((values) => {
-
-  console.log('Form submitted!', values)
-
-})
-
-
-</script>
