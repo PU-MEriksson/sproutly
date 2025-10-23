@@ -7,5 +7,6 @@
     <NuxtLink to="/today">Today</NuxtLink>
     <NuxtLink to="/all-tasks">All Tasks</NuxtLink>
     <NuxtLink to="/login">Login</NuxtLink>
+    <AddTask></AddTask>
   </div>
 </template>
