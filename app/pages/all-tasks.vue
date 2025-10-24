@@ -1,16 +1,33 @@
 <script setup lang="ts">
-import TaskAccordion from "~/components/TaskAccordion.vue";
+import { useReadTasks } from "~/composables/useReadTasks";
+
+const supabase = useSupabaseClient();
+const user = useSupabaseUser();
+const { tasks, loading, error, getTasks } = useReadTasks();
+
+onMounted(async () => {
+  const {
+    data: { user: u },
+  } = await supabase.auth.getUser();
+
+  if (u?.id) {
+    await getTasks();
+  }
+});
 </script>
 
 <template>
-  <div class="bg-blue-500">
+  <div>
     <h1>All tasks</h1>
-    <TaskAccordion />
-    <p>Links:</p>
-    <NuxtLink to="/about">About</NuxtLink>
-    <NuxtLink to="/settings">Settings</NuxtLink>
-    <NuxtLink to="/today">Today</NuxtLink>
-    <NuxtLink to="/all-tasks">All Tasks</NuxtLink>
-    <NuxtLink to="/login">Login</NuxtLink>
+    <pre v-if="error">{{ error }}</pre>
+    <div v-else-if="loading">Loading...</div>
+    <div v-else>
+      <ul v-if="tasks.length > 0">
+        <li v-for="t in tasks" :key="t.id">
+          {{ t.title }}
+        </li>
+      </ul>
+      <p v-else>No tasks found</p>
+    </div>
   </div>
 </template>
