@@ -5,13 +5,28 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+// Import task circle here later when the component is ready
+
+type Task = {
+  id: number;
+  title: string | null;
+  description: string | null;
+  completed: boolean;
+};
+
+const props = defineProps<{ task: Task }>();
 </script>
 
 <template>
   <Accordion type="single" collapsible class="bg-white rounded-xl">
     <AccordionItem value="item-1">
-      <AccordionTrigger class="h-14 p-4">Task placeholder</AccordionTrigger>
+      <AccordionTrigger class="h-14 p-4">{{
+        props.task.title
+      }}</AccordionTrigger>
       <AccordionContent>
+        <p class="text-sm text-gray-600 whitespace-pre-line">
+          {{ props.task.description || "No description" }}
+        </p>
         <p>subtask placeholder text</p>
         <p>subtask placeholder text</p>
         <p>subtask placeholder text</p>
