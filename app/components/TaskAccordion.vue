@@ -5,6 +5,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Checkbox } from "@/components/ui/checkbox";
+
 // Import task circle here later when the component is ready
 
 type Task = {
@@ -20,9 +22,10 @@ const props = defineProps<{ task: Task }>();
 <template>
   <Accordion type="single" collapsible class="bg-white rounded-xl">
     <AccordionItem value="item-1">
-      <AccordionTrigger class="h-14 p-4">{{
-        props.task.title
-      }}</AccordionTrigger>
+      <AccordionTrigger class="h-14 p-4">
+        <Checkbox id="task-completed" v-model="props.task.completed" />
+        {{ props.task.title }}
+      </AccordionTrigger>
       <AccordionContent>
         <p class="text-sm text-gray-600 whitespace-pre-line">
           {{ props.task.description || "No description" }}
