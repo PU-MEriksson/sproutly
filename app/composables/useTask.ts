@@ -75,11 +75,95 @@ export const useTasks = () => {
     }
   };
 
+  const updateTask = async (
+    id: number,
+    updates: Partial<TaskInsert>
+  ) => {
+    const userProfile = await ensureUserProfile();
+    if (!userProfile) throw new Error("No user profile found");
+
+    try {
+      const { data: existing, error: fetchErr } = await supabase
+        .from("tasks")
+        .select("profile_id")
+        .eq("id", id)
+        .single();
+
+      if (fetchErr) throw fetchErr;
+      if (!existing) throw new Error("Task not found");
+      if (existing.profile_id !== userProfile.id) {
+        throw new Error("Not allowed to update this task");
+      }
+
+      const { data: updated, error: updateErr } = await supabase
+        .from("tasks")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (updateErr) throw updateErr;
+      if (!updated) throw new Error("Update returned no data");
+
+      if (fetchedTasks.value) {
+        const idx = fetchedTasks.value.findIndex((t) => t.id === id);
+        if (idx !== -1) {
+          fetchedTasks.value.splice(idx, 1, updated);
+        }
+      }
+
+      console.debug("[useTasks] updated task", updated);
+      return updated;
+    } catch (err) {
+      console.error("[useTasks] updateTask failed", err);
+      throw err;
+    }
+  };
+
+  const deleteTask = async (id: number) => {
+    const userProfile = await ensureUserProfile();
+    if (!userProfile) throw new Error("No user profile found");
+
+    try {
+      const { data: existing, error: fetchErr } = await supabase
+        .from("tasks")
+        .select("profile_id")
+        .eq("id", id)
+        .single();
+
+      if (fetchErr) throw fetchErr;
+      if (!existing) throw new Error("Task not found");
+      if (existing.profile_id !== userProfile.id) {
+        throw new Error("Not allowed to delete this task");
+      }
+
+      const { error: delErr } = await supabase
+        .from("tasks")
+        .delete()
+        .eq("id", id);
+
+      if (delErr) throw delErr;
+
+      if (fetchedTasks.value) {
+        const idx = fetchedTasks.value.findIndex((t) => t.id === id);
+        if (idx !== -1) fetchedTasks.value.splice(idx, 1);
+      }
+
+      console.debug("[useTasks] deleted task", id);
+      return true;
+    } catch (err) {
+      console.error("[useTasks] deleteTask failed", err);
+      throw err;
+    }
+  };
+
   return {
     tasks: computed<TaskRow[]>(() => fetchedTasks.value ?? []),
     loading,
     error,
     refresh,
     addTask,
+    updateTask,
+    deleteTask,
   };
 };
