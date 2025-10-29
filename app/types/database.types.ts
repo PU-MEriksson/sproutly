@@ -136,7 +136,7 @@ export type Database = {
           completed: boolean | null
           created_at: string
           id: number
-          "task.id": number | null
+          task_id: number | null
           title: string
         }
         Insert: {
@@ -144,7 +144,7 @@ export type Database = {
           completed?: boolean | null
           created_at?: string
           id?: number
-          "task.id"?: number | null
+          task_id?: number | null
           title: string
         }
         Update: {
@@ -152,13 +152,13 @@ export type Database = {
           completed?: boolean | null
           created_at?: string
           id?: number
-          "task.id"?: number | null
+          task_id?: number | null
           title?: string
         }
         Relationships: [
           {
             foreignKeyName: "subtasks_task.id_fkey"
-            columns: ["task.id"]
+            columns: ["task_id"]
             isOneToOne: false
             referencedRelation: "tasks"
             referencedColumns: ["id"]

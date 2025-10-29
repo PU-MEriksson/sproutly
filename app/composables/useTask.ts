@@ -1,10 +1,14 @@
 import type { Database } from '~/types/database.types'
+import { useSubtasks } from '~/composables/useSubtask'
+
 type TaskInsert = Database['public']['Tables']['tasks']['Insert']
 type TaskRow = Database['public']['Tables']['tasks']['Row']
+type SubtaskInsert = Database['public']['Tables']['subtasks']['Insert']
 
 export const useTasks = () => {
   const supabase = useSupabaseClient<Database>()
   const { profile, fetchProfile } = useUserProfile()
+  const { addSubtasks } = useSubtasks()
   const tasks = ref<TaskRow[]>([])
 
   const ensureUserProfile = async () => {
@@ -17,13 +21,11 @@ export const useTasks = () => {
     description?: string,
     startdate?: string,
     enddate?: string,
-    deadline?: string
+    deadline?: string,
+    subtasks?: Omit<SubtaskInsert, 'task_id'>[],
   ) => {
     const userProfile = await ensureUserProfile()
-    if (!userProfile) {
-      console.error('[useTasks] No user profile found before insert')
-      throw new Error('No user profile found')
-    }
+    if (!userProfile) throw new Error('No user profile found')
 
     const newTask: TaskInsert = {
       title,
@@ -35,26 +37,23 @@ export const useTasks = () => {
     }
 
     try {
-      console.debug('[useTasks] inserting task', newTask)
-      const { data, error } = await supabase
+      const { data: taskData, error: taskError } = await supabase
         .from('tasks')
-        .insert([newTask] as TaskInsert[])
+        .insert(newTask)
         .select()
+        .single()
 
-      if (error) {
-        console.error('[useTasks] supabase insert error', error)
-        throw error
+      if (taskError) throw taskError
+      if (!taskData) throw new Error('Task insertion returned no data')
+
+      if (subtasks && subtasks.length > 0) {
+        await addSubtasks(taskData.id, subtasks)
       }
 
-      const inserted = data?.[0]
-      if (inserted) {
-        tasks.value.unshift(inserted)
-        console.debug('[useTasks] inserted', inserted)
-      } else {
-        console.warn('[useTasks] insert returned no data')
-      }
+      tasks.value.unshift(taskData)
+      console.debug('[useTasks] inserted task', taskData)
 
-      return inserted
+      return taskData
     } catch (err) {
       console.error('[useTasks] addTask failed', err)
       throw err

@@ -1,7 +1,16 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import * as z from 'zod'
-import { useForm } from 'vee-validate'
+import { useForm, useFieldArray } from 'vee-validate'
+import { Textarea } from "@/components/ui/textarea"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import type { DateValue } from "@internationalized/date"
+import { DateFormatter, getLocalTimeZone, } from "@internationalized/date"
+import { CalendarIcon, Trash2 } from "lucide-vue-next"
+import { ref, watch } from "vue"
+import { cn } from "@/lib/utils"
+import { Input } from '@/components/ui/input'
 import {
   FormControl,
   FormDescription,
@@ -10,18 +19,7 @@ import {
   FormLabel,
   FormMessage
 } from '@/components/ui/form'
-import { Textarea } from "@/components/ui/textarea"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import type { DateValue } from "@internationalized/date"
-import {
-  DateFormatter,
-  getLocalTimeZone,
-} from "@internationalized/date"
-import { CalendarIcon } from "lucide-vue-next"
-import { ref, watch } from "vue"
-import { cn } from "@/lib/utils"
-import { Input } from '@/components/ui/input'
+import type { Database } from '~/types/database.types'
 
 const df = new DateFormatter("sv-SE", {
   dateStyle: "long",
@@ -31,19 +29,27 @@ const startDateValue = ref<DateValue | undefined>()
 const endDateValue = ref<DateValue | undefined>()
 const deadlineValue = ref<DateValue | undefined>()
 
-
+const subtaskSchema = z.object({
+  title: z.string().min(1, 'Subtask title is required'),
+});
 
 const taskSchema = toTypedSchema(z.object({
-  title: z.string(),
+  title: z.string().min(1, 'Task title is required'),
   description: z.string().optional(),
   startdate: z.string().datetime().optional(),
   enddate: z.string().datetime().optional(),
   deadline: z.string().datetime().optional(),   
+  subtasks: z.array(subtaskSchema).default([]),
 }))
 
 const form = useForm({
   validationSchema: taskSchema,
+  initialValues: {
+    subtasks: [],
+  },
 })
+
+const { fields, push, remove } = useFieldArray('subtasks')
 
 const { addTask } = useTasks()
 
@@ -73,7 +79,7 @@ watch(startDateValue, (val) => {
 
 const onSubmit = form.handleSubmit(async (values) => {
   console.log('Form submitted!', values)
-  await addTask(values.title, values.description, values.startdate, values.enddate, values.deadline)
+  await addTask(values.title, values.description, values.startdate, values.enddate, values.deadline,  values.subtasks)
 })
 
 
@@ -199,7 +205,38 @@ const onSubmit = form.handleSubmit(async (values) => {
         <FormMessage />
     </FormItem>
     </FormField>
-    <Button type="submit">
+<div >
+  <h3>Subtasks</h3>
+
+  <div v-if="fields.length === 0">
+    No subtasks yet. Add one below!
+  </div>
+
+  <div v-for="(field, index) in fields" :key="field.key" class="flex items-center">
+    <FormField :name="`subtasks[${index}].title`" v-slot="{ componentField }">
+      <FormItem>
+        <FormLabel>Subtask {{ index + 1 }}</FormLabel>
+        <FormControl>
+          <Input placeholder="Enter subtask title..." v-bind="componentField" />
+        </FormControl>
+        <FormMessage />
+      </FormItem>
+    </FormField>
+
+    <Button type="button" variant="destructive" size="icon" @click="remove(index)">
+      <Trash2 class="h-4 w-4" />
+    </Button>
+  </div>
+
+  <Button
+    type="button"
+    variant="outline"
+    @click="push({ title: '' })"
+  >
+    + Add Subtask
+  </Button>
+</div>
+ <Button type="submit">
       Submit
     </Button>
   </form>
