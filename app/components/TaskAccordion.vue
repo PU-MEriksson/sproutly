@@ -20,8 +20,13 @@ const emit = defineEmits<{
   "update:completed": [completed: boolean];
 }>();
 
-const { fetchSubtasks, toggleSubtaskCompleted, deleteSubtask, addSubtasks } =
-  useSubtasks();
+const {
+  fetchSubtasks,
+  toggleSubtaskCompleted,
+  deleteSubtask,
+  addSubtasks,
+  updateSubtask,
+} = useSubtasks();
 // const { updateTask } = useTasks();
 const subtasks = ref<Subtask[]>([]);
 const loadingSubtasks = ref(false);
@@ -30,6 +35,9 @@ const newSubtaskTitle = ref("");
 const isAddingSubtask = ref(false);
 const showAddInput = ref(false);
 const addInputRef = ref<HTMLInputElement | null>(null);
+const editingSubtaskId = ref<number | null>(null);
+const editingSubtaskTitle = ref("");
+const editInputRefs = ref<{ [key: number]: HTMLInputElement | null }>({});
 
 // const handleTaskToggle = async (completed: boolean) => {
 //   try {
@@ -53,16 +61,27 @@ const loadSubtasks = async () => {
   }
 };
 
-const handleSubtaskToggle = async (subtaskId: number, completed: boolean) => {
+const handleSubtaskToggle = async (
+  subtaskId: number,
+  completed: boolean | string
+) => {
+  // Convert to boolean in case the checkbox returns a string
+  const isCompleted = completed === true || completed === "true";
+
   try {
-    await toggleSubtaskCompleted(subtaskId, completed);
+    await toggleSubtaskCompleted(subtaskId, isCompleted);
     // Update local state
     const subtask = subtasks.value.find((st) => st.id === subtaskId);
     if (subtask) {
-      subtask.completed = completed;
+      subtask.completed = isCompleted;
     }
   } catch (error) {
     console.error("Failed to toggle subtask:", error);
+    // Revert local state on error
+    const subtask = subtasks.value.find((st) => st.id === subtaskId);
+    if (subtask) {
+      subtask.completed = !isCompleted;
+    }
   }
 };
 
@@ -112,6 +131,40 @@ const cancelAddingSubtask = () => {
   showAddInput.value = false;
 };
 
+const startEditingSubtask = (subtask: Subtask) => {
+  editingSubtaskId.value = subtask.id;
+  editingSubtaskTitle.value = subtask.title;
+  nextTick(() => {
+    editInputRefs.value[subtask.id]?.focus();
+  });
+};
+
+const handleEditSubtask = async (subtaskId: number) => {
+  if (!editingSubtaskTitle.value.trim()) {
+    cancelEditingSubtask();
+    return;
+  }
+
+  try {
+    await updateSubtask(subtaskId, { title: editingSubtaskTitle.value.trim() });
+
+    // Update local state
+    const subtask = subtasks.value.find((st) => st.id === subtaskId);
+    if (subtask) {
+      subtask.title = editingSubtaskTitle.value.trim();
+    }
+
+    cancelEditingSubtask();
+  } catch (error) {
+    console.error("Failed to update subtask:", error);
+  }
+};
+
+const cancelEditingSubtask = () => {
+  editingSubtaskId.value = null;
+  editingSubtaskTitle.value = "";
+};
+
 // Load subtasks when accordion is expanded
 const onAccordionChange = (value: string | string[] | undefined) => {
   if (value && subtasks.value.length === 0 && !loadingSubtasks.value) {
@@ -159,23 +212,54 @@ const onAccordionChange = (value: string | string[] | undefined) => {
               >
                 <Checkbox
                   :id="`subtask-${subtask.id}`"
-                  :checked="subtask.completed"
-                  @update:checked="(checked: boolean) => handleSubtaskToggle(subtask.id, checked)"
+                  :checked="subtask.completed ?? false"
+                  @click="
+                    () =>
+                      handleSubtaskToggle(
+                        subtask.id,
+                        !(subtask.completed ?? false)
+                      )
+                  "
                 />
+
+                <!-- Editing mode -->
+                <Input
+                  v-if="editingSubtaskId === subtask.id"
+                  :ref="(el) => editInputRefs[subtask.id] = el as HTMLInputElement"
+                  v-model="editingSubtaskTitle"
+                  class="flex-1 h-8 text-sm"
+                  @keyup.enter="handleEditSubtask(subtask.id)"
+                  @keyup.esc="cancelEditingSubtask"
+                  @blur="handleEditSubtask(subtask.id)"
+                />
+
+                <!-- Display mode -->
                 <label
+                  v-else
                   :for="`subtask-${subtask.id}`"
                   class="flex-1 text-sm cursor-pointer"
                   :class="{ 'line-through text-gray-500': subtask.completed }"
                 >
                   {{ subtask.title }}
                 </label>
-                <button
-                  @click="handleDeleteSubtask(subtask.id)"
-                  class="text-xs text-red-500 hover:text-red-700 px-2 py-1"
-                  title="Delete subtask"
-                >
-                  Delete
-                </button>
+
+                <!-- Action buttons -->
+                <div v-if="editingSubtaskId !== subtask.id" class="flex gap-1">
+                  <button
+                    @click="startEditingSubtask(subtask)"
+                    class="text-xs text-blue-500 hover:text-blue-700 px-2 py-1"
+                    title="Edit subtask"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    @click="handleDeleteSubtask(subtask.id)"
+                    class="text-xs text-red-500 hover:text-red-700 px-2 py-1"
+                    title="Delete subtask"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -185,7 +269,6 @@ const onAccordionChange = (value: string | string[] | undefined) => {
 
             <!-- Add subtask inline input -->
             <div v-if="showAddInput" class="flex items-center gap-2 p-2">
-              <Checkbox disabled class="opacity-50" />
               <Input
                 ref="addInputRef"
                 v-model="newSubtaskTitle"
