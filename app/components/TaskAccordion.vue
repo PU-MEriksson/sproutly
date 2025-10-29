@@ -6,15 +6,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
+import type { Database } from "~/types/database.types";
 
 // Import task circle here later when the component is ready
 
-type Task = {
-  id: number;
-  title: string | null;
-  description: string | null;
-  completed: boolean;
-};
+type Task = Database["public"]["Tables"]["tasks"]["Row"];
 
 const props = defineProps<{ task: Task }>();
 </script>
