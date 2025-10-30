@@ -122,7 +122,7 @@ const onSubmit = form.handleSubmit(async (values) => {
         <FormLabel>More details (optional)</FormLabel>
         <FormControl>
           <Textarea
-            placeholder="Add a description to make your task more understandable"
+            placeholder="Add more details here..."
             class="resize-none"
             v-bind="componentField"
           />
@@ -130,49 +130,58 @@ const onSubmit = form.handleSubmit(async (values) => {
         <FormMessage />
       </FormItem>
     </FormField>
-    <div>
-      <h3>Subtasks</h3>
+    <FormField name="subtasks">
+      <FormItem>
+        <FormLabel>Subtasks</FormLabel>
+        <!-- 
+        <div v-if="fields.length === 0" class="text-sm text-muted-foreground">
+          No subtasks yet. Add one below!
+        </div> -->
 
-      <div v-if="fields.length === 0">No subtasks yet. Add one below!</div>
+        <div class="space-y-3">
+          <div
+            v-for="(field, index) in fields"
+            :key="field.key"
+            class="flex items-center gap-2"
+          >
+            <FormField
+              :name="`subtasks[${index}].title`"
+              v-slot="{ componentField }"
+            >
+              <FormItem class="flex-1">
+                <FormControl>
+                  <Input
+                    placeholder="What's the next small step?"
+                    :aria-label="`Step ${index + 1}`"
+                    v-bind="componentField"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            </FormField>
 
-      <div
-        v-for="(field, index) in fields"
-        :key="field.key"
-        class="flex items-center"
-      >
-        <FormField
-          :name="`subtasks[${index}].title`"
-          v-slot="{ componentField }"
-        >
-          <FormItem>
-            <FormLabel>Step {{ index + 1 }}</FormLabel>
-            <FormControl>
-              <Input
-                placeholder="What's the next small step?"
-                v-bind="componentField"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        </FormField>
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              @click="remove(index)"
+              :aria-label="`Delete step ${index + 1}`"
+            >
+              <Trash2 class="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
 
-        <Button
-          type="button"
-          variant="destructive"
-          size="icon"
-          @click="remove(index)"
-        >
-          <Trash2 class="h-4 w-4" />
+        <Button type="button" variant="outline" @click="push({ title: '' })">
+          + Add Subtask
         </Button>
-      </div>
 
-      <Button type="button" variant="outline" @click="push({ title: '' })">
-        + Add Subtask
-      </Button>
-    </div>
+        <FormMessage />
+      </FormItem>
+    </FormField>
     <FormField v-slot="{ componentField }" name="startdate">
       <FormItem>
-        <FormLabel>Start date</FormLabel>
+        <FormLabel>Start date (optional)</FormLabel>
         <FormControl>
           <Popover>
             <PopoverTrigger as-child>
