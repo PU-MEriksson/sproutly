@@ -18,7 +18,13 @@ type Subtask = Database["public"]["Tables"]["subtasks"]["Row"];
 const props = defineProps<{ task: Task }>();
 const emit = defineEmits<{
   "update:completed": [completed: boolean];
+  delete: [id: number];
 }>();
+
+const {
+  updateTask,
+  deleteTask
+} = useTasks();
 
 const {
   fetchSubtasks,
@@ -27,7 +33,7 @@ const {
   addSubtasks,
   updateSubtask,
 } = useSubtasks();
-// const { updateTask } = useTasks();
+
 const subtasks = ref<Subtask[]>([]);
 const loadingSubtasks = ref(false);
 const subtasksError = ref<string | null>(null);
@@ -39,14 +45,49 @@ const editingSubtaskId = ref<number | null>(null);
 const editingSubtaskTitle = ref("");
 const editInputRefs = ref<{ [key: number]: HTMLInputElement | null }>({});
 
-// const handleTaskToggle = async (completed: boolean) => {
-//   try {
-//     await updateTask(props.task.id, { completed });
-//     emit("update:completed", completed);
-//   } catch (error) {
-//     console.error("Failed to toggle task:", error);
-//   }
-// };
+const updatingTask = ref(false);
+const updateError = ref<string | null>(null);
+const localCompleted = ref(props.task.completed ?? false);
+
+// Sync local state with prop
+watch(() => props.task.completed, (val) => {
+  localCompleted.value = val ?? false;
+});
+
+// Watch for checkbox changes and update DB
+watch(localCompleted, async (checked) => {
+  updatingTask.value = true;
+  updateError.value = null;
+  try {
+    await updateTask(props.task.id, { completed: checked });
+    emit("update:completed", checked);
+  } catch (error) {
+    localCompleted.value = !checked; // rollback
+    updateError.value = "Failed to update task";
+    console.error("Failed to toggle task:", error);
+  } finally {
+    updatingTask.value = false;
+  }
+});
+
+const deletingTask = ref(false);
+const deleteError = ref<string | null>(null);
+
+const handleDeleteTask = async () => {
+  if (!confirm("Are you sure you want to delete this task?")) return;
+  
+  deletingTask.value = true;
+  deleteError.value = null;
+  try {
+    await deleteTask(props.task.id);
+    emit("delete", props.task.id);
+  } catch (error) {
+    console.error("Failed to delete task:", error);
+    deleteError.value = "Failed to delete task";
+  } finally {
+    deletingTask.value = false;
+  }
+};
 
 const loadSubtasks = async () => {
   loadingSubtasks.value = true;
@@ -183,9 +224,23 @@ const onAccordionChange = (value: string | string[] | undefined) => {
     <AccordionItem value="item-1">
       <AccordionTrigger class="h-14 p-4">
         <ClientOnly>
-          <Checkbox />
-        </ClientOnly>
+          <Checkbox 
+            v-model="localCompleted"
+            :disabled="updatingTask"
+          />  
+        </ClientOnly> 
         {{ props.task.title }}
+
+        <!-- Delete button -->
+        <Button
+          variant="ghost"
+          size="sm"
+          class="text-red-500 hover:text-red-700"
+          :disabled="deletingTask"
+          @click.stop="handleDeleteTask"
+        >
+          Delete
+        </Button>
       </AccordionTrigger>
       <AccordionContent class="px-4 pb-4">
         <p class="text-sm text-gray-600 whitespace-pre-line mb-4">
