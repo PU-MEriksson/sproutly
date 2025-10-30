@@ -32,6 +32,11 @@ const df = new DateFormatter("sv-SE", {
 const startDateValue = ref<DateValue | undefined>();
 const endDateValue = ref<DateValue | undefined>();
 const deadlineValue = ref<DateValue | undefined>();
+const isSubmitting = ref(false);
+
+const emit = defineEmits<{
+  taskAdded: [];
+}>();
 
 const subtaskSchema = z.object({
   title: z.string().min(1, "Subtask title is required"),
@@ -90,15 +95,34 @@ watch(startDateValue, (val) => {
 });
 
 const onSubmit = form.handleSubmit(async (values) => {
-  console.log("Form submitted!", values);
-  await addTask(
-    values.title,
-    values.description,
-    values.startdate,
-    values.enddate,
-    values.deadline,
-    values.subtasks
-  );
+  isSubmitting.value = true;
+
+  try {
+    await addTask(
+      values.title,
+      values.description,
+      values.startdate,
+      values.enddate,
+      values.deadline,
+      values.subtasks
+    );
+
+    // Reset the form
+    form.resetForm();
+
+    // Reset date values
+    startDateValue.value = undefined;
+    endDateValue.value = undefined;
+    deadlineValue.value = undefined;
+
+    // Emit event to parent to refresh tasks
+    emit("taskAdded");
+  } catch (error) {
+    console.error("Failed to add task:", error);
+    alert("Failed to add task. Please try again.");
+  } finally {
+    isSubmitting.value = false;
+  }
 });
 </script>
 
@@ -117,6 +141,7 @@ const onSubmit = form.handleSubmit(async (values) => {
         <FormMessage />
       </FormItem>
     </FormField>
+
     <FormField v-slot="{ componentField }" name="description">
       <FormItem>
         <FormLabel>More details (optional)</FormLabel>
@@ -130,13 +155,10 @@ const onSubmit = form.handleSubmit(async (values) => {
         <FormMessage />
       </FormItem>
     </FormField>
+
     <FormField name="subtasks">
       <FormItem>
         <FormLabel>Subtasks</FormLabel>
-        <!-- 
-        <div v-if="fields.length === 0" class="text-sm text-muted-foreground">
-          No subtasks yet. Add one below!
-        </div> -->
 
         <div class="space-y-3">
           <div
@@ -179,6 +201,7 @@ const onSubmit = form.handleSubmit(async (values) => {
         <FormMessage />
       </FormItem>
     </FormField>
+
     <FormField v-slot="{ componentField }" name="startdate">
       <FormItem>
         <FormLabel>Start date (optional)</FormLabel>
@@ -210,68 +233,9 @@ const onSubmit = form.handleSubmit(async (values) => {
         <FormMessage />
       </FormItem>
     </FormField>
-    <FormField v-slot="{ componentField }" name="enddate">
-      <!-- <FormItem>
-        <FormLabel>End date</FormLabel>
-        <FormDescription>
-            When would you like to be done?
-        </FormDescription>
-        <FormControl>
-        <Popover>
-            <PopoverTrigger as-child>
-            <Button
-                variant="outline"
-                :class="cn(
-                'w-[280px] justify-start text-left font-normal',
-                !endDateValue && 'text-muted-foreground'
-                )"
-            >
-                <CalendarIcon class="mr-2 h-4 w-4" />
-                {{ endDateValue
-                ? df.format(endDateValue.toDate(getLocalTimeZone()))
-                : "Pick a date" }}
-            </Button>
-            </PopoverTrigger>
-            <PopoverContent class="w-auto p-0">
-            <Calendar v-model="endDateValue" initial-focus />
-            </PopoverContent>
-        </Popover>
-        </FormControl>
-        <FormMessage />
-    </FormItem> -->
-    </FormField>
-    <!-- <FormField v-slot="{ componentField }" name="deadline">
-      <FormItem>
-        <FormLabel>Deadline</FormLabel>
-        <FormDescription> Is there a deadline? </FormDescription>
-        <FormControl>
-          <Popover>
-            <PopoverTrigger as-child>
-              <Button
-                variant="outline"
-                :class="
-                  cn(
-                    'w-[280px] justify-start text-left font-normal',
-                    !deadlineValue && 'text-muted-foreground'
-                  )
-                "
-              >
-                <CalendarIcon class="mr-2 h-4 w-4" />
-                {{
-                  deadlineValue
-                    ? df.format(deadlineValue.toDate(getLocalTimeZone()))
-                    : "Pick a date"
-                }}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent class="w-auto p-0">
-              <Calendar v-model="deadlineValue" initial-focus />
-            </PopoverContent>
-          </Popover>
-        </FormControl>
-        <FormMessage />
-      </FormItem>
-    </FormField> -->
-    <Button type="submit"> Submit </Button>
+
+    <Button type="submit" :disabled="isSubmitting">
+      {{ isSubmitting ? "Adding..." : "Add Task" }}
+    </Button>
   </form>
 </template>

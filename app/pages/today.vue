@@ -1,6 +1,9 @@
 <script setup lang="ts">
 const { tasks, loading, error, refresh } = useTasks();
-// Add logic for filtering today's tasks here later
+
+const handleTaskAdded = () => {
+  refresh();
+};
 </script>
 
 <template>
@@ -9,6 +12,6 @@ const { tasks, loading, error, refresh } = useTasks();
       card-title="Today's Tasks"
       card-description="Here are all your tasks for today."
     />
-    <AddTask/>
+    <AddTask @task-added="handleTaskAdded" />
   </div>
 </template>
