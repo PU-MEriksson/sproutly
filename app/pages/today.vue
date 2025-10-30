@@ -7,11 +7,8 @@ const handleTaskAdded = () => {
 </script>
 
 <template>
-  <div>
-    <ViewTasks
-      card-title="Today's Tasks"
-      card-description="Here are all your tasks for today."
-    />
-    <AddTask @task-added="handleTaskAdded" />
+  <div class="bg-neutral-100 h-screen">
+    <QuickAddTask @task-added="handleTaskAdded" />
+    <ViewTasks />
   </div>
 </template>
