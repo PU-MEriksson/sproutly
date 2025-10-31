@@ -21,15 +21,22 @@ export const useTasks = () => {
     pending: loading,
     error,
     refresh,
-  } = useLazyAsyncData<TaskRow[]>("user-tasks", async () => {
-    const { data, error } = await supabase
-      .from("tasks")
-      .select("*")
-      .order("created_at", { ascending: false });
+  } = useAsyncData<TaskRow[]>(
+    "user-tasks",
+    async () => {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    if (error) throw error;
-    return data ?? [];
-  });
+      if (error) throw error;
+      return data ?? [];
+    },
+    {
+      server: false, // Only fetch on client side since TaskAccordion is client-only
+      lazy: false,
+    }
+  );
 
   const addTask = async (
     title: string,
@@ -75,10 +82,7 @@ export const useTasks = () => {
     }
   };
 
-  const updateTask = async (
-    id: number,
-    updates: Partial<TaskInsert>
-  ) => {
+  const updateTask = async (id: number, updates: Partial<TaskInsert>) => {
     const userProfile = await ensureUserProfile();
     if (!userProfile) throw new Error("No user profile found");
 
