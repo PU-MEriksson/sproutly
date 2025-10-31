@@ -12,4 +12,5 @@ const user = useSupabaseUser();
       <p>Not logged in</p>
     </div>
   </div>
+  <Navbar />
 </template>

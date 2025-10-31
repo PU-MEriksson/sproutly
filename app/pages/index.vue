@@ -8,4 +8,5 @@
     <NuxtLink to="/all-tasks">All Tasks</NuxtLink>
     <NuxtLink to="/login">Login</NuxtLink>
   </div>
+  <Navbar />
 </template>

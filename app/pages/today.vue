@@ -9,6 +9,7 @@ const { tasks, loading, error, refresh } = useTasks();
       card-title="Today's Tasks"
       card-description="Here are all your tasks for today."
     />
-    <AddTask/>
+    <AddTask />
   </div>
+  <Navbar />
 </template>

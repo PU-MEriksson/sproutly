@@ -9,4 +9,5 @@ const { tasks, loading, error, refresh } = useTasks();
       card-description="Here are all your tasks."
     />
   </div>
+  <Navbar />
 </template>
