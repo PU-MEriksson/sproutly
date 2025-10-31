@@ -21,10 +21,7 @@ const emit = defineEmits<{
   delete: [id: number];
 }>();
 
-const {
-  updateTask,
-  deleteTask
-} = useTasks();
+const { updateTask, deleteTask } = useTasks();
 
 const {
   fetchSubtasks,
@@ -50,9 +47,12 @@ const updateError = ref<string | null>(null);
 const localCompleted = ref(props.task.completed ?? false);
 
 // Sync local state with prop
-watch(() => props.task.completed, (val) => {
-  localCompleted.value = val ?? false;
-});
+watch(
+  () => props.task.completed,
+  (val) => {
+    localCompleted.value = val ?? false;
+  }
+);
 
 // Watch for checkbox changes and update DB
 watch(localCompleted, async (checked) => {
@@ -75,7 +75,7 @@ const deleteError = ref<string | null>(null);
 
 const handleDeleteTask = async () => {
   if (!confirm("Are you sure you want to delete this task?")) return;
-  
+
   deletingTask.value = true;
   deleteError.value = null;
   try {
@@ -215,40 +215,33 @@ const onAccordionChange = (value: string | string[] | undefined) => {
 </script>
 
 <template>
-  <Accordion
-    type="single"
-    collapsible
-    class="bg-white rounded-xl"
-    @update:model-value="onAccordionChange"
-  >
-    <AccordionItem value="item-1">
-      <AccordionTrigger class="h-14 p-4">
-        <ClientOnly>
-          <Checkbox 
-            v-model="localCompleted"
-            :disabled="updatingTask"
-          />  
-        </ClientOnly> 
-        {{ props.task.title }}
+  <ClientOnly>
+    <Accordion
+      type="single"
+      collapsible
+      class="bg-white rounded-xl"
+      @update:model-value="onAccordionChange"
+    >
+      <AccordionItem value="item-1">
+        <AccordionTrigger class="h-14 p-4">
+          <Checkbox v-model="localCompleted" :disabled="updatingTask" />
+          {{ props.task.title }}
+          <Button
+            variant="ghost"
+            size="sm"
+            class="text-red-500 hover:text-red-700"
+            :disabled="deletingTask"
+            @click.stop="handleDeleteTask"
+          >
+            Delete
+          </Button>
+        </AccordionTrigger>
+        <AccordionContent class="px-4 pb-4">
+          <p class="text-sm text-gray-600 whitespace-pre-line mb-4">
+            {{ props.task.description || "No description" }}
+          </p>
 
-        <!-- Delete button -->
-        <Button
-          variant="ghost"
-          size="sm"
-          class="text-red-500 hover:text-red-700"
-          :disabled="deletingTask"
-          @click.stop="handleDeleteTask"
-        >
-          Delete
-        </Button>
-      </AccordionTrigger>
-      <AccordionContent class="px-4 pb-4">
-        <p class="text-sm text-gray-600 whitespace-pre-line mb-4">
-          {{ props.task.description || "No description" }}
-        </p>
-
-        <!-- Subtasks section -->
-        <ClientOnly>
+          <!-- Subtasks section -->
           <div class="space-y-2">
             <h4 class="text-sm font-semibold text-gray-700">Subtasks</h4>
 
@@ -346,8 +339,8 @@ const onAccordionChange = (value: string | string[] | undefined) => {
               <span>Add subtask</span>
             </button>
           </div>
-        </ClientOnly>
-      </AccordionContent>
-    </AccordionItem>
-  </Accordion>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  </ClientOnly>
 </template>
