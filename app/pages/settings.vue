@@ -13,4 +13,5 @@ async function logout() {
     <p>This is where users can adjust their settings.</p>
     <button @click="logout">Log out</button>
   </div>
+  <Navbar />
 </template>

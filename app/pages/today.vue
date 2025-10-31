@@ -7,8 +7,11 @@ const handleTaskAdded = () => {
 </script>
 
 <template>
+
   <div class="bg-neutral-100 h-screen">
     <QuickAddTask @task-added="handleTaskAdded" />
     <ViewTasks />
+
   </div>
+  <Navbar />
 </template>
