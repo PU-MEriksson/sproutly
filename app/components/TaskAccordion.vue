@@ -8,6 +8,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { WandSparkles } from "lucide-vue-next";
 import type { Database } from "~/types/database.types";
 
@@ -228,13 +229,18 @@ const handleGenerateSubtasks = async () => {
   aiGenerationError.value = null; // Clear previous errors
 
   try {
-    // Call AI to generate subtasks
+    // Prepare existing subtasks to send to AI
+    const existingSubtasksForAI = subtasks.value.map((st) => ({
+      title: st.title,
+      completed: st.completed ?? false,
+    }));
+
+    // Call AI to generate subtasks, passing existing ones
     await generateSubtasks(
       props.task.title,
-      props.task.description || undefined
-    );
-
-    // Check if AI generation failed
+      props.task.description || undefined,
+      existingSubtasksForAI
+    ); // Check if AI generation failed
     if (aiError.value) {
       aiGenerationError.value =
         "Failed to generate subtasks. Please try again.";
@@ -302,7 +308,8 @@ const handleGenerateSubtasks = async () => {
               @click="handleGenerateSubtasks"
               :disabled="aiLoading"
             >
-              <WandSparkles class="h-4 w-4" />
+              <Spinner v-if="aiLoading" />
+              <WandSparkles v-else class="h-4 w-4" />
               {{ aiLoading ? "Generating..." : "Break down task" }}
             </Button>
 
