@@ -2,6 +2,11 @@ interface Subtask {
   title: string;
 }
 
+interface ExistingSubtask {
+  title: string;
+  completed: boolean;
+}
+
 export function useAI() {
   const subtasks = ref<Subtask[]>([]);
   const loading = ref(false);
@@ -9,7 +14,8 @@ export function useAI() {
 
   const generateSubtasks = async (
     taskTitle: string,
-    taskDescription?: string
+    taskDescription?: string,
+    existingSubtasks?: ExistingSubtask[]
   ) => {
     loading.value = true;
     error.value = null;
@@ -20,6 +26,7 @@ export function useAI() {
         body: {
           title: taskTitle,
           description: taskDescription,
+          existingSubtasks: existingSubtasks || [],
         },
       });
 
