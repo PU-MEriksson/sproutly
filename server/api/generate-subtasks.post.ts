@@ -2,12 +2,23 @@ import { generateObject } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
 
+interface ExistingSubtask {
+  title: string;
+  completed: boolean;
+}
+
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
 
-  const body = await readBody<{ title: string; description?: string }>(event);
+  const body = await readBody<{
+    title: string;
+    description?: string;
+    existingSubtasks?: ExistingSubtask[];
+  }>(event);
+
   const taskTitle = body.title;
   const taskDescription = body.description;
+  const existingSubtasks = body.existingSubtasks || [];
 
   const openai = createOpenAI({
     apiKey: config.openaiApiKey,
@@ -44,11 +55,37 @@ Start with the easiest possible action to build momentum. Make the first step la
 Task: "${taskTitle}"
 ${taskDescription ? `Additional context: ${taskDescription}` : ""}
 
+${
+  existingSubtasks.length > 0
+    ? `
+Existing subtasks already added by the user:
+${existingSubtasks
+  .map((st, idx) => `${idx + 1}. [${st.completed ? "x" : " "}] ${st.title}`)
+  .join("\n")}
+
+IMPORTANT: 
+- Do NOT duplicate these existing subtasks
+- Generate ONLY new, complementary steps that fill gaps or add value
+- Consider what's already done (marked with [x])
+- If the existing subtasks already cover everything well, return an empty array or just 1-2 additional helpful steps
+`
+    : ""
+}
+
 Consider:
 - How complex is this task?
 - What are the natural, logical steps someone would take?
+${
+  existingSubtasks.length > 0
+    ? "- What steps are missing from the existing subtasks?"
+    : ""
+}
 
-Return the steps that genuinely help someone complete this task. If it's already simple and clear, return just 1-2 steps.`,
+Return ${
+      existingSubtasks.length > 0
+        ? "ONLY NEW steps that complement existing ones"
+        : "the steps that genuinely help someone complete this task"
+    }.`,
   });
 
   return result.object.subtasks;
