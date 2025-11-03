@@ -8,6 +8,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { WandSparkles } from "lucide-vue-next";
 import type { Database } from "~/types/database.types";
 
 // Import task circle here later when the component is ready
@@ -31,7 +33,16 @@ const {
   updateSubtask,
 } = useSubtasks();
 
+const aiComposable = useAI();
+const {
+  generateSubtasks,
+  loading: aiLoading,
+  error: aiError,
+  subtasks: aiSubtasks,
+} = aiComposable;
+
 const subtasks = ref<Subtask[]>([]);
+const aiGenerationError = ref<string | null>(null);
 const loadingSubtasks = ref(false);
 const subtasksError = ref<string | null>(null);
 const newSubtaskTitle = ref("");
@@ -212,6 +223,54 @@ const onAccordionChange = (value: string | string[] | undefined) => {
     loadSubtasks();
   }
 };
+
+// Generate subtasks with AI
+const handleGenerateSubtasks = async () => {
+  aiGenerationError.value = null; // Clear previous errors
+
+  try {
+    // Prepare existing subtasks to send to AI
+    const existingSubtasksForAI = subtasks.value.map((st) => ({
+      title: st.title,
+      completed: st.completed ?? false,
+    }));
+
+    // Call AI to generate subtasks, passing existing ones
+    await generateSubtasks(
+      props.task.title,
+      props.task.description || undefined,
+      existingSubtasksForAI
+    ); // Check if AI generation failed
+    if (aiError.value) {
+      aiGenerationError.value =
+        "Failed to generate subtasks. Please try again.";
+      return;
+    }
+
+    // Check if we got any subtasks
+    if (!aiSubtasks.value || aiSubtasks.value.length === 0) {
+      aiGenerationError.value =
+        "No subtasks were generated. The task might already be simple enough!";
+      return;
+    }
+
+    // Try to save them to the database
+    try {
+      const newSubtasks = await addSubtasks(props.task.id, aiSubtasks.value);
+
+      // Add to local state to display them
+      subtasks.value.push(...newSubtasks);
+
+      console.log("AI subtasks generated and saved!", newSubtasks);
+    } catch (dbError) {
+      console.error("Failed to save subtasks to database:", dbError);
+      aiGenerationError.value = "Failed to save subtasks. Please try again.";
+    }
+  } catch (error) {
+    console.error("Failed to generate subtasks with AI:", error);
+    aiGenerationError.value = "An unexpected error occurred. Please try again.";
+  }
+};
 </script>
 
 <template>
@@ -237,13 +296,43 @@ const onAccordionChange = (value: string | string[] | undefined) => {
           </Button>
         </AccordionTrigger>
         <AccordionContent class="px-4 pb-4">
-          <p class="text-sm text-gray-600 whitespace-pre-line mb-4">
-            {{ props.task.description || "No description" }}
+          <p
+            v-if="props.task.description"
+            class="text-sm text-gray-600 whitespace-pre-line mb-4"
+          >
+            {{ props.task.description }}
           </p>
+          <div class="mb-4">
+            <Button
+              size="sm"
+              @click="handleGenerateSubtasks"
+              :disabled="aiLoading"
+            >
+              <Spinner v-if="aiLoading" />
+              <WandSparkles v-else class="h-4 w-4" />
+              {{ aiLoading ? "Generating..." : "Break down task" }}
+            </Button>
+
+            <!-- Error message -->
+            <div
+              v-if="aiGenerationError || aiError"
+              class="mt-2 p-3 bg-red-50 border border-red-200 rounded-md"
+            >
+              <p class="text-sm text-red-600 font-medium">
+                {{ aiGenerationError || aiError }}
+              </p>
+              <button
+                @click="handleGenerateSubtasks"
+                class="mt-1 text-xs text-red-700 hover:text-red-800 underline"
+              >
+                Try again
+              </button>
+            </div>
+          </div>
 
           <!-- Subtasks section -->
           <div class="space-y-2">
-            <h4 class="text-sm font-semibold text-gray-700">Subtasks</h4>
+            <h4 class="text-sm font-semibold text-gray-00">Subtasks</h4>
 
             <p v-if="loadingSubtasks" class="text-sm text-gray-500">
               Loading subtasks...
