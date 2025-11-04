@@ -4,12 +4,7 @@ const lastCompletedTask = ref<string | undefined>();
 
 // Completed tasks today
 const completedTasksToday = computed(() => {
-  const today = new Date().toISOString().split("T")[0]!; // Gets 'YYYY-MM-DD'
-
-  return todaysTasks.value.filter((task) => {
-    // Only includes tasks that are completed and have today's date
-    return task.completed && task.startdate === today;
-  });
+  return todaysTasks.value.filter((task) => task.completed);
 });
 
 const timeOfDay = computed(() => {
