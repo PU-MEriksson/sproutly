@@ -1,8 +1,8 @@
 <script setup lang="ts">
-const { tasks, loading, error, refresh } = useTasks();
+const { todaysTasks, loadingToday, errorToday, refreshToday } = useTasks();
 
 const handleTaskAdded = () => {
-  refresh();
+  refreshToday();
 };
 </script>
 
@@ -10,7 +10,7 @@ const handleTaskAdded = () => {
 
   <div class="bg-neutral-100 h-screen">
     <QuickAddTask @task-added="handleTaskAdded" />
-    <ViewTasks />
+    <ViewTodaysTasks />
 
   </div>
   <Navbar />
