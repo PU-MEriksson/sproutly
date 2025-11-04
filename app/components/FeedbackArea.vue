@@ -14,7 +14,7 @@ const feedbackMessage = computed(() => {
   if (props.lastCompletedTask) {
     return {
       emoji: "🎉",
-      message: `Amazing! You completed "${props.lastCompletedTask}". That's progress!`,
+      message: `Amazing! You completed "${props.lastCompletedTask}". You should be proud of yourself!`,
       type: "celebration",
     };
   }
@@ -89,15 +89,15 @@ const feedbackMessage = computed(() => {
 
 <template>
   <Card
-    :class="{
-      'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200':
-        feedbackMessage.type === 'celebration',
-      'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200':
-        feedbackMessage.type === 'support',
-      'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200':
-        feedbackMessage.type === 'neutral',
-    }"
-    class="border shadow-sm"
+    :class="[
+      'm-4',
+      feedbackMessage.type === 'celebration' &&
+        '!bg-gradient-to-r from-green-50 to-emerald-50 border-green-200',
+      feedbackMessage.type === 'support' &&
+        '!bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200',
+      feedbackMessage.type === 'neutral' &&
+        '!bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200',
+    ]"
   >
     <CardContent class="pt-6">
       <p class="text-sm flex items-start gap-3">
