@@ -47,9 +47,9 @@ const taskSchema = toTypedSchema(
   z.object({
     title: z.string().min(1, "Task title is required"),
     description: z.string().optional(),
-    startdate: z.string().datetime().optional(),
-    enddate: z.string().datetime().optional(),
-    deadline: z.string().datetime().optional(),
+    startdate: z.string().date().optional(),
+    enddate: z.string().date().optional(),
+    deadline: z.string().date().optional(),
     subtasks: z.array(subtaskSchema).default([]),
   })
 );
@@ -67,7 +67,8 @@ const { addTask } = useTasks();
 
 watch(endDateValue, (val) => {
   if (val) {
-    form.setFieldValue("enddate", val.toDate(getLocalTimeZone()).toISOString());
+    const ymd = `${val.year.toString().padStart(4, '0')}-${val.month.toString().padStart(2, '0')}-${val.day.toString().padStart(2, '0')}`;
+    form.setFieldValue("enddate", ymd);
   } else {
     form.setFieldValue("enddate", undefined);
   }
@@ -75,10 +76,8 @@ watch(endDateValue, (val) => {
 
 watch(deadlineValue, (val) => {
   if (val) {
-    form.setFieldValue(
-      "deadline",
-      val.toDate(getLocalTimeZone()).toISOString()
-    );
+    const ymd = `${val.year.toString().padStart(4, '0')}-${val.month.toString().padStart(2, '0')}-${val.day.toString().padStart(2, '0')}`;
+    form.setFieldValue("deadline", ymd);
   } else {
     form.setFieldValue("deadline", undefined);
   }
@@ -86,10 +85,8 @@ watch(deadlineValue, (val) => {
 
 watch(startDateValue, (val) => {
   if (val) {
-    form.setFieldValue(
-      "startdate",
-      val.toDate(getLocalTimeZone()).toISOString()
-    );
+    const ymd = `${val.year.toString().padStart(4, '0')}-${val.month.toString().padStart(2, '0')}-${val.day.toString().padStart(2, '0')}`;
+    form.setFieldValue("startdate", ymd);
   } else {
     form.setFieldValue("startdate", undefined);
   }

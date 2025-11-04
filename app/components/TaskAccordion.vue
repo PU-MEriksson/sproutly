@@ -12,6 +12,15 @@ import { Spinner } from "@/components/ui/spinner";
 import { WandSparkles } from "lucide-vue-next";
 import type { Database } from "~/types/database.types";
 
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
+
 // Import task circle here later when the component is ready
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"];
@@ -81,8 +90,15 @@ watch(localCompleted, async (checked) => {
   }
 });
 
+const editingTask = ref(false);
+const editingError = ref<string | null>(null);
+
+const handleTaskUpdated = (updatedTask: Task) => {
+	emit("update:completed", updatedTask.completed ?? false);
+}; 
+
 const deletingTask = ref(false);
-const deleteError = ref<string | null>(null);
+const deleteError = ref<string | null>(null); 
 
 const handleDeleteTask = async () => {
   if (!confirm("Are you sure you want to delete this task?")) return;
@@ -285,6 +301,28 @@ const handleGenerateSubtasks = async () => {
         <AccordionTrigger class="h-14 p-4">
           <Checkbox v-model="localCompleted" :disabled="updatingTask" />
           {{ props.task.title }}
+
+          <Sheet>
+            <SheetTrigger>
+              <Button
+                variant="ghost"
+                size="sm"
+                class="text-blue-500 hover:text-blue-700"
+                :disabled="editingTask"
+              >
+                Edit
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Do you want to edit this task?</SheetTitle>
+                <SheetDescription>
+                  <EditTask :task="props.task" @updated="handleTaskUpdated" />
+                </SheetDescription>
+              </SheetHeader>
+            </SheetContent>
+          </Sheet>
+
           <Button
             variant="ghost"
             size="sm"
@@ -428,7 +466,7 @@ const handleGenerateSubtasks = async () => {
               <span>Add subtask</span>
             </button>
           </div>
-        </AccordionContent>
+  </AccordionContent>
       </AccordionItem>
     </Accordion>
   </ClientOnly>
