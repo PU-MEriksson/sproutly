@@ -20,6 +20,7 @@ type Subtask = Database["public"]["Tables"]["subtasks"]["Row"];
 const props = defineProps<{ task: Task }>();
 const emit = defineEmits<{
   "update:completed": [completed: boolean];
+  "task-completed": [taskTitle: string];
   delete: [id: number];
 }>();
 
@@ -72,6 +73,11 @@ watch(localCompleted, async (checked) => {
   try {
     await updateTask(props.task.id, { completed: checked });
     emit("update:completed", checked);
+
+    // Emit task-completed event when a task is marked as completed
+    if (checked) {
+      emit("task-completed", props.task.title);
+    }
   } catch (error) {
     localCompleted.value = !checked; // rollback
     updateError.value = "Failed to update task";
