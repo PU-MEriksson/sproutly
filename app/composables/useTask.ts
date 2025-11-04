@@ -38,6 +38,31 @@ export const useTasks = () => {
     }
   );
 
+  let currentDate = new Date().toJSON().slice(0, 10);
+  
+  const {
+    data: fetchedTodaysTasks,
+    pending: loadingToday,
+    error: errorToday,
+    refresh: refreshToday, 
+  } = useAsyncData<TaskRow[]>(
+    "user-tasks-today",
+    async () => {
+      const {data, error} = await supabase
+      .from("tasks")
+      .select("*")
+      .or(`startdate.eq.${currentDate},and(startdate.lt.${currentDate},completed.is.false)`)
+      .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data ?? [];
+    },
+    {
+      server: false,
+      lazy: false
+    }
+  )
+
   const addTask = async (
     title: string,
     description?: string,
@@ -163,9 +188,13 @@ export const useTasks = () => {
 
   return {
     tasks: computed<TaskRow[]>(() => fetchedTasks.value ?? []),
+    todaysTasks: computed<TaskRow[]>(()=>fetchedTodaysTasks.value ?? []),
     loading,
+    loadingToday,
     error,
+    errorToday,
     refresh,
+    refreshToday,
     addTask,
     updateTask,
     deleteTask,
