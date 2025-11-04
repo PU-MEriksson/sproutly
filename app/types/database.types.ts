@@ -240,7 +240,7 @@ export type Database = {
         Row: {
           archived: boolean | null
           challenging: number | null
-          completed: boolean | null
+          completed: boolean
           created_at: string
           deadline: string | null
           description: string | null
@@ -257,7 +257,7 @@ export type Database = {
         Insert: {
           archived?: boolean | null
           challenging?: number | null
-          completed?: boolean | null
+          completed?: boolean
           created_at?: string
           deadline?: string | null
           description?: string | null
@@ -274,7 +274,7 @@ export type Database = {
         Update: {
           archived?: boolean | null
           challenging?: number | null
-          completed?: boolean | null
+          completed?: boolean
           created_at?: string
           deadline?: string | null
           description?: string | null
