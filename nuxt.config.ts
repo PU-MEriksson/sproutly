@@ -1,11 +1,27 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
+import tailwindcss from "@tailwindcss/vite";
+
 export default defineNuxtConfig({
-  runtimeConfig: {
-    public: {
-      supabaseUrl: process.env.SUPABASE_URL,
-      supabasePublishableKey: process.env.SUPABASE_KEY,
-    },
+  compatibilityDate: "2025-10-21",
+  css: ["~/assets/css/tailwind.css"],
+  vite: {
+    plugins: [tailwindcss()],
   },
-  compatibilityDate: "2025-07-15",
-  devtools: { enabled: true },
+  modules: ["@nuxtjs/supabase", "shadcn-nuxt"],
+  shadcn: {
+    /**
+     * Prefix for all the imported component
+     */
+    prefix: "",
+    /**
+     * Directory that the component lives in.
+     * @default "./app/components/ui"
+     */
+    componentDir: "./app/components/ui",
+  },
+  supabase: {
+    types: false,
+  },
+  runtimeConfig: {
+    openaiApiKey: process.env.OPENAI_API_KEY || "",
+  },
 });

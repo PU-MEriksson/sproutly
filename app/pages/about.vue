@@ -1,26 +1,16 @@
 <script setup>
-import { createClient } from "@supabase/supabase-js";
-const config = useRuntimeConfig();
-const supabase = createClient(
-  config.public.supabaseUrl,
-  config.public.supabasePublishableKey
-);
-const instruments = ref([]);
-
-async function getInstruments() {
-  const { data } = await supabase.from("instruments").select();
-  instruments.value = data;
-}
-
-onMounted(() => {
-  getInstruments();
-});
+const user = useSupabaseUser();
 </script>
 
 <template>
-  <ul>
-    <li v-for="instrument in instruments" :key="instrument.id">
-      {{ instrument.name }}
-    </li>
-  </ul>
+  <div>
+    <h1>About</h1>
+    <div v-if="user">
+      <p>Logged in as: {{ user.email }}</p>
+    </div>
+    <div v-else>
+      <p>Not logged in</p>
+    </div>
+  </div>
+  <Navbar />
 </template>
