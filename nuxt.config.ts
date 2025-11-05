@@ -14,6 +14,10 @@ export default defineNuxtConfig({
       short_name: "ToDo",
       description: "A supportive task management app",
       theme_color: "#ffffff",
+      background_color: "#ffffff",
+      display: "standalone",
+      start_url: "/",
+      scope: "/",
       icons: [
         {
           src: "pwa-192x192.png",
