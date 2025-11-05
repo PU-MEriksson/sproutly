@@ -28,7 +28,6 @@ export default defineNuxtConfig({
       ],
     },
     workbox: {
-      navigateFallback: "/",
       globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
       runtimeCaching: [
         {
@@ -41,7 +40,7 @@ export default defineNuxtConfig({
       installPrompt: true,
     },
     devOptions: {
-      enabled: true,
+      enabled: false, // Disable service worker in dev to avoid auth issues
       type: "module",
     },
   },
@@ -58,8 +57,20 @@ export default defineNuxtConfig({
   },
   supabase: {
     types: false,
+    redirectOptions: {
+      login: "/login",
+      callback: "/confirm",
+      exclude: ["/login", "/confirm"],
+    },
   },
   runtimeConfig: {
     openaiApiKey: process.env.OPENAI_API_KEY || "",
+    public: {
+      PUBLIC_REDIRECT_URL:
+        process.env.PUBLIC_REDIRECT_URL ||
+        (process.env.VERCEL_URL
+          ? `https://${process.env.VERCEL_URL}`
+          : "http://localhost:3000"),
+    },
   },
 });
