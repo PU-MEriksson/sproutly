@@ -14,6 +14,7 @@ const handleTaskCompleted = (taskTitle: string) => {
   <section class="bg-neutral-100 p-4">
     <p v-if="loadingToday">Loading…</p>
     <p v-else-if="errorToday">{{ errorToday }}</p>
+    <p v-else-if="todaysTasks.length === 0">No tasks found</p>
 
     <div v-else class="space-y-2">
       <TaskAccordion
@@ -22,7 +23,6 @@ const handleTaskCompleted = (taskTitle: string) => {
         :task="t"
         @task-completed="handleTaskCompleted"
       />
-      <p v-if="todaysTasks.length === 0">No tasks found</p>
     </div>
   </section>
 </template>
