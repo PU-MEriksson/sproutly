@@ -7,6 +7,12 @@ export default defineNuxtConfig({
     plugins: [tailwindcss()],
   },
   modules: ["@nuxtjs/supabase", "shadcn-nuxt", "@vite-pwa/nuxt"],
+  app: {
+    head: {
+      link: [{ rel: "manifest", href: "/manifest.webmanifest" }],
+      meta: [{ name: "theme-color", content: "#ffffff" }],
+    },
+  },
   pwa: {
     registerType: "autoUpdate",
     manifest: {
@@ -20,12 +26,12 @@ export default defineNuxtConfig({
       scope: "/",
       icons: [
         {
-          src: "pwa-192x192.png",
+          src: "/pwa-192x192.png",
           sizes: "192x192",
           type: "image/png",
         },
         {
-          src: "pwa-512x512.png",
+          src: "/pwa-512x512.png",
           sizes: "512x512",
           type: "image/png",
         },
@@ -44,8 +50,9 @@ export default defineNuxtConfig({
       installPrompt: true,
     },
     devOptions: {
-      enabled: false, // Disable service worker in dev to avoid auth issues
+      enabled: true,
       type: "module",
+      navigateFallback: "/",
     },
   },
   shadcn: {

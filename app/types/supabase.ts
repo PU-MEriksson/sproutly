@@ -1,4 +1,4 @@
-export type Database = {
+/* export type Database = {
   public: {
     Tables: {
       profiles: {
@@ -23,4 +23,4 @@ export type Database = {
     Functions: {};
     Enums: {};
   };
-};
+}; */
