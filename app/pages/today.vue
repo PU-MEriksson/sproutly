@@ -54,7 +54,8 @@ const todaysTotalTasks = computed(
 </script>
 
 <template>
-  <div class="bg-neutral-100 h-screen">
+  <div class="bg-neutral-100 min-h-screen pb-20 pt-16">
+    <TopNavbar />
     <FeedbackArea
       :total-tasks="todaysTotalTasks"
       :completed-tasks-today="completedTasksToday.length"
