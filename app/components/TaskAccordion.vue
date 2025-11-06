@@ -305,48 +305,21 @@ const handleGenerateSubtasks = async () => {
 
 <template>
   <ClientOnly>
-    <Accordion
-      type="single"
-      collapsible
-      class="bg-white rounded-xl"
-      @update:model-value="onAccordionChange"
-    >
-      <AccordionItem value="item-1">
-        <AccordionTrigger class="h-14 p-4">
-          <Checkbox v-model="localCompleted" :disabled="updatingTask" />
-          {{ props.task.title }}
-
-          <Sheet>
-            <SheetTrigger>
-              <Button
-                variant="ghost"
-                size="sm"
-                class="text-blue-500 hover:text-blue-700"
-                :disabled="editingTask"
-              >
-                Edit
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Do you want to edit this task?</SheetTitle>
-                <SheetDescription>
-                  <EditTask :task="props.task" @updated="handleTaskUpdated" />
-                </SheetDescription>
-              </SheetHeader>
-            </SheetContent>
-          </Sheet>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            class="text-red-500 hover:text-red-700"
-            :disabled="deletingTask"
-            @click.stop="handleDeleteTask"
-          >
-            Delete
-          </Button>
-        </AccordionTrigger>
+<Accordion 
+type="single" 
+collapsible 
+class="bg-white rounded-xl" 
+@update:model-value="onAccordionChange" 
+> 
+  <AccordionItem value="item-1"> 
+    <AccordionTrigger class="h-14 p-4"> 
+      <Checkbox 
+        v-model="localCompleted" 
+        :disabled="updatingTask" 
+        @click.stop
+      /> 
+      {{ props.task.title }} 
+    </AccordionTrigger>
         <AccordionContent class="px-4 pb-4">
           <p
             v-if="props.task.description"
@@ -480,6 +453,36 @@ const handleGenerateSubtasks = async () => {
               <span>Add subtask</span>
             </button>
           </div>
+                    <Sheet>
+            <SheetTrigger>
+              <Button
+                variant="ghost"
+                size="sm"
+                class="text-blue-500 hover:text-blue-700"
+                :disabled="editingTask"
+              >
+                Edit
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Do you want to edit this task?</SheetTitle>
+                <SheetDescription>
+                  <EditTask :task="props.task" @updated="handleTaskUpdated" />
+                </SheetDescription>
+              </SheetHeader>
+            </SheetContent>
+          </Sheet>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            class="text-red-500 hover:text-red-700"
+            :disabled="deletingTask"
+            @click.stop="handleDeleteTask"
+          >
+            Delete
+          </Button>
         </AccordionContent>
       </AccordionItem>
     </Accordion>

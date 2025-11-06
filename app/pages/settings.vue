@@ -8,7 +8,8 @@ async function logout() {
 </script>
 
 <template>
-  <div class="settings-page">
+  <div class="settings-page pb-20 pt-16">
+    <TopNavbar />
     <h1>Settings Page</h1>
     <p>This is where users can adjust their settings.</p>
     <button @click="logout">Log out</button>

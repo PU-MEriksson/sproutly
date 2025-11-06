@@ -10,9 +10,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import type { DateValue } from "@internationalized/date";
-import { DateFormatter, getLocalTimeZone } from "@internationalized/date";
+import {
+  DateFormatter,
+  getLocalTimeZone,
+  parseDate,
+} from "@internationalized/date";
 import { CalendarIcon, Trash2 } from "lucide-vue-next";
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,6 +29,10 @@ import {
 } from "@/components/ui/form";
 
 import type { Database } from "~/types/database.types";
+
+const props = defineProps<{
+  defaultDate?: string;
+}>();
 
 const df = new DateFormatter("sv-SE", {
   dateStyle: "long",
@@ -67,7 +75,9 @@ const { addTask } = useTasks();
 
 watch(endDateValue, (val) => {
   if (val) {
-    const ymd = `${val.year.toString().padStart(4, '0')}-${val.month.toString().padStart(2, '0')}-${val.day.toString().padStart(2, '0')}`;
+    const ymd = `${val.year.toString().padStart(4, "0")}-${val.month
+      .toString()
+      .padStart(2, "0")}-${val.day.toString().padStart(2, "0")}`;
     form.setFieldValue("enddate", ymd);
   } else {
     form.setFieldValue("enddate", undefined);
@@ -76,7 +86,9 @@ watch(endDateValue, (val) => {
 
 watch(deadlineValue, (val) => {
   if (val) {
-    const ymd = `${val.year.toString().padStart(4, '0')}-${val.month.toString().padStart(2, '0')}-${val.day.toString().padStart(2, '0')}`;
+    const ymd = `${val.year.toString().padStart(4, "0")}-${val.month
+      .toString()
+      .padStart(2, "0")}-${val.day.toString().padStart(2, "0")}`;
     form.setFieldValue("deadline", ymd);
   } else {
     form.setFieldValue("deadline", undefined);
@@ -85,10 +97,24 @@ watch(deadlineValue, (val) => {
 
 watch(startDateValue, (val) => {
   if (val) {
-    const ymd = `${val.year.toString().padStart(4, '0')}-${val.month.toString().padStart(2, '0')}-${val.day.toString().padStart(2, '0')}`;
+    const ymd = `${val.year.toString().padStart(4, "0")}-${val.month
+      .toString()
+      .padStart(2, "0")}-${val.day.toString().padStart(2, "0")}`;
     form.setFieldValue("startdate", ymd);
   } else {
     form.setFieldValue("startdate", undefined);
+  }
+});
+
+// Set default date if provided
+onMounted(() => {
+  if (props.defaultDate) {
+    try {
+      startDateValue.value = parseDate(props.defaultDate);
+      form.setFieldValue("startdate", props.defaultDate);
+    } catch (error) {
+      console.error("Failed to parse default date:", error);
+    }
   }
 });
 
