@@ -27,6 +27,7 @@ const handleTaskCompleted = (taskTitle: string) => {
 </script>
 
 <template>
+<ClientOnly fallback-tag="section" fallback="">
   <section class="bg-neutral-100 p-4">
     <p v-if="loadingTodaysUncompleted">Loading…</p>
     <p v-else-if="errorTodaysUncompleted">{{ errorTodaysUncompleted }}</p>
@@ -51,4 +52,5 @@ const handleTaskCompleted = (taskTitle: string) => {
       <p v-if="todaysTotal === 0">No tasks found</p>
     </div>
   </section>
+  </ClientOnly>
 </template>

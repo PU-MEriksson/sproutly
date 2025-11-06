@@ -6,7 +6,48 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()],
   },
-  modules: ["@nuxtjs/supabase", "shadcn-nuxt"],
+  modules: ["@nuxtjs/supabase", "shadcn-nuxt", "@vite-pwa/nuxt"],
+  pwa: {
+    registerType: "autoUpdate",
+    manifest: {
+      name: "Supportive ToDo",
+      short_name: "ToDo",
+      description: "A supportive task management app",
+      theme_color: "#ffffff",
+      background_color: "#ffffff",
+      display: "standalone",
+      start_url: "/",
+      scope: "/",
+      icons: [
+        {
+          src: "pwa-192x192.png",
+          sizes: "192x192",
+          type: "image/png",
+        },
+        {
+          src: "pwa-512x512.png",
+          sizes: "512x512",
+          type: "image/png",
+        },
+      ],
+    },
+    workbox: {
+      globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
+      runtimeCaching: [
+        {
+          urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+          handler: "NetworkFirst",
+        },
+      ],
+    },
+    client: {
+      installPrompt: true,
+    },
+    devOptions: {
+      enabled: false, // Disable service worker in dev to avoid auth issues
+      type: "module",
+    },
+  },
   shadcn: {
     /**
      * Prefix for all the imported component
@@ -20,8 +61,20 @@ export default defineNuxtConfig({
   },
   supabase: {
     types: false,
+    redirectOptions: {
+      login: "/login",
+      callback: "/confirm",
+      exclude: ["/login", "/confirm"],
+    },
   },
   runtimeConfig: {
     openaiApiKey: process.env.OPENAI_API_KEY || "",
+    public: {
+      PUBLIC_REDIRECT_URL:
+        process.env.PUBLIC_REDIRECT_URL ||
+        (process.env.VERCEL_URL
+          ? `https://${process.env.VERCEL_URL}`
+          : "http://localhost:3000"),
+    },
   },
 });

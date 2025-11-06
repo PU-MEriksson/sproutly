@@ -19,9 +19,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet'
-
-// Import task circle here later when the component is ready
+} from "@/components/ui/sheet";
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"];
 type Subtask = Database["public"]["Tables"]["subtasks"]["Row"];
@@ -34,6 +32,7 @@ const emit = defineEmits<{
 }>();
 
 const { updateTask, deleteTask } = useTasks();
+const { celebrateTask, celebrateSubtask } = useCelebration();
 
 const {
   fetchSubtasks,
@@ -89,6 +88,7 @@ watch(localCompleted, async (checked) => {
     // Emit task-completed event when a task is marked as completed
     if (checked) {
       emit("task-completed", props.task.title);
+      celebrateTask();
     }
   } catch (error) {
     localCompleted.value = !checked; // rollback
@@ -103,11 +103,11 @@ const editingTask = ref(false);
 /* const editingError = ref<string | null>(null);
  */
 const handleTaskUpdated = (updatedTask: Task) => {
-	emit("update:completed", updatedTask.completed ?? false);
-}; 
+  emit("update:completed", updatedTask.completed ?? false);
+};
 
 const deletingTask = ref(false);
-const deleteError = ref<string | null>(null); 
+const deleteError = ref<string | null>(null);
 
 const handleDeleteTask = async () => {
   if (!confirm("Are you sure you want to delete this task?")) return;
@@ -151,6 +151,11 @@ const handleSubtaskToggle = async (
     const subtask = subtasks.value.find((st) => st.id === subtaskId);
     if (subtask) {
       subtask.completed = isCompleted;
+    }
+
+    // Celebrate if marking as complete
+    if (isCompleted) {
+      celebrateSubtask();
     }
   } catch (error) {
     console.error("Failed to toggle subtask:", error);
@@ -475,7 +480,7 @@ const handleGenerateSubtasks = async () => {
               <span>Add subtask</span>
             </button>
           </div>
-  </AccordionContent>
+        </AccordionContent>
       </AccordionItem>
     </Accordion>
   </ClientOnly>
