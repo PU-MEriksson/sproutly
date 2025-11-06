@@ -16,17 +16,75 @@ export const useTasks = () => {
     return profile.value;
   };
 
-  const {
-    data: fetchedTasks,
-    pending: loading,
-    error,
-    refresh,
+  let currentDate = new Date().toJSON().slice(0, 10);
+
+  type TaskFilter = {
+  completed?: boolean;
+  completed_date?: string;
+  startdate_lte?: string;
+};
+
+function useTasksData(key: string, filters: TaskFilter) {
+  return useAsyncData<TaskRow[]>(
+    key,
+    async () => {
+      let query = supabase.from("tasks").select("*").order("created_at", { ascending: false });
+
+      if (filters.completed !== undefined) query = query.eq("completed", filters.completed);
+      if (filters.completed_date) query = query.eq("completed_date", filters.completed_date);
+      if (filters.startdate_lte) query = query.lte("startdate", filters.startdate_lte);
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data ?? [];
+    },
+    { server: false, lazy: false }
+  );
+}
+
+const {
+  data: fetchedAllUncompletedTasks,
+  pending: loadingAllUncompletedTasks,
+  error: errorAllUncompletedTasks,
+  refresh: refreshAllUncompletedTasks,
+} = useTasksData("user-tasks-all-uncompleted", { completed: false });
+
+const {
+  data: fetchedAllCompletedTasks,
+  pending: loadingAllCompletedTasks,
+  error: errorAllCompletedTasks,
+  refresh: refreshAllCompletedTasks,
+} = useTasksData("user-tasks-all-completed", { completed: true });
+
+const {
+  data: fetchedTodaysUncompletedTasks,
+  pending: loadingTodaysUncompletedTasks,
+  error: errorTodaysUncompletedTasks,
+  refresh: refreshTodaysUncompletedTasks,
+} = useTasksData("user-tasks-today-uncompleted", { completed: false, startdate_lte: currentDate });
+
+const {
+  data: fetchedTodaysCompletedTasks,
+  pending: loadingTodaysCompletedTasks,
+  error: errorTodaysCompletedTasks,
+  refresh: refreshTodaysCompletedTasks,
+} = useTasksData("user-tasks-today-completed", { completed: true, completed_date: currentDate });
+
+
+
+  /* const {
+    data: fetchedAllUncompletedTasks,
+    pending: loadingAllUncompletedTasks,
+    error: errorAllUncompletedTasks,
+    refresh: refreshAllUncompletedTasks,
+
   } = useAsyncData<TaskRow[]>(
-    "user-tasks",
+    "user-tasks-all-uncompleted",
     async () => {
       const { data, error } = await supabase
         .from("tasks")
         .select("*")
+        .eq("completed", false)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -38,21 +96,45 @@ export const useTasks = () => {
     }
   );
 
-  let currentDate = new Date().toJSON().slice(0, 10);
-  
-  const {
-    data: fetchedTodaysTasks,
-    pending: loadingToday,
-    error: errorToday,
-    refresh: refreshToday, 
+    const {
+    data: fetchedAllCompletedTasks,
+    pending: loadingAllCompletedTasks,
+    error: errorAllCompletedTasks,
+    refresh: refreshAllCompletedTasks,
+
   } = useAsyncData<TaskRow[]>(
-    "user-tasks-today",
+    "user-tasks-all-completed",
     async () => {
-      const {data, error} = await supabase
-      .from("tasks")
-      .select("*")
-      .or(`startdate.eq.${currentDate},and(startdate.lt.${currentDate},completed.is.false)`)
-      .order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("completed", true)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data ?? [];
+    },
+    {
+      server: false, // Only fetch on client side since TaskAccordion is client-only
+      lazy: false,
+    }
+  );
+
+  const {
+    data: fetchedTodaysUncompletedTasks,
+    pending: loadingTodaysUncompletedTasks,
+    error: errorTodaysUncompletedTasks,
+    refresh: refreshTodaysUncompletedTasks, 
+
+  } = useAsyncData<TaskRow[]>(
+    "user-tasks-today-uncompleted",
+    async () => {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .lte("startdate", currentDate)
+        .eq("completed", false)       
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       return data ?? [];
@@ -62,6 +144,30 @@ export const useTasks = () => {
       lazy: false
     }
   )
+
+    const {
+    data: fetchedTodaysCompletedTasks,
+    pending: loadingTodaysCompletedTasks,
+    error: errorTodaysCompletedTasks,
+    refresh: refreshTodaysCompletedTasks, 
+  } = useAsyncData<TaskRow[]>(
+    "user-tasks-today-completed",
+    async () => {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("completed", true)       
+        .eq("completed_date", currentDate)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data ?? [];
+    },
+    {
+      server: false,
+      lazy: false
+    }
+  ) */
 
   const addTask = async (
     title: string,
@@ -133,13 +239,20 @@ export const useTasks = () => {
 
       if (updateErr) throw updateErr;
       if (!updated) throw new Error("Update returned no data");
-
-      if (fetchedTasks.value) {
-        const idx = fetchedTasks.value.findIndex((t) => t.id === id);
+/* 
+      if (fetchedAllUncompletedTasks.value) {
+        const idx = fetchedAllUncompletedTasks.value.findIndex((t) => t.id === id);
         if (idx !== -1) {
-          fetchedTasks.value.splice(idx, 1, updated);
+          fetchedAllUncompletedTasks.value.splice(idx, 1, updated);
         }
-      }
+      } */
+
+    await Promise.allSettled([
+      refreshTodaysCompletedTasks(),
+      refreshTodaysUncompletedTasks(),
+      refreshAllCompletedTasks(),
+      refreshAllUncompletedTasks(),
+    ]);
 
       console.debug("[useTasks] updated task", updated);
       return updated;
@@ -173,9 +286,9 @@ export const useTasks = () => {
 
       if (delErr) throw delErr;
 
-      if (fetchedTasks.value) {
-        const idx = fetchedTasks.value.findIndex((t) => t.id === id);
-        if (idx !== -1) fetchedTasks.value.splice(idx, 1);
+      if (fetchedAllUncompletedTasks.value) {
+        const idx = fetchedAllUncompletedTasks.value.findIndex((t) => t.id === id);
+        if (idx !== -1) fetchedAllUncompletedTasks.value.splice(idx, 1);
       }
 
       console.debug("[useTasks] deleted task", id);
@@ -187,14 +300,22 @@ export const useTasks = () => {
   };
 
   return {
-    tasks: computed<TaskRow[]>(() => fetchedTasks.value ?? []),
-    todaysTasks: computed<TaskRow[]>(()=>fetchedTodaysTasks.value ?? []),
-    loading,
-    loadingToday,
-    error,
-    errorToday,
-    refresh,
-    refreshToday,
+    allUncompletedTasks: computed<TaskRow[]>(() => fetchedAllUncompletedTasks.value ?? []),
+    allCompletedTasks: computed<TaskRow[]>(() => fetchedAllCompletedTasks.value ?? []),
+    todaysUncompletedTasks: computed<TaskRow[]>(()=>fetchedTodaysUncompletedTasks.value ?? []),
+    todaysCompletedTasks: computed<TaskRow[]>(()=>fetchedTodaysCompletedTasks.value ?? []),
+    loadingAllUncompletedTasks,
+    loadingAllCompletedTasks,
+    loadingTodaysUncompletedTasks,
+    loadingTodaysCompletedTasks,
+    errorAllUncompletedTasks,
+    errorAllCompletedTasks,
+    errorTodaysUncompletedTasks,
+    errorTodaysCompletedTasks,
+    refreshAllUncompletedTasks,
+    refreshAllCompletedTasks,
+    refreshTodaysUncompletedTasks,
+    refreshTodaysCompletedTasks,
     addTask,
     updateTask,
     deleteTask,

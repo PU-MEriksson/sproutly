@@ -1,5 +1,15 @@
 <script setup lang="ts">
-const { tasks, loading, error, refresh } = useTasks();
+import type { Database } from '~/types/database.types';
+
+type Task = Database["public"]["Tables"]["tasks"]["Row"];
+
+const props = defineProps<{ 
+  tasks: Task[]
+  loading: boolean
+  error: string | null
+  refresh: ()=>void
+  
+}>();
 
 const emit = defineEmits<{
   "task-completed": [taskTitle: string];
