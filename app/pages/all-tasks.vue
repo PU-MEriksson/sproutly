@@ -9,11 +9,17 @@ const {
   errorAllCompletedTasks,
   refreshAllCompletedTasks,
 } = useTasks();
+const handleTaskAdded = () => {
+  refreshAllCompletedTasks();
+  refreshAllUncompletedTasks();
+};
 </script>
 
 <template>
-  <div class="pb-20 pt-16">
+  <div class="bg-neutral-100 min-h-screen pb-20 pt-16">
     <TopNavbar />
+    <QuickAddTask @task-added="handleTaskAdded" />
+
     <Section>
       <h2>To do</h2>
       <ViewTasks
