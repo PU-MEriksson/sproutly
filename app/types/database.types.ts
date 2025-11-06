@@ -241,6 +241,7 @@ export type Database = {
           archived: boolean | null
           challenging: number | null
           completed: boolean
+          completed_date: string | null
           created_at: string
           deadline: string | null
           description: string | null
@@ -258,6 +259,7 @@ export type Database = {
           archived?: boolean | null
           challenging?: number | null
           completed?: boolean
+          completed_date?: string | null
           created_at?: string
           deadline?: string | null
           description?: string | null
@@ -275,6 +277,7 @@ export type Database = {
           archived?: boolean | null
           challenging?: number | null
           completed?: boolean
+          completed_date?: string | null
           created_at?: string
           deadline?: string | null
           description?: string | null

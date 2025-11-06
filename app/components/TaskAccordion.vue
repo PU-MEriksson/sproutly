@@ -66,6 +66,9 @@ const updatingTask = ref(false);
 const updateError = ref<string | null>(null);
 const localCompleted = ref(props.task.completed ?? false);
 
+let currentDate = new Date().toJSON().slice(0, 10);
+
+
 // Sync local state with prop
 watch(
   () => props.task.completed,
@@ -79,7 +82,7 @@ watch(localCompleted, async (checked) => {
   updatingTask.value = true;
   updateError.value = null;
   try {
-    await updateTask(props.task.id, { completed: checked });
+    await updateTask(props.task.id, { completed: checked, completed_date: currentDate});
     emit("update:completed", checked);
 
     // Emit task-completed event when a task is marked as completed
@@ -97,8 +100,8 @@ watch(localCompleted, async (checked) => {
 });
 
 const editingTask = ref(false);
-const editingError = ref<string | null>(null);
-
+/* const editingError = ref<string | null>(null);
+ */
 const handleTaskUpdated = (updatedTask: Task) => {
   emit("update:completed", updatedTask.completed ?? false);
 };
