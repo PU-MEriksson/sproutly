@@ -23,6 +23,10 @@ import {
 } from "@/components/ui/form";
 import AddTask from "./AddTask.vue";
 
+const props = defineProps<{
+  defaultDate?: string;
+}>();
+
 const isExpanded = ref(false);
 const isSubmitting = ref(false);
 
@@ -33,6 +37,7 @@ const emit = defineEmits<{
 const quickFormSchema = toTypedSchema(
   z.object({
     title: z.string().min(1, "Task title is required"),
+    startdate: z.string().date().optional(),
   })
 );
 
@@ -49,7 +54,7 @@ const handleQuickAdd = form.handleSubmit(async (values) => {
   const { addTask } = useTasks();
 
   try {
-    await addTask(values.title.trim());
+    await addTask(values.title.trim(), undefined, props.defaultDate);
     form.resetForm();
     emit("taskAdded");
   } catch (error) {
@@ -106,7 +111,10 @@ const handleExpandedTaskAdded = () => {
         </SheetTrigger>
         <SheetContent side="bottom">
           <div class="mt-4 max-h-[75vh] overflow-y-auto">
-            <AddTask @task-added="handleExpandedTaskAdded" />
+            <AddTask
+              :default-date="defaultDate"
+              @task-added="handleExpandedTaskAdded"
+            />
           </div>
         </SheetContent>
       </Sheet>
