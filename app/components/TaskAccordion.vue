@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { WandSparkles } from "lucide-vue-next";
+import { WandSparkles, Pencil, Trash2, Plus, Check, X } from "lucide-vue-next";
 import type { Database } from "~/types/database.types";
 
 import {
@@ -131,7 +131,9 @@ const loadSubtasks = async () => {
   loadingSubtasks.value = true;
   subtasksError.value = null;
   try {
-    subtasks.value = await fetchSubtasks(props.task.id);
+    const fetchedSubtasks = await fetchSubtasks(props.task.id);
+    // Explicitly maintain creation order, don't sort by completion
+    subtasks.value = fetchedSubtasks;
   } catch (error) {
     console.error("Failed to load subtasks:", error);
     subtasksError.value = "Failed to load subtasks";
@@ -147,16 +149,26 @@ const handleSubtaskToggle = async (
   // Convert to boolean in case the checkbox returns a string
   const isCompleted = completed === true || completed === "true";
 
+  console.log("Toggling subtask:", subtaskId, "to:", isCompleted);
+
+  // Find the current index to maintain order
+  const currentIndex = subtasks.value.findIndex((st) => st.id === subtaskId);
+
   try {
     await toggleSubtaskCompleted(subtaskId, isCompleted);
-    // Update local state
+
+    // Update local state while preserving array order
     const subtask = subtasks.value.find((st) => st.id === subtaskId);
     if (subtask) {
+      // Update in place to maintain order
       subtask.completed = isCompleted;
+      // Force reactivity update
+      subtasks.value = [...subtasks.value];
     }
 
     // Celebrate if marking as complete
     if (isCompleted) {
+      console.log("Celebrating subtask completion!");
       celebrateSubtask();
     }
   } catch (error) {
@@ -165,6 +177,7 @@ const handleSubtaskToggle = async (
     const subtask = subtasks.value.find((st) => st.id === subtaskId);
     if (subtask) {
       subtask.completed = !isCompleted;
+      subtasks.value = [...subtasks.value];
     }
   }
 };
@@ -310,20 +323,20 @@ const handleGenerateSubtasks = async () => {
     <Accordion
       type="single"
       collapsible
-      class="bg-white/70 backdrop-blur-sm rounded-2xl border-l-4 border-l-calm-400 border border-calm-200/40 shadow-sm hover:shadow-md hover:border-l-calm-500 hover:border-calm-300/50 transition-all duration-200"
+      class="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-sm hover:shadow-md hover:border-gray-300/70 transition-all duration-200"
       @update:model-value="onAccordionChange"
     >
       <AccordionItem value="item-1" class="border-0">
-        <AccordionTrigger class="h-16 px-6 py-4 hover:no-underline group">
-          <div class="flex items-center gap-4 w-full">
+        <AccordionTrigger class="min-h-16 px-6 py-4 hover:no-underline group">
+          <div class="flex items-start gap-4 w-full">
             <Checkbox
               v-model="localCompleted"
               :disabled="updatingTask"
               @click.stop
-              class="data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-calm-500 data-[state=checked]:to-calm-600 data-[state=checked]:border-calm-500"
+              class="mt-0.5 shrink-0 data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-calm-500 data-[state=checked]:to-calm-600 data-[state=checked]:border-calm-500"
             />
             <span
-              class="text-base text-calm-800 font-normal group-hover:text-calm-700"
+              class="text-base text-calm-800 font-normal group-hover:text-calm-700 text-left break-words flex-1 min-w-0"
             >
               {{ props.task.title }}
             </span>
@@ -336,33 +349,39 @@ const handleGenerateSubtasks = async () => {
           >
             {{ props.task.description }}
           </p>
-          <div class="mb-6">
+
+          <!-- AI and Helper Tools -->
+          <div class="mb-6 flex flex-wrap gap-2">
             <Button
               size="sm"
               @click="handleGenerateSubtasks"
               :disabled="aiLoading"
-              class="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg h-9 px-4 shadow-sm hover:shadow-md transition-all"
+              class="gap-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg h-9 px-4 shadow-sm hover:shadow-md transition-all"
             >
-              <Spinner v-if="aiLoading" />
+              <Spinner v-if="aiLoading" class="h-4 w-4" />
               <WandSparkles v-else class="h-4 w-4" />
-              {{ aiLoading ? "Generating..." : "Break down task" }}
+              <span>{{ aiLoading ? "Thinking..." : "Break down" }}</span>
             </Button>
 
-            <!-- Error message -->
-            <div
-              v-if="aiGenerationError || aiError"
-              class="mt-3 p-4 bg-red-50 border border-red-200 rounded-xl"
+            <!-- Placeholder for future buttons -->
+            <!-- <Button size="sm" class="gap-2">Focus Mode</Button> -->
+            <!-- <Button size="sm" class="gap-2">Get Started</Button> -->
+          </div>
+
+          <!-- Error message -->
+          <div
+            v-if="aiGenerationError || aiError"
+            class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl"
+          >
+            <p class="text-sm text-red-700 font-medium">
+              {{ aiGenerationError || aiError }}
+            </p>
+            <button
+              @click="handleGenerateSubtasks"
+              class="mt-2 text-sm text-red-700 hover:text-red-800 underline underline-offset-2"
             >
-              <p class="text-sm text-red-700 font-medium">
-                {{ aiGenerationError || aiError }}
-              </p>
-              <button
-                @click="handleGenerateSubtasks"
-                class="mt-2 text-sm text-red-700 hover:text-red-800 underline underline-offset-2"
-              >
-                Try again
-              </button>
-            </div>
+              Try again
+            </button>
           </div>
 
           <!-- Subtasks section -->
@@ -380,101 +399,144 @@ const handleGenerateSubtasks = async () => {
               <div
                 v-for="subtask in subtasks"
                 :key="subtask.id"
-                class="flex items-center gap-3 p-3 hover:bg-calm-50/50 rounded-lg transition-colors duration-150"
+                class="group flex items-center gap-3 p-3 bg-white/40 hover:bg-calm-50 rounded-lg transition-all duration-150 border border-transparent hover:border-calm-200/40"
               >
                 <Checkbox
                   :id="`subtask-${subtask.id}`"
                   :checked="subtask.completed ?? false"
-                  @click="
+                  @click.stop="
                     () =>
                       handleSubtaskToggle(
                         subtask.id,
                         !(subtask.completed ?? false)
                       )
                   "
-                  class="data-[state=checked]:bg-calm-500 data-[state=checked]:border-calm-500"
+                  class="data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-calm-500 data-[state=checked]:to-calm-600 data-[state=checked]:border-calm-500"
                 />
 
                 <!-- Editing mode -->
-                <Input
+                <div
                   v-if="editingSubtaskId === subtask.id"
-                  :ref="(el) => editInputRefs[subtask.id] = el as HTMLInputElement"
-                  v-model="editingSubtaskTitle"
-                  class="flex-1 h-9 text-sm border-calm-200"
-                  @keyup.enter="handleEditSubtask(subtask.id)"
-                  @keyup.esc="cancelEditingSubtask"
-                  @blur="handleEditSubtask(subtask.id)"
-                />
+                  class="flex-1 flex items-center gap-2"
+                >
+                  <Input
+                    :ref="(el) => editInputRefs[subtask.id] = el as HTMLInputElement"
+                    v-model="editingSubtaskTitle"
+                    class="flex-1 h-9 text-sm border-calm-300 focus:border-calm-500"
+                    placeholder="Update subtask..."
+                    @keyup.enter="handleEditSubtask(subtask.id)"
+                    @keyup.esc="cancelEditingSubtask"
+                  />
+                  <button
+                    @click="handleEditSubtask(subtask.id)"
+                    class="p-1.5 text-calm-600 hover:text-calm-700 hover:bg-calm-100 rounded-md transition-colors"
+                    title="Save"
+                  >
+                    <Check :size="16" />
+                  </button>
+                  <button
+                    @click="cancelEditingSubtask"
+                    class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                    title="Cancel"
+                  >
+                    <X :size="16" />
+                  </button>
+                </div>
 
                 <!-- Display mode -->
                 <label
                   v-else
                   :for="`subtask-${subtask.id}`"
-                  class="flex-1 text-sm cursor-pointer text-calm-700 transition-colors"
+                  class="flex-1 text-sm cursor-pointer text-calm-800 transition-colors select-none"
                   :class="{ 'line-through text-calm-400': subtask.completed }"
                 >
                   {{ subtask.title }}
                 </label>
 
-                <!-- Action buttons -->
-                <div v-if="editingSubtaskId !== subtask.id" class="flex gap-1">
+                <!-- Action buttons - visible on hover (desktop) or always (mobile/touch) -->
+                <div
+                  v-if="editingSubtaskId !== subtask.id"
+                  class="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                >
                   <button
                     @click="startEditingSubtask(subtask)"
-                    class="text-xs text-calm-600 hover:text-calm-700 px-3 py-1.5 rounded-lg hover:bg-calm-50 transition-colors"
+                    class="p-2 text-calm-600 hover:text-calm-700 hover:bg-calm-100 rounded-md transition-all"
                     title="Edit subtask"
                   >
-                    Edit
+                    <Pencil :size="14" />
                   </button>
                   <button
                     @click="handleDeleteSubtask(subtask.id)"
-                    class="text-xs text-red-600 hover:text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                    class="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-all"
                     title="Delete subtask"
                   >
-                    Delete
+                    <Trash2 :size="14" />
                   </button>
                 </div>
               </div>
             </div>
 
-            <p v-else-if="!showAddInput" class="text-sm text-calm-500 pl-3">
+            <p
+              v-else-if="!showAddInput"
+              class="text-sm text-calm-500 pl-3 italic"
+            >
               No subtasks yet
             </p>
 
             <!-- Add subtask inline input -->
-            <div v-if="showAddInput" class="flex items-center gap-3 p-3">
+            <div
+              v-if="showAddInput"
+              class="flex items-center gap-2 p-3 bg-calm-50/50 rounded-lg border border-calm-200/50"
+            >
               <Input
                 ref="addInputRef"
                 v-model="newSubtaskTitle"
-                placeholder="Subtask title..."
-                class="flex-1 h-9 text-sm border-calm-200"
+                placeholder="What needs to be done?"
+                class="flex-1 h-9 text-sm border-calm-300 focus:border-calm-500 bg-white"
                 @keyup.enter="handleAddSubtask"
                 @keyup.esc="cancelAddingSubtask"
-                @blur="cancelAddingSubtask"
                 :disabled="isAddingSubtask"
               />
+              <button
+                @click="handleAddSubtask"
+                :disabled="isAddingSubtask || !newSubtaskTitle.trim()"
+                class="p-2 text-calm-600 hover:text-calm-700 hover:bg-calm-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Add subtask"
+              >
+                <Check :size="16" />
+              </button>
+              <button
+                @click="cancelAddingSubtask"
+                class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                title="Cancel"
+              >
+                <X :size="16" />
+              </button>
             </div>
 
             <!-- Add subtask button -->
             <button
               v-else
               @click="startAddingSubtask"
-              class="flex items-center gap-2.5 p-3 text-sm text-calm-600 hover:text-calm-700 hover:bg-calm-50 rounded-lg w-full transition-colors duration-150"
+              class="flex items-center justify-center gap-2 p-3 text-sm font-medium text-calm-600 hover:text-calm-700 bg-calm-50/30 hover:bg-calm-100/50 rounded-lg w-full transition-all duration-150 border border-dashed border-calm-300 hover:border-calm-400"
             >
-              <span class="text-xl font-light">+</span>
-              <span>Add subtask</span>
+              <Plus :size="18" />
+              <span>Add a subtask</span>
             </button>
           </div>
 
-          <div class="flex gap-2 mt-6 pt-4 border-t border-calm-100">
+          <!-- Task actions footer -->
+          <div class="flex gap-3 mt-8 pt-6 border-t border-calm-200/60">
             <Sheet>
-              <SheetTrigger>
+              <SheetTrigger as-child>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  class="text-calm-600 hover:text-calm-700 hover:bg-calm-50 rounded-lg"
+                  class="flex-1 gap-2 text-calm-700 border-calm-300 hover:bg-calm-50 hover:border-calm-400 rounded-lg h-10 font-medium"
                   :disabled="editingTask"
                 >
-                  Edit task
+                  <Pencil :size="16" />
+                  <span>Edit Task</span>
                 </Button>
               </SheetTrigger>
               <SheetContent>
@@ -488,13 +550,14 @@ const handleGenerateSubtasks = async () => {
             </Sheet>
 
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              class="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
+              class="flex-1 gap-2 text-red-700 border-red-300 hover:bg-red-50 hover:border-red-400 rounded-lg h-10 font-medium"
               :disabled="deletingTask"
               @click.stop="handleDeleteTask"
             >
-              Delete task
+              <Trash2 :size="16" />
+              <span>Delete Task</span>
             </Button>
           </div>
         </AccordionContent>
