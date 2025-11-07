@@ -9,8 +9,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { WandSparkles, Pencil, Trash2, Plus, Check, X } from "lucide-vue-next";
+import {
+  WandSparkles,
+  Pencil,
+  Trash2,
+  Plus,
+  Check,
+  X,
+  ArrowLeft,
+} from "lucide-vue-next";
 import type { Database } from "~/types/database.types";
+import { toast } from "vue-sonner";
 
 import {
   Sheet,
@@ -24,14 +33,17 @@ import {
 type Task = Database["public"]["Tables"]["tasks"]["Row"];
 type Subtask = Database["public"]["Tables"]["subtasks"]["Row"];
 
-const props = defineProps<{ task: Task }>();
+const props = defineProps<{
+  task: Task;
+  showRemoveFromToday?: boolean;
+}>();
 const emit = defineEmits<{
   "update:completed": [completed: boolean];
   "task-completed": [taskTitle: string];
   delete: [id: number];
 }>();
 
-const { updateTask, deleteTask } = useTasks();
+const { updateTask, deleteTask, removeFromToday } = useTasks();
 const { celebrateTask, celebrateSubtask } = useCelebration();
 
 const {
@@ -124,6 +136,24 @@ const handleDeleteTask = async () => {
     deleteError.value = "Failed to delete task";
   } finally {
     deletingTask.value = false;
+  }
+};
+
+const removingFromToday = ref(false);
+
+const handleRemoveFromToday = async () => {
+  removingFromToday.value = true;
+  try {
+    await removeFromToday(props.task.id);
+    console.log("Task removed successfully");
+    toast.success("Task moved to All Tasks");
+    // Optionally emit an event if the parent component needs to know
+    emit("delete", props.task.id);
+  } catch (error) {
+    console.error("Failed to remove task from today:", error);
+    toast.error("Failed to remove task from today");
+  } finally {
+    removingFromToday.value = false;
   }
 };
 
@@ -536,7 +566,7 @@ const handleGenerateSubtasks = async () => {
                   :disabled="editingTask"
                 >
                   <Pencil :size="16" />
-                  <span>Edit Task</span>
+                  <span>Edit</span>
                 </Button>
               </SheetTrigger>
               <SheetContent>
@@ -557,7 +587,19 @@ const handleGenerateSubtasks = async () => {
               @click.stop="handleDeleteTask"
             >
               <Trash2 :size="16" />
-              <span>Delete Task</span>
+              <span>Delete</span>
+            </Button>
+            <Button
+              v-if="showRemoveFromToday"
+              variant="outline"
+              size="sm"
+              class="flex-1 gap-2 text-calm-700 border-calm-300 hover:bg-calm-50 hover:border-calm-400 rounded-lg h-10 font-medium"
+              :disabled="removingFromToday"
+              @click.stop="handleRemoveFromToday"
+              title="Remove from today"
+            >
+              <ArrowLeft :size="16" />
+              <span>Move</span>
             </Button>
           </div>
         </AccordionContent>
