@@ -90,19 +90,21 @@ const feedbackMessage = computed(() => {
 <template>
   <Card
     :class="[
-      'm-4',
+      'mx-6 my-6 border-0 shadow-md',
       feedbackMessage.type === 'celebration' &&
-        '!bg-gradient-to-r from-green-50 to-emerald-50 border-green-200',
+        '!bg-gradient-to-br from-emerald-100 via-teal-50 to-cyan-100 border border-emerald-200/50',
       feedbackMessage.type === 'support' &&
-        '!bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200',
+        '!bg-gradient-to-br from-calm-100 via-calm-50 to-blue-50 border border-calm-200/50',
       feedbackMessage.type === 'neutral' &&
-        '!bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200',
+        '!bg-gradient-to-br from-purple-50 via-pink-50 to-calm-50 border border-purple-100/50',
     ]"
   >
-    <CardContent class="pt-6">
-      <p class="text-sm flex items-start gap-3">
-        <span class="text-2xl">{{ feedbackMessage.emoji }}</span>
-        <span class="flex-1 pt-1">{{ feedbackMessage.message }}</span>
+    <CardContent class="pt-8 pb-8 px-6">
+      <p class="text-base flex items-start gap-4">
+        <span class="text-3xl">{{ feedbackMessage.emoji }}</span>
+        <span class="flex-1 pt-1.5 text-calm-900 leading-relaxed font-medium">{{
+          feedbackMessage.message
+        }}</span>
       </p>
     </CardContent>
   </Card>

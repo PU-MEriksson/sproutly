@@ -68,7 +68,6 @@ const localCompleted = ref(props.task.completed ?? false);
 
 let currentDate = new Date().toJSON().slice(0, 10);
 
-
 // Sync local state with prop
 watch(
   () => props.task.completed,
@@ -82,7 +81,10 @@ watch(localCompleted, async (checked) => {
   updatingTask.value = true;
   updateError.value = null;
   try {
-    await updateTask(props.task.id, { completed: checked, completed_date: currentDate});
+    await updateTask(props.task.id, {
+      completed: checked,
+      completed_date: currentDate,
+    });
     emit("update:completed", checked);
 
     // Emit task-completed event when a task is marked as completed
@@ -305,33 +307,41 @@ const handleGenerateSubtasks = async () => {
 
 <template>
   <ClientOnly>
-<Accordion 
-type="single" 
-collapsible 
-class="bg-white rounded-xl" 
-@update:model-value="onAccordionChange" 
-> 
-  <AccordionItem value="item-1"> 
-    <AccordionTrigger class="h-14 p-4"> 
-      <Checkbox 
-        v-model="localCompleted" 
-        :disabled="updatingTask" 
-        @click.stop
-      /> 
-      {{ props.task.title }} 
-    </AccordionTrigger>
-        <AccordionContent class="px-4 pb-4">
+    <Accordion
+      type="single"
+      collapsible
+      class="bg-white/70 backdrop-blur-sm rounded-2xl border-l-4 border-l-calm-400 border border-calm-200/40 shadow-sm hover:shadow-md hover:border-l-calm-500 hover:border-calm-300/50 transition-all duration-200"
+      @update:model-value="onAccordionChange"
+    >
+      <AccordionItem value="item-1" class="border-0">
+        <AccordionTrigger class="h-16 px-6 py-4 hover:no-underline group">
+          <div class="flex items-center gap-4 w-full">
+            <Checkbox
+              v-model="localCompleted"
+              :disabled="updatingTask"
+              @click.stop
+              class="data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-calm-500 data-[state=checked]:to-calm-600 data-[state=checked]:border-calm-500"
+            />
+            <span
+              class="text-base text-calm-800 font-normal group-hover:text-calm-700"
+            >
+              {{ props.task.title }}
+            </span>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent class="px-6 pb-6 pt-2">
           <p
             v-if="props.task.description"
-            class="text-sm text-gray-600 whitespace-pre-line mb-4"
+            class="text-sm text-calm-600 whitespace-pre-line mb-6 leading-relaxed"
           >
             {{ props.task.description }}
           </p>
-          <div class="mb-4">
+          <div class="mb-6">
             <Button
               size="sm"
               @click="handleGenerateSubtasks"
               :disabled="aiLoading"
+              class="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg h-9 px-4 shadow-sm hover:shadow-md transition-all"
             >
               <Spinner v-if="aiLoading" />
               <WandSparkles v-else class="h-4 w-4" />
@@ -341,14 +351,14 @@ class="bg-white rounded-xl"
             <!-- Error message -->
             <div
               v-if="aiGenerationError || aiError"
-              class="mt-2 p-3 bg-red-50 border border-red-200 rounded-md"
+              class="mt-3 p-4 bg-red-50 border border-red-200 rounded-xl"
             >
-              <p class="text-sm text-red-600 font-medium">
+              <p class="text-sm text-red-700 font-medium">
                 {{ aiGenerationError || aiError }}
               </p>
               <button
                 @click="handleGenerateSubtasks"
-                class="mt-1 text-xs text-red-700 hover:text-red-800 underline"
+                class="mt-2 text-sm text-red-700 hover:text-red-800 underline underline-offset-2"
               >
                 Try again
               </button>
@@ -356,13 +366,13 @@ class="bg-white rounded-xl"
           </div>
 
           <!-- Subtasks section -->
-          <div class="space-y-2">
-            <h4 class="text-sm font-semibold text-gray-00">Subtasks</h4>
+          <div class="space-y-3">
+            <h4 class="text-sm font-semibold text-calm-700">Subtasks</h4>
 
-            <p v-if="loadingSubtasks" class="text-sm text-gray-500">
+            <p v-if="loadingSubtasks" class="text-sm text-calm-500">
               Loading subtasks...
             </p>
-            <p v-else-if="subtasksError" class="text-sm text-red-500">
+            <p v-else-if="subtasksError" class="text-sm text-red-600">
               {{ subtasksError }}
             </p>
 
@@ -370,7 +380,7 @@ class="bg-white rounded-xl"
               <div
                 v-for="subtask in subtasks"
                 :key="subtask.id"
-                class="flex items-center gap-2 p-2 hover:bg-gray-50 rounded"
+                class="flex items-center gap-3 p-3 hover:bg-calm-50/50 rounded-lg transition-colors duration-150"
               >
                 <Checkbox
                   :id="`subtask-${subtask.id}`"
@@ -382,6 +392,7 @@ class="bg-white rounded-xl"
                         !(subtask.completed ?? false)
                       )
                   "
+                  class="data-[state=checked]:bg-calm-500 data-[state=checked]:border-calm-500"
                 />
 
                 <!-- Editing mode -->
@@ -389,7 +400,7 @@ class="bg-white rounded-xl"
                   v-if="editingSubtaskId === subtask.id"
                   :ref="(el) => editInputRefs[subtask.id] = el as HTMLInputElement"
                   v-model="editingSubtaskTitle"
-                  class="flex-1 h-8 text-sm"
+                  class="flex-1 h-9 text-sm border-calm-200"
                   @keyup.enter="handleEditSubtask(subtask.id)"
                   @keyup.esc="cancelEditingSubtask"
                   @blur="handleEditSubtask(subtask.id)"
@@ -399,8 +410,8 @@ class="bg-white rounded-xl"
                 <label
                   v-else
                   :for="`subtask-${subtask.id}`"
-                  class="flex-1 text-sm cursor-pointer"
-                  :class="{ 'line-through text-gray-500': subtask.completed }"
+                  class="flex-1 text-sm cursor-pointer text-calm-700 transition-colors"
+                  :class="{ 'line-through text-calm-400': subtask.completed }"
                 >
                   {{ subtask.title }}
                 </label>
@@ -409,14 +420,14 @@ class="bg-white rounded-xl"
                 <div v-if="editingSubtaskId !== subtask.id" class="flex gap-1">
                   <button
                     @click="startEditingSubtask(subtask)"
-                    class="text-xs text-blue-500 hover:text-blue-700 px-2 py-1"
+                    class="text-xs text-calm-600 hover:text-calm-700 px-3 py-1.5 rounded-lg hover:bg-calm-50 transition-colors"
                     title="Edit subtask"
                   >
                     Edit
                   </button>
                   <button
                     @click="handleDeleteSubtask(subtask.id)"
-                    class="text-xs text-red-500 hover:text-red-700 px-2 py-1"
+                    class="text-xs text-red-600 hover:text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
                     title="Delete subtask"
                   >
                     Delete
@@ -425,17 +436,17 @@ class="bg-white rounded-xl"
               </div>
             </div>
 
-            <p v-else-if="!showAddInput" class="text-sm text-gray-500">
-              No subtasks
+            <p v-else-if="!showAddInput" class="text-sm text-calm-500 pl-3">
+              No subtasks yet
             </p>
 
             <!-- Add subtask inline input -->
-            <div v-if="showAddInput" class="flex items-center gap-2 p-2">
+            <div v-if="showAddInput" class="flex items-center gap-3 p-3">
               <Input
                 ref="addInputRef"
                 v-model="newSubtaskTitle"
                 placeholder="Subtask title..."
-                class="flex-1 h-8 text-sm"
+                class="flex-1 h-9 text-sm border-calm-200"
                 @keyup.enter="handleAddSubtask"
                 @keyup.esc="cancelAddingSubtask"
                 @blur="cancelAddingSubtask"
@@ -447,42 +458,45 @@ class="bg-white rounded-xl"
             <button
               v-else
               @click="startAddingSubtask"
-              class="flex items-center gap-2 p-2 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded w-full"
+              class="flex items-center gap-2.5 p-3 text-sm text-calm-600 hover:text-calm-700 hover:bg-calm-50 rounded-lg w-full transition-colors duration-150"
             >
-              <span class="text-lg">+</span>
+              <span class="text-xl font-light">+</span>
               <span>Add subtask</span>
             </button>
           </div>
-                    <Sheet>
-            <SheetTrigger>
-              <Button
-                variant="ghost"
-                size="sm"
-                class="text-blue-500 hover:text-blue-700"
-                :disabled="editingTask"
-              >
-                Edit
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Do you want to edit this task?</SheetTitle>
-                <SheetDescription>
-                  <EditTask :task="props.task" @updated="handleTaskUpdated" />
-                </SheetDescription>
-              </SheetHeader>
-            </SheetContent>
-          </Sheet>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            class="text-red-500 hover:text-red-700"
-            :disabled="deletingTask"
-            @click.stop="handleDeleteTask"
-          >
-            Delete
-          </Button>
+          <div class="flex gap-2 mt-6 pt-4 border-t border-calm-100">
+            <Sheet>
+              <SheetTrigger>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  class="text-calm-600 hover:text-calm-700 hover:bg-calm-50 rounded-lg"
+                  :disabled="editingTask"
+                >
+                  Edit task
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Edit your task</SheetTitle>
+                  <SheetDescription>
+                    <EditTask :task="props.task" @updated="handleTaskUpdated" />
+                  </SheetDescription>
+                </SheetHeader>
+              </SheetContent>
+            </Sheet>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              class="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
+              :disabled="deletingTask"
+              @click.stop="handleDeleteTask"
+            >
+              Delete task
+            </Button>
+          </div>
         </AccordionContent>
       </AccordionItem>
     </Accordion>

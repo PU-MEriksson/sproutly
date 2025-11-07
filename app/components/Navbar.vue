@@ -3,15 +3,17 @@ import { ListTodo, CalendarCheck, Settings } from "lucide-vue-next";
 </script>
 
 <template>
-  <nav class="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-center h-16">
-        <div class="flex space-x-8 items-center">
+  <nav
+    class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-calm-100 z-50"
+  >
+    <div class="max-w-5xl mx-auto px-6 sm:px-8 lg:px-10">
+      <div class="flex justify-center h-20">
+        <div class="flex space-x-2 items-center">
           <!-- Navigation Links -->
           <NuxtLink
             to="/all-tasks"
-            class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 whitespace-nowrap"
-            active-class="text-blue-600 bg-blue-50"
+            class="text-calm-700 hover:text-calm-800 px-6 py-3 rounded-xl text-sm font-medium flex items-center gap-2.5 whitespace-nowrap transition-all duration-200 hover:bg-calm-50/70"
+            active-class="text-white bg-gradient-to-r from-calm-500 to-calm-600 shadow-sm"
           >
             <ListTodo :size="20" />
             <span>All Tasks</span>
@@ -19,8 +21,8 @@ import { ListTodo, CalendarCheck, Settings } from "lucide-vue-next";
 
           <NuxtLink
             to="/today"
-            class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 whitespace-nowrap"
-            active-class="text-blue-600 bg-blue-50"
+            class="text-calm-700 hover:text-calm-800 px-6 py-3 rounded-xl text-sm font-medium flex items-center gap-2.5 whitespace-nowrap transition-all duration-200 hover:bg-calm-50/70"
+            active-class="text-white bg-gradient-to-r from-calm-500 to-calm-600 shadow-sm"
           >
             <CalendarCheck :size="20" />
             <span>Today</span>
@@ -28,8 +30,8 @@ import { ListTodo, CalendarCheck, Settings } from "lucide-vue-next";
 
           <NuxtLink
             to="/settings"
-            class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 whitespace-nowrap"
-            active-class="text-blue-600 bg-blue-50"
+            class="text-calm-700 hover:text-calm-800 px-6 py-3 rounded-xl text-sm font-medium flex items-center gap-2.5 whitespace-nowrap transition-all duration-200 hover:bg-calm-50/70"
+            active-class="text-white bg-gradient-to-r from-calm-500 to-calm-600 shadow-sm"
           >
             <Settings :size="20" />
             <span>Settings</span>
