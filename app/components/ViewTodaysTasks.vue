@@ -40,6 +40,7 @@ const handleTaskCompleted = (taskTitle: string) => {
               v-for="t in todaysUncompleted"
               :key="t.id"
               :task="t"
+              :showRemoveFromToday="true"
               @task-completed="handleTaskCompleted"
             />
           </div>
@@ -52,6 +53,7 @@ const handleTaskCompleted = (taskTitle: string) => {
               v-for="t in todaysCompleted"
               :key="t.id"
               :task="t"
+              :showRemoveFromToday="true"
               @task-completed="handleTaskCompleted"
             />
           </div>
