@@ -54,28 +54,30 @@ const todaysTotalTasks = computed(
 </script>
 
 <template>
-  <div class="bg-neutral-100 min-h-screen pb-20 pt-16">
+  <div class="flex flex-col min-h-screen bg-white">
     <TopNavbar />
-    <FeedbackArea
-      :total-tasks="todaysTotalTasks"
-      :completed-tasks-today="completedTasksToday.length"
-      :last-completed-task="lastCompletedTask"
-      :time-of-day="timeOfDay"
-    />
-    <QuickAddTask :default-date="todaysDate" @task-added="handleTaskAdded" />
+    <div class="flex-1 pt-20 pb-20">
+      <FeedbackArea
+        :total-tasks="todaysTotalTasks"
+        :completed-tasks-today="completedTasksToday.length"
+        :last-completed-task="lastCompletedTask"
+        :time-of-day="timeOfDay"
+      />
+      <QuickAddTask :default-date="todaysDate" @task-added="handleTaskAdded" />
 
-    <ViewTodaysTasks
-      @task-completed="handleTaskCompleted"
-      :todays-uncompleted="todaysUncompletedTasks"
-      :loading-todays-uncompleted="loadingTodaysUncompletedTasks"
-      :error-todays-uncompleted="errorTodaysUncompletedTasks?.message || null"
-      :refresh-todays-uncompleted="refreshTodaysUncompletedTasks"
-      :todays-completed="todaysCompletedTasks"
-      :loading-todays-completed="loadingTodaysCompletedTasks"
-      :refresh-todays-completed="refreshTodaysCompletedTasks"
-      :error-todays-completed="errorTodaysCompletedTasks?.message || null"
-      :todays-total="todaysTotalTasks"
-    />
+      <ViewTodaysTasks
+        @task-completed="handleTaskCompleted"
+        :todays-uncompleted="todaysUncompletedTasks"
+        :loading-todays-uncompleted="loadingTodaysUncompletedTasks"
+        :error-todays-uncompleted="errorTodaysUncompletedTasks?.message || null"
+        :refresh-todays-uncompleted="refreshTodaysUncompletedTasks"
+        :todays-completed="todaysCompletedTasks"
+        :loading-todays-completed="loadingTodaysCompletedTasks"
+        :refresh-todays-completed="refreshTodaysCompletedTasks"
+        :error-todays-completed="errorTodaysCompletedTasks?.message || null"
+        :todays-total="todaysTotalTasks"
+      />
+    </div>
+    <Navbar />
   </div>
-  <Navbar />
 </template>
