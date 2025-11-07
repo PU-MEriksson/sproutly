@@ -1,15 +1,30 @@
 import type { Database } from "~/types/database.types";
 import { useSubtasks } from "~/composables/useSubtask";
+import { useSanitize } from "./useSanitize";
+import {z} from "zod"
 
 type TaskInsert = Database["public"]["Tables"]["tasks"]["Insert"];
 type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
 type SubtaskInsert = Database["public"]["Tables"]["subtasks"]["Insert"];
 
 export const useTasks = () => {
+  const taskInsertSchema = z.object({
+  title: z.string().min(1).max(255),
+  description: z.string().max(2000).nullable().optional(),
+  startdate: z.string().nullable().optional(),
+  enddate: z.string().nullable().optional(),
+  deadline: z.string().nullable().optional(),
+  subtasks: z
+    .array(z.object({ title: z.string().min(1).max(255) }))
+    .optional()
+    .default([]),
+})
+  const {sanitizeTask} = useSanitize();
   const supabase = useSupabaseClient<Database>();
   const { profile, fetchProfile } = useUserProfile();
   const { addSubtasks } = useSubtasks();
   const tasks = ref<TaskRow[]>([]);
+
 
   const ensureUserProfile = async () => {
     if (!profile.value) await fetchProfile();
@@ -180,12 +195,17 @@ const {
     const userProfile = await ensureUserProfile();
     if (!userProfile) throw new Error("No user profile found");
 
+    const clean = sanitizeTask({ title, description, subtasks })
+    const parsed = taskInsertSchema.safeParse(clean)
+    if (!parsed.success) throw new Error("Invalid task data")
+
+
     const newTask: TaskInsert = {
-      title,
-      description,
+      title: parsed.data.title,
+      description: parsed.data.description,
       startdate,
       enddate,
-      deadline,
+      deadline, 
       profile_id: userProfile.id,
     };
 
@@ -199,8 +219,8 @@ const {
       if (taskError) throw taskError;
       if (!taskData) throw new Error("Task insertion returned no data");
 
-      if (subtasks && subtasks.length > 0) {
-        await addSubtasks(taskData.id, subtasks);
+      if (parsed.data.subtasks && parsed.data.subtasks.length > 0) {
+        await addSubtasks(taskData.id, parsed.data.subtasks);
       }
 
       tasks.value.unshift(taskData);
@@ -217,6 +237,8 @@ const {
     const userProfile = await ensureUserProfile();
     if (!userProfile) throw new Error("No user profile found");
 
+    const clean = sanitizeTask(updates)
+
     try {
       const { data: existing, error: fetchErr } = await supabase
         .from("tasks")
@@ -230,9 +252,13 @@ const {
         throw new Error("Not allowed to update this task");
       }
 
+      const clean = sanitizeTask(updates)
+      const parsed = taskInsertSchema.partial().safeParse(clean)
+      if (!parsed.success) throw new Error("Invalid task data")
+
       const { data: updated, error: updateErr } = await supabase
         .from("tasks")
-        .update(updates)
+        .update(parsed.data)
         .eq("id", id)
         .select()
         .single();
