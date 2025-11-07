@@ -14,6 +14,8 @@ export const useTasks = () => {
   startdate: z.string().nullable().optional(),
   enddate: z.string().nullable().optional(),
   deadline: z.string().nullable().optional(),
+  completed: z.boolean().optional(),
+  completed_date: z.string().nullable().optional(),
   subtasks: z
     .array(z.object({ title: z.string().min(1).max(255) }))
     .optional()
@@ -236,8 +238,6 @@ const {
   const updateTask = async (id: number, updates: Partial<TaskInsert>) => {
     const userProfile = await ensureUserProfile();
     if (!userProfile) throw new Error("No user profile found");
-
-    const clean = sanitizeTask(updates)
 
     try {
       const { data: existing, error: fetchErr } = await supabase
