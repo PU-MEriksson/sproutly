@@ -9,8 +9,19 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { WandSparkles, Pencil, Trash2, Plus, Check, X } from "lucide-vue-next";
+import { Badge } from "@/components/ui/badge";
+import {
+  WandSparkles,
+  Pencil,
+  Trash2,
+  Plus,
+  Check,
+  X,
+  ArrowLeft,
+  ArrowRight,
+} from "lucide-vue-next";
 import type { Database } from "~/types/database.types";
+import { toast } from "vue-sonner";
 
 import {
   Sheet,
@@ -21,17 +32,27 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 type Task = Database["public"]["Tables"]["tasks"]["Row"];
 type Subtask = Database["public"]["Tables"]["subtasks"]["Row"];
 
-const props = defineProps<{ task: Task }>();
+const props = defineProps<{
+  task: Task;
+  showRemoveFromToday?: boolean;
+}>();
 const emit = defineEmits<{
   "update:completed": [completed: boolean];
   "task-completed": [taskTitle: string];
   delete: [id: number];
 }>();
 
-const { updateTask, deleteTask } = useTasks();
+const { updateTask, deleteTask, removeFromToday, addToToday } = useTasks();
 const { celebrateTask, celebrateSubtask } = useCelebration();
 
 const {
@@ -124,6 +145,43 @@ const handleDeleteTask = async () => {
     deleteError.value = "Failed to delete task";
   } finally {
     deletingTask.value = false;
+  }
+};
+
+const togglingToday = ref(false);
+
+// Check if task is on Today's list
+const isOnToday = computed(() => {
+  if (!props.task.startdate) return false;
+  const taskStartDate = new Date(props.task.startdate).toJSON().slice(0, 10);
+  return taskStartDate <= currentDate;
+});
+
+const handleToggleToday = async () => {
+  togglingToday.value = true;
+  try {
+    if (isOnToday.value) {
+      // Remove from Today
+      await removeFromToday(props.task.id);
+      console.log("Task removed from today");
+      toast.success("Task removed from Today");
+      // Only emit delete if we're on the Today page
+      if (props.showRemoveFromToday) {
+        emit("delete", props.task.id);
+      }
+    } else {
+      // Add to Today
+      await addToToday(props.task.id);
+      console.log("Task added to today");
+      toast.success("Task added to Today");
+    }
+  } catch (error) {
+    console.error("Failed to toggle task today status:", error);
+    toast.error(
+      isOnToday.value ? "Failed to remove from today" : "Failed to add to today"
+    );
+  } finally {
+    togglingToday.value = false;
   }
 };
 
@@ -335,11 +393,23 @@ const handleGenerateSubtasks = async () => {
               @click.stop
               class="mt-0.5 shrink-0 data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-calm-500 data-[state=checked]:to-calm-600 data-[state=checked]:border-calm-500"
             />
-            <span
-              class="text-base text-calm-800 font-normal group-hover:text-calm-700 text-left break-words flex-1 min-w-0"
-            >
-              {{ props.task.title }}
-            </span>
+            <div class="flex-1 min-w-0 flex items-center justify-between gap-2">
+              <span
+                class="text-base text-calm-800 font-normal group-hover:text-calm-700 text-left break-words"
+              >
+                {{ props.task.title }}
+              </span>
+              <!-- Only show badge on All Tasks page, not on Today page where it's redundant -->
+              <Badge
+                v-if="isOnToday && !showRemoveFromToday"
+                variant="secondary"
+                class="bg-calm-100 text-calm-700 border-calm-300 hover:bg-calm-100"
+                title="On Today's list"
+              >
+                <Check :size="12" />
+                <span>Today</span>
+              </Badge>
+            </div>
           </div>
         </AccordionTrigger>
         <AccordionContent class="px-6 pb-6 pt-2">
@@ -536,7 +606,7 @@ const handleGenerateSubtasks = async () => {
                   :disabled="editingTask"
                 >
                   <Pencil :size="16" />
-                  <span>Edit Task</span>
+                  <span>Edit</span>
                 </Button>
               </SheetTrigger>
               <SheetContent>
@@ -557,7 +627,26 @@ const handleGenerateSubtasks = async () => {
               @click.stop="handleDeleteTask"
             >
               <Trash2 :size="16" />
-              <span>Delete Task</span>
+              <span>Delete</span>
+            </Button>
+
+            <!-- Toggle Today button - shows current state on both pages -->
+            <Button
+              variant="outline"
+              size="sm"
+              :class="[
+                'flex-1 gap-2 rounded-lg h-10 font-medium transition-all',
+                isOnToday
+                  ? 'text-calm-700 bg-calm-100 border-calm-400 hover:bg-calm-50 hover:border-calm-300'
+                  : 'text-calm-700 border-calm-300 hover:bg-calm-50 hover:border-calm-400',
+              ]"
+              :disabled="togglingToday"
+              @click.stop="handleToggleToday"
+              :title="isOnToday ? 'Remove from Today' : 'Do Today'"
+            >
+              <Check v-if="isOnToday" :size="16" class="text-calm-600" />
+              <ArrowRight v-else :size="16" />
+              <span>{{ isOnToday ? "Do Today" : "Do Today" }}</span>
             </Button>
           </div>
         </AccordionContent>
