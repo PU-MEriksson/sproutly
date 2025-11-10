@@ -17,6 +17,7 @@ import {
   Check,
   X,
   ArrowLeft,
+  ArrowRight,
 } from "lucide-vue-next";
 import type { Database } from "~/types/database.types";
 import { toast } from "vue-sonner";
@@ -43,7 +44,7 @@ const emit = defineEmits<{
   delete: [id: number];
 }>();
 
-const { updateTask, deleteTask, removeFromToday } = useTasks();
+const { updateTask, deleteTask, removeFromToday, addToToday } = useTasks();
 const { celebrateTask, celebrateSubtask } = useCelebration();
 
 const {
@@ -140,20 +141,37 @@ const handleDeleteTask = async () => {
 };
 
 const removingFromToday = ref(false);
+const addingToToday = ref(false);
 
 const handleRemoveFromToday = async () => {
   removingFromToday.value = true;
   try {
     await removeFromToday(props.task.id);
-    console.log("Task removed successfully");
-    toast.success("Task moved to All Tasks");
-    // Optionally emit an event if the parent component needs to know
+    console.log("Task removed from today");
+    toast.success("Task removed from Today");
+    // Emit delete to remove from Today view
     emit("delete", props.task.id);
   } catch (error) {
     console.error("Failed to remove task from today:", error);
     toast.error("Failed to remove task from today");
   } finally {
     removingFromToday.value = false;
+  }
+};
+
+const handleAddToToday = async () => {
+  addingToToday.value = true;
+  try {
+    await addToToday(props.task.id);
+    console.log("Task added to today");
+    toast.success("Task added to Today");
+    // Don't emit delete - the task should remain visible in All Tasks
+    // The refresh in addToToday will update both lists
+  } catch (error) {
+    console.error("Failed to add task to today:", error);
+    toast.error("Failed to add task to today");
+  } finally {
+    addingToToday.value = false;
   }
 };
 
@@ -589,6 +607,7 @@ const handleGenerateSubtasks = async () => {
               <Trash2 :size="16" />
               <span>Delete</span>
             </Button>
+
             <Button
               v-if="showRemoveFromToday"
               variant="outline"
@@ -599,7 +618,20 @@ const handleGenerateSubtasks = async () => {
               title="Remove from today"
             >
               <ArrowLeft :size="16" />
-              <span>Move</span>
+              <span>Remove</span>
+            </Button>
+
+            <Button
+              v-else
+              variant="outline"
+              size="sm"
+              class="flex-1 gap-2 text-calm-700 border-calm-300 hover:bg-calm-50 hover:border-calm-400 rounded-lg h-10 font-medium"
+              :disabled="addingToToday"
+              @click.stop="handleAddToToday"
+              title="Add to today"
+            >
+              <ArrowRight :size="16" />
+              <span>Add</span>
             </Button>
           </div>
         </AccordionContent>
