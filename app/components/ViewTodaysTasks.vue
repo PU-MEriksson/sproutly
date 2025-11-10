@@ -58,7 +58,7 @@ const handleTaskCompleted = (taskTitle: string) => {
         </div>
 
         <p v-if="todaysTotal === 0" class="text-calm-500 text-center py-12">
-          No tasks for today
+          <NoTasks />
         </p>
       </div>
     </section>
