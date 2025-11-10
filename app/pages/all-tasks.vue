@@ -20,8 +20,12 @@ const handleTaskAdded = () => {
     <TopNavbar />
     <QuickAddTask @task-added="handleTaskAdded" />
 
+    <section v-if="allUncompletedTasks?.length === 0 && allCompletedTasks?.length === 0">
+      <NoTasks />
+    </section>
+
     <section class="space-y-6 px-6 py-4">
-      <div class="space-y-3">
+      <div v-if="allUncompletedTasks?.length > 0" class="space-y-3">
         <h2 class="text-lg font-semibold text-calm-700 px-2">To do</h2>
         <ViewTasks
           :tasks="allUncompletedTasks"
@@ -33,7 +37,7 @@ const handleTaskAdded = () => {
         />
       </div>
 
-      <div class="space-y-3">
+      <div v-if="allCompletedTasks?.length > 0" class="space-y-3">
         <h2 class="text-lg font-semibold text-calm-700 px-2">Completed</h2>
         <ViewTasks
           :tasks="allCompletedTasks"
