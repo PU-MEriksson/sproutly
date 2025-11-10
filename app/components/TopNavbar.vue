@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { User } from "lucide-vue-next";
+import { User, Sprout } from "lucide-vue-next";
 </script>
 
 <template>
@@ -8,18 +8,19 @@ import { User } from "lucide-vue-next";
   >
     <div class="max-w-5xl mx-auto px-6 sm:px-8 lg:px-10">
       <div class="flex justify-between items-center h-20">
-        <!-- Logo/Brand -->
+        <!-- Logo/Brand Icon -->
         <div class="flex items-center">
           <NuxtLink
             to="/"
-            class="text-2xl font-light tracking-wide bg-gradient-to-r from-calm-700 to-calm-600 bg-clip-text text-transparent hover:from-calm-600 hover:to-calm-500 transition-all duration-200"
+            class="text-calm-700 hover:text-calm-600 p-2 rounded-lg hover:bg-calm-50 transition-all duration-200"
+            aria-label="Home"
           >
-            SupportiveToDo
+            <Sprout :size="28" :stroke-width="2" />
           </NuxtLink>
         </div>
 
-        <!-- Profile Icon -->
-        <div class="flex items-center">
+        <!-- Profile Icon to add later -->
+        <!-- <div class="flex items-center">
           <NuxtLink
             to="/settings"
             class="text-calm-700 hover:text-calm-800 p-2.5 rounded-full hover:bg-calm-100/70 transition-all duration-200"
@@ -27,7 +28,7 @@ import { User } from "lucide-vue-next";
           >
             <User :size="22" />
           </NuxtLink>
-        </div>
+        </div> -->
       </div>
     </div>
   </nav>
