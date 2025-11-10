@@ -377,6 +377,48 @@ export const useTasks = () => {
     }
   };
 
+  const addToToday = async (id: number) => {
+    const userProfile = await ensureUserProfile();
+    if (!userProfile) throw new Error("No user profile found");
+
+    try {
+      const { data: existing, error: fetchErr } = await supabase
+        .from("tasks")
+        .select("profile_id")
+        .eq("id", id)
+        .single();
+
+      if (fetchErr) throw fetchErr;
+      if (!existing) throw new Error("Task not found");
+      if (existing.profile_id !== userProfile.id) {
+        throw new Error("Not allowed to update this task");
+      }
+
+      const { data: updated, error: updateErr } = await supabase
+        .from("tasks")
+        .update({ startdate: currentDate })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (updateErr) throw updateErr;
+      if (!updated) throw new Error("Update returned no data");
+
+      await Promise.allSettled([
+        refreshTodaysCompletedTasks(),
+        refreshTodaysUncompletedTasks(),
+        refreshAllCompletedTasks(),
+        refreshAllUncompletedTasks(),
+      ]);
+
+      console.debug("[useTasks] added task to today", updated);
+      return updated;
+    } catch (err) {
+      console.error("[useTasks] addToToday failed", err);
+      throw err;
+    }
+  };
+
   return {
     allUncompletedTasks: computed<TaskRow[]>(
       () => fetchedAllUncompletedTasks.value ?? []
@@ -406,5 +448,6 @@ export const useTasks = () => {
     updateTask,
     deleteTask,
     removeFromToday,
+    addToToday,
   };
 };
