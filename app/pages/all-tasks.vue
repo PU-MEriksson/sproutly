@@ -18,9 +18,19 @@ const handleTaskAdded = () => {
 <template>
   <div class="bg-white min-h-screen pb-20 pt-20">
     <TopNavbar />
+
+    <!-- Page heading -->
+    <div class="px-6 pt-6 pb-2">
+      <h1 class="text-2xl font-bold text-calm-800">All Tasks</h1>
+    </div>
+
     <QuickAddTask @task-added="handleTaskAdded" />
 
-    <section v-if="allUncompletedTasks?.length === 0 && allCompletedTasks?.length === 0">
+    <section
+      v-if="
+        allUncompletedTasks?.length === 0 && allCompletedTasks?.length === 0
+      "
+    >
       <NoTasks />
     </section>
 
