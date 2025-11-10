@@ -98,6 +98,15 @@ export const useTasks = () => {
     completed_date: currentDate,
   });
 
+  const refreshAll = async () => {
+  await Promise.allSettled([
+    refreshTodaysCompletedTasks(),
+    refreshTodaysUncompletedTasks(),
+    refreshAllCompletedTasks(),
+    refreshAllUncompletedTasks(),
+  ]);
+};
+
   /* const {
     data: fetchedAllUncompletedTasks,
     pending: loadingAllUncompletedTasks,
@@ -281,12 +290,7 @@ export const useTasks = () => {
         }
       } */
 
-      await Promise.allSettled([
-        refreshTodaysCompletedTasks(),
-        refreshTodaysUncompletedTasks(),
-        refreshAllCompletedTasks(),
-        refreshAllUncompletedTasks(),
-      ]);
+      await refreshAll();
 
       console.debug("[useTasks] updated task", updated);
       return updated;
@@ -328,6 +332,9 @@ export const useTasks = () => {
       }
 
       console.debug("[useTasks] deleted task", id);
+      
+      await refreshAll();
+
       return true;
     } catch (err) {
       console.error("[useTasks] deleteTask failed", err);
@@ -362,12 +369,7 @@ export const useTasks = () => {
       if (updateErr) throw updateErr;
       if (!updated) throw new Error("Update returned no data");
 
-      await Promise.allSettled([
-        refreshTodaysCompletedTasks(),
-        refreshTodaysUncompletedTasks(),
-        refreshAllCompletedTasks(),
-        refreshAllUncompletedTasks(),
-      ]);
+      await refreshAll();
 
       console.debug("[useTasks] removed task from today", updated);
       return updated;
@@ -404,12 +406,7 @@ export const useTasks = () => {
       if (updateErr) throw updateErr;
       if (!updated) throw new Error("Update returned no data");
 
-      await Promise.allSettled([
-        refreshTodaysCompletedTasks(),
-        refreshTodaysUncompletedTasks(),
-        refreshAllCompletedTasks(),
-        refreshAllUncompletedTasks(),
-      ]);
+      await refreshAll();
 
       console.debug("[useTasks] added task to today", updated);
       return updated;

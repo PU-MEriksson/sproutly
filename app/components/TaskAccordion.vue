@@ -32,13 +32,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-
 type Task = Database["public"]["Tables"]["tasks"]["Row"];
 type Subtask = Database["public"]["Tables"]["subtasks"]["Row"];
 
@@ -139,6 +132,7 @@ const handleDeleteTask = async () => {
   deleteError.value = null;
   try {
     await deleteTask(props.task.id);
+    toast.success("Task removed!");
     emit("delete", props.task.id);
   } catch (error) {
     console.error("Failed to delete task:", error);
