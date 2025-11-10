@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { Badge } from "@/components/ui/badge";
 import {
   WandSparkles,
   Pencil,
@@ -147,8 +148,6 @@ const handleDeleteTask = async () => {
   }
 };
 
-const removingFromToday = ref(false);
-const addingToToday = ref(false);
 const togglingToday = ref(false);
 
 // Check if task is on Today's list
@@ -183,38 +182,6 @@ const handleToggleToday = async () => {
     );
   } finally {
     togglingToday.value = false;
-  }
-};
-
-const handleRemoveFromToday = async () => {
-  removingFromToday.value = true;
-  try {
-    await removeFromToday(props.task.id);
-    console.log("Task removed from today");
-    toast.success("Task removed from Today");
-    // Emit delete to remove from Today view
-    emit("delete", props.task.id);
-  } catch (error) {
-    console.error("Failed to remove task from today:", error);
-    toast.error("Failed to remove task from today");
-  } finally {
-    removingFromToday.value = false;
-  }
-};
-
-const handleAddToToday = async () => {
-  addingToToday.value = true;
-  try {
-    await addToToday(props.task.id);
-    console.log("Task added to today");
-    toast.success("Task added to Today");
-    // Don't emit delete - the task should remain visible in All Tasks
-    // The refresh in addToToday will update both lists
-  } catch (error) {
-    console.error("Failed to add task to today:", error);
-    toast.error("Failed to add task to today");
-  } finally {
-    addingToToday.value = false;
   }
 };
 
@@ -426,11 +393,23 @@ const handleGenerateSubtasks = async () => {
               @click.stop
               class="mt-0.5 shrink-0 data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-calm-500 data-[state=checked]:to-calm-600 data-[state=checked]:border-calm-500"
             />
-            <span
-              class="text-base text-calm-800 font-normal group-hover:text-calm-700 text-left break-words flex-1 min-w-0"
-            >
-              {{ props.task.title }}
-            </span>
+            <div class="flex-1 min-w-0 flex items-center justify-between gap-2">
+              <span
+                class="text-base text-calm-800 font-normal group-hover:text-calm-700 text-left break-words"
+              >
+                {{ props.task.title }}
+              </span>
+              <!-- Only show badge on All Tasks page, not on Today page where it's redundant -->
+              <Badge
+                v-if="isOnToday && !showRemoveFromToday"
+                variant="secondary"
+                class="bg-calm-100 text-calm-700 border-calm-300 hover:bg-calm-100"
+                title="On Today's list"
+              >
+                <Check :size="12" />
+                <span>Today</span>
+              </Badge>
+            </div>
           </div>
         </AccordionTrigger>
         <AccordionContent class="px-6 pb-6 pt-2">
