@@ -1,11 +1,27 @@
 import type { Database } from "~/types/database.types";
 import { useSubtasks } from "~/composables/useSubtask";
+import { useSanitize } from "./useSanitize";
+import { z } from "zod";
 
 type TaskInsert = Database["public"]["Tables"]["tasks"]["Insert"];
 type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
 type SubtaskInsert = Database["public"]["Tables"]["subtasks"]["Insert"];
 
 export const useTasks = () => {
+  const taskInsertSchema = z.object({
+  title: z.string().min(1).max(255),
+  description: z.string().max(2000).nullable().optional(),
+  startdate: z.string().nullable().optional(),
+  enddate: z.string().nullable().optional(),
+  deadline: z.string().nullable().optional(),
+  completed: z.boolean().optional(),
+  completed_date: z.string().nullable().optional(),
+  subtasks: z
+    .array(z.object({ title: z.string().min(1).max(255) }))
+    .optional()
+    .default([]),
+})
+  const {sanitizeTask} = useSanitize();
   const supabase = useSupabaseClient<Database>();
   const { profile, fetchProfile } = useUserProfile();
   const { addSubtasks } = useSubtasks();
@@ -19,58 +35,77 @@ export const useTasks = () => {
   let currentDate = new Date().toJSON().slice(0, 10);
 
   type TaskFilter = {
-  completed?: boolean;
-  completed_date?: string;
-  startdate_lte?: string;
+    completed?: boolean;
+    completed_date?: string;
+    startdate_lte?: string;
+  };
+
+  function useTasksData(key: string, filters: TaskFilter) {
+    return useAsyncData<TaskRow[]>(
+      key,
+      async () => {
+        let query = supabase
+          .from("tasks")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (filters.completed !== undefined)
+          query = query.eq("completed", filters.completed);
+        if (filters.completed_date)
+          query = query.eq("completed_date", filters.completed_date);
+        if (filters.startdate_lte)
+          query = query.lte("startdate", filters.startdate_lte);
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return data ?? [];
+      },
+      { server: false, lazy: false }
+    );
+  }
+
+  const {
+    data: fetchedAllUncompletedTasks,
+    pending: loadingAllUncompletedTasks,
+    error: errorAllUncompletedTasks,
+    refresh: refreshAllUncompletedTasks,
+  } = useTasksData("user-tasks-all-uncompleted", { completed: false });
+
+  const {
+    data: fetchedAllCompletedTasks,
+    pending: loadingAllCompletedTasks,
+    error: errorAllCompletedTasks,
+    refresh: refreshAllCompletedTasks,
+  } = useTasksData("user-tasks-all-completed", { completed: true });
+
+  const {
+    data: fetchedTodaysUncompletedTasks,
+    pending: loadingTodaysUncompletedTasks,
+    error: errorTodaysUncompletedTasks,
+    refresh: refreshTodaysUncompletedTasks,
+  } = useTasksData("user-tasks-today-uncompleted", {
+    completed: false,
+    startdate_lte: currentDate,
+  });
+
+  const {
+    data: fetchedTodaysCompletedTasks,
+    pending: loadingTodaysCompletedTasks,
+    error: errorTodaysCompletedTasks,
+    refresh: refreshTodaysCompletedTasks,
+  } = useTasksData("user-tasks-today-completed", {
+    completed: true,
+    completed_date: currentDate,
+  });
+
+  const refreshAll = async () => {
+  await Promise.allSettled([
+    refreshTodaysCompletedTasks(),
+    refreshTodaysUncompletedTasks(),
+    refreshAllCompletedTasks(),
+    refreshAllUncompletedTasks(),
+  ]);
 };
-
-function useTasksData(key: string, filters: TaskFilter) {
-  return useAsyncData<TaskRow[]>(
-    key,
-    async () => {
-      let query = supabase.from("tasks").select("*").order("created_at", { ascending: false });
-
-      if (filters.completed !== undefined) query = query.eq("completed", filters.completed);
-      if (filters.completed_date) query = query.eq("completed_date", filters.completed_date);
-      if (filters.startdate_lte) query = query.lte("startdate", filters.startdate_lte);
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data ?? [];
-    },
-    { server: false, lazy: false }
-  );
-}
-
-const {
-  data: fetchedAllUncompletedTasks,
-  pending: loadingAllUncompletedTasks,
-  error: errorAllUncompletedTasks,
-  refresh: refreshAllUncompletedTasks,
-} = useTasksData("user-tasks-all-uncompleted", { completed: false });
-
-const {
-  data: fetchedAllCompletedTasks,
-  pending: loadingAllCompletedTasks,
-  error: errorAllCompletedTasks,
-  refresh: refreshAllCompletedTasks,
-} = useTasksData("user-tasks-all-completed", { completed: true });
-
-const {
-  data: fetchedTodaysUncompletedTasks,
-  pending: loadingTodaysUncompletedTasks,
-  error: errorTodaysUncompletedTasks,
-  refresh: refreshTodaysUncompletedTasks,
-} = useTasksData("user-tasks-today-uncompleted", { completed: false, startdate_lte: currentDate });
-
-const {
-  data: fetchedTodaysCompletedTasks,
-  pending: loadingTodaysCompletedTasks,
-  error: errorTodaysCompletedTasks,
-  refresh: refreshTodaysCompletedTasks,
-} = useTasksData("user-tasks-today-completed", { completed: true, completed_date: currentDate });
-
-
 
   /* const {
     data: fetchedAllUncompletedTasks,
@@ -180,9 +215,13 @@ const {
     const userProfile = await ensureUserProfile();
     if (!userProfile) throw new Error("No user profile found");
 
+    const clean = sanitizeTask({ title, description, subtasks });
+    const parsed = taskInsertSchema.safeParse(clean);
+    if (!parsed.success) throw new Error("Invalid task data");
+
     const newTask: TaskInsert = {
-      title,
-      description,
+      title: parsed.data.title,
+      description: parsed.data.description,
       startdate,
       enddate,
       deadline,
@@ -199,8 +238,8 @@ const {
       if (taskError) throw taskError;
       if (!taskData) throw new Error("Task insertion returned no data");
 
-      if (subtasks && subtasks.length > 0) {
-        await addSubtasks(taskData.id, subtasks);
+      if (parsed.data.subtasks && parsed.data.subtasks.length > 0) {
+        await addSubtasks(taskData.id, parsed.data.subtasks);
       }
 
       tasks.value.unshift(taskData);
@@ -230,16 +269,20 @@ const {
         throw new Error("Not allowed to update this task");
       }
 
+      const clean = sanitizeTask(updates);
+      const parsed = taskInsertSchema.partial().safeParse(clean);
+      if (!parsed.success) throw new Error("Invalid task data");
+
       const { data: updated, error: updateErr } = await supabase
         .from("tasks")
-        .update(updates)
+        .update(parsed.data)
         .eq("id", id)
         .select()
         .single();
 
       if (updateErr) throw updateErr;
       if (!updated) throw new Error("Update returned no data");
-/* 
+      /* 
       if (fetchedAllUncompletedTasks.value) {
         const idx = fetchedAllUncompletedTasks.value.findIndex((t) => t.id === id);
         if (idx !== -1) {
@@ -247,12 +290,7 @@ const {
         }
       } */
 
-    await Promise.allSettled([
-      refreshTodaysCompletedTasks(),
-      refreshTodaysUncompletedTasks(),
-      refreshAllCompletedTasks(),
-      refreshAllUncompletedTasks(),
-    ]);
+      await refreshAll();
 
       console.debug("[useTasks] updated task", updated);
       return updated;
@@ -287,11 +325,16 @@ const {
       if (delErr) throw delErr;
 
       if (fetchedAllUncompletedTasks.value) {
-        const idx = fetchedAllUncompletedTasks.value.findIndex((t) => t.id === id);
+        const idx = fetchedAllUncompletedTasks.value.findIndex(
+          (t) => t.id === id
+        );
         if (idx !== -1) fetchedAllUncompletedTasks.value.splice(idx, 1);
       }
 
       console.debug("[useTasks] deleted task", id);
+      
+      await refreshAll();
+
       return true;
     } catch (err) {
       console.error("[useTasks] deleteTask failed", err);
@@ -299,11 +342,93 @@ const {
     }
   };
 
+  const removeFromToday = async (id: number) => {
+    const userProfile = await ensureUserProfile();
+    if (!userProfile) throw new Error("No user profile found");
+
+    try {
+      const { data: existing, error: fetchErr } = await supabase
+        .from("tasks")
+        .select("profile_id")
+        .eq("id", id)
+        .single();
+
+      if (fetchErr) throw fetchErr;
+      if (!existing) throw new Error("Task not found");
+      if (existing.profile_id !== userProfile.id) {
+        throw new Error("Not allowed to update this task");
+      }
+
+      const { data: updated, error: updateErr } = await supabase
+        .from("tasks")
+        .update({ startdate: null })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (updateErr) throw updateErr;
+      if (!updated) throw new Error("Update returned no data");
+
+      await refreshAll();
+
+      console.debug("[useTasks] removed task from today", updated);
+      return updated;
+    } catch (err) {
+      console.error("[useTasks] removeFromToday failed", err);
+      throw err;
+    }
+  };
+
+  const addToToday = async (id: number) => {
+    const userProfile = await ensureUserProfile();
+    if (!userProfile) throw new Error("No user profile found");
+
+    try {
+      const { data: existing, error: fetchErr } = await supabase
+        .from("tasks")
+        .select("profile_id")
+        .eq("id", id)
+        .single();
+
+      if (fetchErr) throw fetchErr;
+      if (!existing) throw new Error("Task not found");
+      if (existing.profile_id !== userProfile.id) {
+        throw new Error("Not allowed to update this task");
+      }
+
+      const { data: updated, error: updateErr } = await supabase
+        .from("tasks")
+        .update({ startdate: currentDate })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (updateErr) throw updateErr;
+      if (!updated) throw new Error("Update returned no data");
+
+      await refreshAll();
+
+      console.debug("[useTasks] added task to today", updated);
+      return updated;
+    } catch (err) {
+      console.error("[useTasks] addToToday failed", err);
+      throw err;
+    }
+  };
+
   return {
-    allUncompletedTasks: computed<TaskRow[]>(() => fetchedAllUncompletedTasks.value ?? []),
-    allCompletedTasks: computed<TaskRow[]>(() => fetchedAllCompletedTasks.value ?? []),
-    todaysUncompletedTasks: computed<TaskRow[]>(()=>fetchedTodaysUncompletedTasks.value ?? []),
-    todaysCompletedTasks: computed<TaskRow[]>(()=>fetchedTodaysCompletedTasks.value ?? []),
+    allUncompletedTasks: computed<TaskRow[]>(
+      () => fetchedAllUncompletedTasks.value ?? []
+    ),
+    allCompletedTasks: computed<TaskRow[]>(
+      () => fetchedAllCompletedTasks.value ?? []
+    ),
+    todaysUncompletedTasks: computed<TaskRow[]>(
+      () => fetchedTodaysUncompletedTasks.value ?? []
+    ),
+    todaysCompletedTasks: computed<TaskRow[]>(
+      () => fetchedTodaysCompletedTasks.value ?? []
+    ),
     loadingAllUncompletedTasks,
     loadingAllCompletedTasks,
     loadingTodaysUncompletedTasks,
@@ -319,5 +444,7 @@ const {
     addTask,
     updateTask,
     deleteTask,
+    removeFromToday,
+    addToToday,
   };
 };

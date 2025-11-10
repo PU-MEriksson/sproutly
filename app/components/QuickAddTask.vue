@@ -72,17 +72,20 @@ const handleExpandedTaskAdded = () => {
 </script>
 
 <template>
-  <div class="p-4 m-4 bg-white space-y-4 rounded-lg shadow-md">
-    <div class="space-y-2">
-      <form @submit="handleQuickAdd" class="flex gap-2 items-center">
+  <div
+    class="px-6 py-8 mx-6 my-6 bg-white/70 backdrop-blur-sm space-y-6 rounded-2xl border-l-4 border-l-calm-400 border border-calm-200/40 shadow-md"
+  >
+    <div class="space-y-3">
+      <form @submit="handleQuickAdd" class="flex gap-3 items-center">
         <FormField v-slot="{ componentField }" name="title">
           <FormItem class="flex-1">
             <FormControl>
               <Input
                 type="text"
-                placeholder="I want to..."
+                placeholder="What needs to be done?"
                 v-bind="componentField"
                 aria-label="Quick add task"
+                class="h-12 text-base border-calm-200/50 focus:border-calm-400 bg-white/80"
               />
             </FormControl>
             <FormMessage />
@@ -91,11 +94,12 @@ const handleExpandedTaskAdded = () => {
 
         <Button
           type="submit"
-          size="icon"
           :disabled="isSubmitting"
-          title="Add task"
+          class="h-12 px-5 gap-2 bg-gradient-to-br from-calm-500 to-calm-600 hover:from-calm-600 hover:to-calm-700 text-white rounded-xl transition-all duration-200 shadow-sm hover:shadow-md font-medium"
         >
-          <Plus class="h-4 w-4" />
+          <Plus class="h-5 w-5" />
+          <span class="hidden sm:inline">Add Task</span>
+          <span class="sm:hidden">Add</span>
         </Button>
       </form>
 
@@ -103,10 +107,10 @@ const handleExpandedTaskAdded = () => {
         <SheetTrigger as-child>
           <button
             type="button"
-            class="text-xs text-gray-500 hover:text-gray-700 underline-offset-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded"
+            class="text-sm text-calm-600 hover:text-calm-700 underline-offset-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-calm-400 rounded-lg px-2 py-1 transition-colors duration-200"
             aria-label="Add task with more details"
           >
-            Advanced input
+            Include more details
           </button>
         </SheetTrigger>
         <SheetContent side="bottom">

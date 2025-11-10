@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Sprout, Loader2 } from "lucide-vue-next";
+
 const { hasUsername, fetchProfile } = useUserProfile();
 const user = useSupabaseUser();
 
@@ -22,5 +24,26 @@ watch(
 </script>
 
 <template>
-  <div>Waiting for login...</div>
+  <div
+    class="flex min-h-screen items-center justify-center p-4 bg-gradient-to-br from-calm-50 to-white"
+  >
+    <div class="text-center space-y-6">
+      <!-- Logo/Icon -->
+      <div class="flex justify-center">
+        <div class="text-calm-600">
+          <Sprout :size="48" :stroke-width="2" />
+        </div>
+      </div>
+
+      <!-- Loading spinner -->
+      <div class="flex justify-center">
+        <Loader2 class="h-8 w-8 animate-spin text-calm-500" />
+      </div>
+
+      <div class="space-y-2">
+        <h1 class="text-2xl font-bold text-calm-800">Logging you in...</h1>
+        <p class="text-calm-600">Please wait while we set up your account</p>
+      </div>
+    </div>
+  </div>
 </template>

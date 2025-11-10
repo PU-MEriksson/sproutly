@@ -50,7 +50,7 @@ export default defineNuxtConfig({
       installPrompt: true,
     },
     devOptions: {
-      enabled: true,
+      enabled: false, // Disable PWA in dev to reduce console noise
       type: "module",
       navigateFallback: "/",
     },
@@ -71,7 +71,14 @@ export default defineNuxtConfig({
     redirectOptions: {
       login: "/login",
       callback: "/confirm",
-      exclude: ["/login", "/confirm"],
+      exclude: [
+        "/",
+        "/login",
+        "/confirm",
+        "/about",
+        "/manifest.webmanifest",
+        "/dev-sw.js",
+      ],
     },
   },
   runtimeConfig: {

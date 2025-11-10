@@ -29,6 +29,16 @@ const todaysDate = computed(() => {
   return `${year}-${month}-${day}`;
 });
 
+const formattedDate = computed(() => {
+  const today = new Date();
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  };
+  return today.toLocaleDateString("en-US", options);
+});
+
 const handleTaskCompleted = (taskTitle: string) => {
   // Show celebration for 8 seconds
   lastCompletedTask.value = taskTitle;
@@ -54,28 +64,50 @@ const todaysTotalTasks = computed(
 </script>
 
 <template>
-  <div class="bg-neutral-100 min-h-screen pb-20 pt-16">
+  <div class="flex flex-col min-h-screen bg-white">
     <TopNavbar />
-    <FeedbackArea
-      :total-tasks="todaysTotalTasks"
-      :completed-tasks-today="completedTasksToday.length"
-      :last-completed-task="lastCompletedTask"
-      :time-of-day="timeOfDay"
-    />
-    <QuickAddTask :default-date="todaysDate" @task-added="handleTaskAdded" />
+    <div class="flex-1 pt-20 pb-20">
+      <!-- Page heading -->
+      <div class="page-heading px-6 pt-6 pb-2">
+        <h1 class="text-2xl font-bold text-calm-800">
+          Today
+          <span class="text-calm-600 font-normal text-lg"
+            >• {{ formattedDate }}</span
+          >
+        </h1>
+      </div>
 
-    <ViewTodaysTasks
-      @task-completed="handleTaskCompleted"
-      :todays-uncompleted="todaysUncompletedTasks"
-      :loading-todays-uncompleted="loadingTodaysUncompletedTasks"
-      :error-todays-uncompleted="errorTodaysUncompletedTasks?.message || null"
-      :refresh-todays-uncompleted="refreshTodaysUncompletedTasks"
-      :todays-completed="todaysCompletedTasks"
-      :loading-todays-completed="loadingTodaysCompletedTasks"
-      :refresh-todays-completed="refreshTodaysCompletedTasks"
-      :error-todays-completed="errorTodaysCompletedTasks?.message || null"
-      :todays-total="todaysTotalTasks"
-    />
+      <FeedbackArea
+        :total-tasks="todaysTotalTasks"
+        :completed-tasks-today="completedTasksToday.length"
+        :last-completed-task="lastCompletedTask"
+        :time-of-day="timeOfDay"
+      />
+      <QuickAddTask :default-date="todaysDate" @task-added="handleTaskAdded" />
+
+      <ViewTodaysTasks
+        @task-completed="handleTaskCompleted"
+        :todays-uncompleted="todaysUncompletedTasks"
+        :loading-todays-uncompleted="loadingTodaysUncompletedTasks"
+        :error-todays-uncompleted="errorTodaysUncompletedTasks?.message || null"
+        :refresh-todays-uncompleted="refreshTodaysUncompletedTasks"
+        :todays-completed="todaysCompletedTasks"
+        :loading-todays-completed="loadingTodaysCompletedTasks"
+        :refresh-todays-completed="refreshTodaysCompletedTasks"
+        :error-todays-completed="errorTodaysCompletedTasks?.message || null"
+        :todays-total="todaysTotalTasks"
+      />
+    </div>
+    <Navbar />
   </div>
-  <Navbar />
 </template>
+
+<style scoped>
+.page-heading {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+</style>

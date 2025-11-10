@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import Button from "~/components/ui/button/Button.vue";
 import Input from "~/components/ui/input/Input.vue";
+import { Sprout } from "lucide-vue-next";
 
 const supabase = useSupabaseClient();
+
 const email = ref("");
 const otp = ref("");
 const otpSent = ref(false);
@@ -58,11 +60,23 @@ const resetForm = () => {
 };
 </script>
 <template>
-  <div class="flex min-h-screen items-center justify-center p-4">
-    <div class="w-full max-w-md space-y-6">
+  <div
+    class="flex min-h-screen items-center justify-center p-4 bg-gradient-to-br from-calm-50 to-white"
+  >
+    <div class="w-full max-w-md space-y-8">
+      <!-- Logo/Icon -->
       <div class="text-center">
-        <h1 class="text-3xl font-bold">Welcome Back</h1>
-        <p class="text-muted-foreground mt-2">
+        <div class="flex justify-center mb-6">
+          <div class="text-calm-600">
+            <Sprout :size="48" :stroke-width="2" />
+          </div>
+        </div>
+        <h1
+          class="text-3xl font-bold bg-gradient-to-r from-calm-700 to-calm-600 bg-clip-text text-transparent"
+        >
+          Welcome Back
+        </h1>
+        <p class="text-calm-600 mt-2">
           {{
             otpSent
               ? "Enter the code from your email"
@@ -71,12 +85,16 @@ const resetForm = () => {
         </p>
       </div>
 
-      <div class="space-y-4">
+      <div
+        class="bg-white/70 backdrop-blur-sm rounded-2xl border border-calm-200/40 shadow-lg p-8 space-y-6"
+      >
         <div v-if="!otpSent">
           <!-- Email Input Step -->
           <div class="space-y-4">
             <div class="space-y-2">
-              <label for="email" class="text-sm font-medium">Email</label>
+              <label for="email" class="text-sm font-medium text-calm-800"
+                >Email</label
+              >
               <Input
                 id="email"
                 v-model="email"
@@ -84,14 +102,14 @@ const resetForm = () => {
                 placeholder="you@example.com"
                 :disabled="loading"
                 @keyup.enter="sendOtp"
+                class="h-12 border-calm-200/50 focus:border-calm-400"
               />
             </div>
 
             <Button
               @click="sendOtp"
-              variant="default"
               size="lg"
-              class="w-full"
+              class="w-full h-12 bg-gradient-to-br from-calm-500 to-calm-600 hover:from-calm-600 hover:to-calm-700 text-white shadow-sm hover:shadow-md"
               :disabled="!email || loading"
             >
               {{ loading ? "Sending..." : "Send Code" }}
@@ -103,27 +121,26 @@ const resetForm = () => {
           <!-- OTP Verification Step -->
           <div class="space-y-4">
             <div class="space-y-2">
-              <label for="otp" class="text-sm font-medium">
+              <label for="otp" class="text-sm font-medium text-calm-800">
                 Verification Code
               </label>
               <Input
                 id="otp"
                 v-model="otp"
                 type="text"
-                placeholder="Enter 6-digit code"
+                placeholder="000000"
                 maxlength="6"
                 :disabled="loading"
                 @keyup.enter="verifyOtp"
-                class="text-center text-2xl tracking-widest"
+                class="text-center text-2xl tracking-widest h-14 border-calm-200/50 focus:border-calm-400"
               />
-              <p class="text-xs text-muted-foreground">Sent to {{ email }}</p>
+              <p class="text-xs text-calm-600">Sent to {{ email }}</p>
             </div>
 
             <Button
               @click="verifyOtp"
-              variant="default"
               size="lg"
-              class="w-full"
+              class="w-full h-12 bg-gradient-to-br from-calm-500 to-calm-600 hover:from-calm-600 hover:to-calm-700 text-white shadow-sm hover:shadow-md"
               :disabled="otp.length !== 6 || loading"
             >
               {{ loading ? "Verifying..." : "Verify Code" }}
@@ -133,7 +150,7 @@ const resetForm = () => {
               @click="resetForm"
               variant="ghost"
               size="sm"
-              class="w-full"
+              class="w-full text-calm-600 hover:text-calm-700 hover:bg-calm-50"
               :disabled="loading"
             >
               Use different email
@@ -141,7 +158,10 @@ const resetForm = () => {
           </div>
         </div>
 
-        <div v-if="errorMessage" class="text-sm text-red-600 text-center">
+        <div
+          v-if="errorMessage"
+          class="text-sm text-red-600 bg-red-50 p-3 rounded-lg text-center"
+        >
           {{ errorMessage }}
         </div>
       </div>

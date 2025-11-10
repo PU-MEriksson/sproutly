@@ -1,28 +1,34 @@
 <script setup lang="ts">
-import { User } from "lucide-vue-next";
+import { User, Sprout } from "lucide-vue-next";
 </script>
 
 <template>
-  <nav class="fixed top-0 left-0 right-0 bg-white shadow-sm border-b z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-16">
-        <!-- Logo/Brand -->
+  <nav
+    class="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md border-b border-calm-100 z-50"
+  >
+    <div class="max-w-5xl mx-auto px-6 sm:px-8 lg:px-10">
+      <div class="flex justify-between items-center h-20">
+        <!-- Logo/Brand Icon -->
         <div class="flex items-center">
-          <NuxtLink to="/" class="text-xl font-bold text-gray-900">
-            SupportiveToDo
+          <NuxtLink
+            to="/"
+            class="text-calm-700 hover:text-calm-600 p-2 rounded-lg hover:bg-calm-50 transition-all duration-200"
+            aria-label="Home"
+          >
+            <Sprout :size="28" :stroke-width="2" />
           </NuxtLink>
         </div>
 
-        <!-- Profile Icon -->
-        <div class="flex items-center">
+        <!-- Profile Icon to add later -->
+        <!-- <div class="flex items-center">
           <NuxtLink
             to="/settings"
-            class="text-gray-700 hover:text-gray-900 p-2 rounded-full hover:bg-gray-100 transition-colors"
+            class="text-calm-700 hover:text-calm-800 p-2.5 rounded-full hover:bg-calm-100/70 transition-all duration-200"
             aria-label="Profile settings"
           >
-            <User :size="24" />
+            <User :size="22" />
           </NuxtLink>
-        </div>
+        </div> -->
       </div>
     </div>
   </nav>
