@@ -68,7 +68,7 @@ const todaysTotalTasks = computed(
     <TopNavbar />
     <div class="flex-1 pt-20 pb-20">
       <!-- Page heading -->
-      <div class="px-6 pt-6 pb-2">
+      <div class="page-heading px-6 pt-6 pb-2">
         <h1 class="text-2xl font-bold text-calm-800">
           Today
           <span class="text-calm-600 font-normal text-lg"
@@ -101,3 +101,13 @@ const todaysTotalTasks = computed(
     <Navbar />
   </div>
 </template>
+
+<style scoped>
+.page-heading {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+</style>
