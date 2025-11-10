@@ -82,7 +82,7 @@ const handleExpandedTaskAdded = () => {
             <FormControl>
               <Input
                 type="text"
-                placeholder="What would you like to accomplish?"
+                placeholder="What needs to be done?"
                 v-bind="componentField"
                 aria-label="Quick add task"
                 class="h-12 text-base border-calm-200/50 focus:border-calm-400 bg-white/80"
@@ -94,12 +94,12 @@ const handleExpandedTaskAdded = () => {
 
         <Button
           type="submit"
-          size="icon"
           :disabled="isSubmitting"
-          title="Add task"
-          class="h-12 w-12 bg-gradient-to-br from-calm-500 to-calm-600 hover:from-calm-600 hover:to-calm-700 text-white rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
+          class="h-12 px-5 gap-2 bg-gradient-to-br from-calm-500 to-calm-600 hover:from-calm-600 hover:to-calm-700 text-white rounded-xl transition-all duration-200 shadow-sm hover:shadow-md font-medium"
         >
           <Plus class="h-5 w-5" />
+          <span class="hidden sm:inline">Add Task</span>
+          <span class="sm:hidden">Add</span>
         </Button>
       </form>
 
@@ -110,7 +110,7 @@ const handleExpandedTaskAdded = () => {
             class="text-sm text-calm-600 hover:text-calm-700 underline-offset-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-calm-400 rounded-lg px-2 py-1 transition-colors duration-200"
             aria-label="Add task with more details"
           >
-            Add more details
+            Include more details
           </button>
         </SheetTrigger>
         <SheetContent side="bottom">
