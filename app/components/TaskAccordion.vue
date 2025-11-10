@@ -31,6 +31,13 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 type Task = Database["public"]["Tables"]["tasks"]["Row"];
 type Subtask = Database["public"]["Tables"]["subtasks"]["Row"];
 
@@ -142,6 +149,42 @@ const handleDeleteTask = async () => {
 
 const removingFromToday = ref(false);
 const addingToToday = ref(false);
+const togglingToday = ref(false);
+
+// Check if task is on Today's list
+const isOnToday = computed(() => {
+  if (!props.task.startdate) return false;
+  const taskStartDate = new Date(props.task.startdate).toJSON().slice(0, 10);
+  return taskStartDate <= currentDate;
+});
+
+const handleToggleToday = async () => {
+  togglingToday.value = true;
+  try {
+    if (isOnToday.value) {
+      // Remove from Today
+      await removeFromToday(props.task.id);
+      console.log("Task removed from today");
+      toast.success("Task removed from Today");
+      // Only emit delete if we're on the Today page
+      if (props.showRemoveFromToday) {
+        emit("delete", props.task.id);
+      }
+    } else {
+      // Add to Today
+      await addToToday(props.task.id);
+      console.log("Task added to today");
+      toast.success("Task added to Today");
+    }
+  } catch (error) {
+    console.error("Failed to toggle task today status:", error);
+    toast.error(
+      isOnToday.value ? "Failed to remove from today" : "Failed to add to today"
+    );
+  } finally {
+    togglingToday.value = false;
+  }
+};
 
 const handleRemoveFromToday = async () => {
   removingFromToday.value = true;
@@ -608,30 +651,23 @@ const handleGenerateSubtasks = async () => {
               <span>Delete</span>
             </Button>
 
+            <!-- Toggle Today button - shows current state on both pages -->
             <Button
-              v-if="showRemoveFromToday"
               variant="outline"
               size="sm"
-              class="flex-1 gap-2 text-calm-700 border-calm-300 hover:bg-calm-50 hover:border-calm-400 rounded-lg h-10 font-medium"
-              :disabled="removingFromToday"
-              @click.stop="handleRemoveFromToday"
-              title="Remove from today"
+              :class="[
+                'flex-1 gap-2 rounded-lg h-10 font-medium transition-all',
+                isOnToday
+                  ? 'text-calm-700 bg-calm-100 border-calm-400 hover:bg-calm-50 hover:border-calm-300'
+                  : 'text-calm-700 border-calm-300 hover:bg-calm-50 hover:border-calm-400',
+              ]"
+              :disabled="togglingToday"
+              @click.stop="handleToggleToday"
+              :title="isOnToday ? 'Remove from Today' : 'Do Today'"
             >
-              <ArrowLeft :size="16" />
-              <span>Remove</span>
-            </Button>
-
-            <Button
-              v-else
-              variant="outline"
-              size="sm"
-              class="flex-1 gap-2 text-calm-700 border-calm-300 hover:bg-calm-50 hover:border-calm-400 rounded-lg h-10 font-medium"
-              :disabled="addingToToday"
-              @click.stop="handleAddToToday"
-              title="Add to today"
-            >
-              <ArrowRight :size="16" />
-              <span>Add</span>
+              <Check v-if="isOnToday" :size="16" class="text-calm-600" />
+              <ArrowRight v-else :size="16" />
+              <span>{{ isOnToday ? "Do Today" : "Do Today" }}</span>
             </Button>
           </div>
         </AccordionContent>
