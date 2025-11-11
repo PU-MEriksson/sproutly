@@ -56,6 +56,53 @@ const localCompleted = ref(props.task.completed ?? false);
 
 const subtaskListRef = ref<InstanceType<typeof SubtaskList> | null>(null);
 
+// Track accordion open/closed state
+const route = useRoute();
+const accordionValue = ref<string | undefined>(undefined);
+
+// Storage key based on route and task ID
+const storageKey = computed(() => `accordion-${route.path}-${props.task.id}`);
+
+// Load accordion state from sessionStorage on mount
+onMounted(() => {
+  if (import.meta.client) {
+    const saved = sessionStorage.getItem(storageKey.value);
+    if (saved === "open") {
+      accordionValue.value = "item-1";
+    }
+  }
+});
+
+// Save accordion state to sessionStorage when it changes
+watch(accordionValue, (newValue) => {
+  if (import.meta.client) {
+    if (newValue) {
+      sessionStorage.setItem(storageKey.value, "open");
+    } else {
+      sessionStorage.removeItem(storageKey.value);
+    }
+  }
+});
+
+// Clear all accordion states when route changes
+const currentPath = ref(route.path);
+watch(
+  () => route.path,
+  (newPath) => {
+    if (import.meta.client && newPath !== currentPath.value) {
+      // Clear all accordion states for the old route
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key?.startsWith(`accordion-${currentPath.value}-`)) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((key) => sessionStorage.removeItem(key));
+      currentPath.value = newPath;
+    }
+  }
+);
 
 let currentDate = new Date().toJSON().slice(0, 10);
 
@@ -156,18 +203,20 @@ const handleToggleToday = async () => {
   }
 };
 
-
 // Load subtasks when accordion is expanded
 const onAccordionChange = (value: string | string[] | undefined) => {
   console.log("Accordion changed:", value);
-  if (value) subtaskListRef.value?.loadSubtasks();
+  accordionValue.value = typeof value === "string" ? value : undefined;
+  if (value) {
+    subtaskListRef.value?.loadSubtasks();
+  }
 };
-
 </script>
 
 <template>
   <ClientOnly>
     <Accordion
+      v-model="accordionValue"
       type="single"
       collapsible
       class="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-sm hover:shadow-md hover:border-gray-300/70 transition-all duration-200"
@@ -209,15 +258,15 @@ const onAccordionChange = (value: string | string[] | undefined) => {
             {{ props.task.description }}
           </p>
 
-
-
-          <SubtaskList 
-          ref="subtaskListRef"
-          :task-id="props.task.id"
-          :task-title="props.task.title"
-          :task-description="props.task.description"
-          @subtasks-changed="(updated) => console.log('Updated subtasks', updated)"
-          @subtask-completed="celebrateSubtask()"
+          <SubtaskList
+            ref="subtaskListRef"
+            :task-id="props.task.id"
+            :task-title="props.task.title"
+            :task-description="props.task.description"
+            @subtasks-changed="
+              (updated) => console.log('Updated subtasks', updated)
+            "
+            @subtask-completed="celebrateSubtask()"
           />
 
           <!-- Task actions footer -->
