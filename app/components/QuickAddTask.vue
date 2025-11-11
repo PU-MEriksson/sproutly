@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { toTypedSchema } from "@vee-validate/zod";
 import * as z from "zod";
 import { useForm } from "vee-validate";
@@ -29,6 +29,7 @@ const props = defineProps<{
 
 const isExpanded = ref(false);
 const isSubmitting = ref(false);
+const formRef = ref<HTMLFormElement | null>(null);
 
 const emit = defineEmits<{
   taskAdded: [];
@@ -69,6 +70,26 @@ const handleExpandedTaskAdded = () => {
   isExpanded.value = false;
   emit("taskAdded");
 };
+
+const handleInputFocus = () => {
+  // Clear error message when user focuses on the input
+  form.setFieldError("title", undefined);
+};
+
+const handleClickOutside = (event: MouseEvent) => {
+  if (formRef.value && !formRef.value.contains(event.target as Node)) {
+    // Clear error when clicking outside the form
+    form.setFieldError("title", undefined);
+  }
+};
+
+onMounted(() => {
+  document.addEventListener("click", handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener("click", handleClickOutside);
+});
 </script>
 
 <template>
@@ -76,14 +97,26 @@ const handleExpandedTaskAdded = () => {
     class="px-6 py-8 mx-6 my-6 bg-white/70 backdrop-blur-sm space-y-6 rounded-2xl border-l-4 border-l-calm-400 border border-calm-200/40 shadow-md"
   >
     <div class="space-y-3">
-      <form @submit="handleQuickAdd" class="flex gap-3 items-center">
-        <FormField v-slot="{ componentField }" name="title">
+      <form
+        ref="formRef"
+        @submit="handleQuickAdd"
+        class="flex gap-3 items-start"
+      >
+        <FormField
+          v-slot="{ componentField }"
+          name="title"
+          :validate-on-blur="false"
+          :validate-on-change="false"
+          :validate-on-input="false"
+          :validate-on-model-update="false"
+        >
           <FormItem class="flex-1">
             <FormControl>
               <Input
                 type="text"
                 placeholder="What needs to be done?"
                 v-bind="componentField"
+                @focus="handleInputFocus"
                 aria-label="Quick add task"
                 class="h-12 text-base border-calm-200/50 focus:border-calm-400 bg-white/80"
               />
