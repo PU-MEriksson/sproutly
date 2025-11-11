@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Separator } from "@/components/ui/separator";
+
 const supabase = useSupabaseClient();
 
 async function logout() {
@@ -13,7 +15,14 @@ async function logout() {
     <div class="max-w-2xl mx-auto px-6 py-8">
       <h1 class="text-2xl font-bold text-calm-800 mb-6">Settings</h1>
 
-      <div class="space-y-4">
+      <div class="space-y-6">
+        <Separator />
+
+        <!-- Daily Reset Preference Component -->
+        <DailyResetPreference />
+
+        <Separator />
+
         <!-- About Link -->
         <NuxtLink
           to="/about"
