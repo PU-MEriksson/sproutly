@@ -83,6 +83,11 @@ const saveProfile = async () => {
             </p>
           </div>
 
+          <!-- Daily Reset Preference -->
+          <div class="pt-4 border-t border-calm-200/40">
+            <DailyResetPreference :show-toast="false" compact show-hint />
+          </div>
+
           <Button
             @click="saveProfile"
             size="lg"
