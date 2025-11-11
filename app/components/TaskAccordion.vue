@@ -146,7 +146,7 @@ const togglingToday = ref(false);
 
 // Check if task is on Today's list
 const isOnToday = computed(() => {
-  if (!props.task.startdate) return false;
+  if (!props.task.startdate || props.task.completed) return false;
   const taskStartDate = new Date(props.task.startdate).toJSON().slice(0, 10);
   return taskStartDate <= currentDate;
 });
