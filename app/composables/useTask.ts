@@ -9,19 +9,19 @@ type SubtaskInsert = Database["public"]["Tables"]["subtasks"]["Insert"];
 
 export const useTasks = () => {
   const taskInsertSchema = z.object({
-  title: z.string().min(1).max(255),
-  description: z.string().max(2000).nullable().optional(),
-  startdate: z.string().nullable().optional(),
-  enddate: z.string().nullable().optional(),
-  deadline: z.string().nullable().optional(),
-  completed: z.boolean().optional(),
-  completed_date: z.string().nullable().optional(),
-  subtasks: z
-    .array(z.object({ title: z.string().min(1).max(255) }))
-    .optional()
-    .default([]),
-})
-  const {sanitizeTask} = useSanitize();
+    title: z.string().min(1).max(255),
+    description: z.string().max(2000).nullable().optional(),
+    startdate: z.string().nullable().optional(),
+    enddate: z.string().nullable().optional(),
+    deadline: z.string().nullable().optional(),
+    completed: z.boolean().optional(),
+    completed_date: z.string().nullable().optional(),
+    subtasks: z
+      .array(z.object({ title: z.string().min(1).max(255) }))
+      .optional()
+      .default([]),
+  });
+  const { sanitizeTask } = useSanitize();
   const supabase = useSupabaseClient<Database>();
   const { profile, fetchProfile } = useUserProfile();
   const { addSubtasks } = useSubtasks();
@@ -99,13 +99,13 @@ export const useTasks = () => {
   });
 
   const refreshAll = async () => {
-  await Promise.allSettled([
-    refreshTodaysCompletedTasks(),
-    refreshTodaysUncompletedTasks(),
-    refreshAllCompletedTasks(),
-    refreshAllUncompletedTasks(),
-  ]);
-};
+    await Promise.allSettled([
+      refreshTodaysCompletedTasks(),
+      refreshTodaysUncompletedTasks(),
+      refreshAllCompletedTasks(),
+      refreshAllUncompletedTasks(),
+    ]);
+  };
 
   /* const {
     data: fetchedAllUncompletedTasks,
@@ -332,7 +332,7 @@ export const useTasks = () => {
       }
 
       console.debug("[useTasks] deleted task", id);
-      
+
       await refreshAll();
 
       return true;
@@ -416,6 +416,66 @@ export const useTasks = () => {
     }
   };
 
+  const checkAndResetDailyTasks = async () => {
+    const userProfile = await ensureUserProfile();
+    if (!userProfile) return;
+
+    // Only run on client-side
+    if (typeof window === "undefined") return;
+
+    const { dailyResetPreference } = useUserSettings();
+
+    // Check if it's a new day
+    const lastCheckDate = localStorage.getItem("lastDailyCheck");
+    const today = new Date().toISOString().split("T")[0] as string;
+
+    if (lastCheckDate === today) {
+      // Already checked today, skip
+      return;
+    }
+
+    // Save that we checked today
+    localStorage.setItem("lastDailyCheck", today);
+
+    // If user chose "fresh start"
+    if (dailyResetPreference.value === "fresh_start") {
+      await performFreshStart(userProfile.id);
+    }
+
+    // If "carry_over" - do nothing, tasks remain automatically
+  };
+
+  const performFreshStart = async (profileId: string) => {
+    // Find all incomplete tasks from yesterday or earlier
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split("T")[0];
+
+    try {
+      const { error } = await supabase
+        .from("tasks")
+        .update({ startdate: null })
+        .eq("profile_id", profileId)
+        .eq("completed", false)
+        .lte("startdate", yesterdayStr);
+
+      if (error) {
+        console.error("[useTasks] Fresh start failed:", error);
+        return;
+      }
+
+      await refreshAll();
+      console.debug("[useTasks] Fresh start completed");
+    } catch (err) {
+      console.error("[useTasks] performFreshStart failed:", err);
+    }
+  };
+
+  // Run check when component mounts
+  onMounted(() => {
+    checkAndResetDailyTasks();
+  });
+
   return {
     allUncompletedTasks: computed<TaskRow[]>(
       () => fetchedAllUncompletedTasks.value ?? []
@@ -446,5 +506,6 @@ export const useTasks = () => {
     deleteTask,
     removeFromToday,
     addToToday,
+    checkAndResetDailyTasks,
   };
 };
