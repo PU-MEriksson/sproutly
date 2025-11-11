@@ -76,7 +76,7 @@ const handleExpandedTaskAdded = () => {
     class="px-6 py-8 mx-6 my-6 bg-white/70 backdrop-blur-sm space-y-6 rounded-2xl border-l-4 border-l-calm-400 border border-calm-200/40 shadow-md"
   >
     <div class="space-y-3">
-      <form @submit="handleQuickAdd" class="flex gap-3 items-center">
+      <form @submit="handleQuickAdd" class="flex gap-3 items-start">
         <FormField v-slot="{ componentField }" name="title">
           <FormItem class="flex-1">
             <FormControl>
