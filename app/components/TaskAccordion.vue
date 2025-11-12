@@ -6,18 +6,12 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import {
-  WandSparkles,
   Pencil,
   Trash2,
-  Plus,
   Check,
-  X,
-  ArrowLeft,
   ArrowRight,
 } from "lucide-vue-next";
 import type { Database } from "~/types/database.types";
@@ -234,7 +228,7 @@ const onAccordionChange = (value: string | string[] | undefined) => {
                   <span>Edit</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent>
+              <SheetContent class="overflow-auto">
                 <SheetHeader>
                   <SheetTitle>Edit your task</SheetTitle>
                   <SheetDescription>
