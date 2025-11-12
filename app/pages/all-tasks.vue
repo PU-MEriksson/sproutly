@@ -47,7 +47,7 @@ const handleTaskAdded = () => {
         />
       </div>
 
-      <div v-if="allCompletedTasks?.length > 0" class="space-y-3">
+      <!-- <div v-if="allCompletedTasks?.length > 0" class="space-y-3">
         <h2 class="text-lg font-semibold text-calm-700 px-2">Completed</h2>
         <ViewTasks
           :tasks="allCompletedTasks"
@@ -57,7 +57,7 @@ const handleTaskAdded = () => {
           "
           :refresh="refreshAllCompletedTasks"
         />
-      </div>
+      </div> -->
     </section>
   </div>
   <Navbar />
