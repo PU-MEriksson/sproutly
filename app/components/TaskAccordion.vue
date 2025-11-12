@@ -19,6 +19,7 @@ import {
   X,
   ArrowLeft,
   ArrowRight,
+  MoreVertical,
 } from "lucide-vue-next";
 import type { Database } from "~/types/database.types";
 import { toast } from "vue-sonner";
@@ -31,6 +32,15 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 
 import SubtaskList from "./SubtaskList.vue";
 
@@ -229,24 +239,73 @@ const onAccordionChange = (value: string | string[] | undefined) => {
               v-model="localCompleted"
               :disabled="updatingTask"
               @click.stop
-              class="mt-0.5 shrink-0 data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-calm-500 data-[state=checked]:to-calm-600 data-[state=checked]:border-calm-500"
+              class="m-1 shrink-0 data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-calm-500 data-[state=checked]:to-calm-600 data-[state=checked]:border-calm-500"
             />
-            <div class="flex-1 min-w-0 flex items-center justify-between gap-2">
-              <span
-                class="text-base text-calm-800 font-normal group-hover:text-calm-700 text-left break-words"
-              >
-                {{ props.task.title }}
-              </span>
-              <!-- Only show badge on All Tasks page, not on Today page where it's redundant -->
-              <Badge
-                v-if="isOnToday && !showRemoveFromToday"
-                variant="secondary"
-                class="bg-calm-100 text-calm-700 border-calm-300 hover:bg-calm-100"
-                title="On Today's list"
-              >
-                <Check :size="12" />
-                <span>Today</span>
-              </Badge>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between gap-2">
+                <span
+                  class="text-base text-calm-800 font-normal group-hover:text-calm-700 text-left break-words flex-1"
+                >
+                  {{ props.task.title }}
+                </span>
+
+                <!-- More actions menu -->
+                <DropdownMenu>
+                  <DropdownMenuTrigger as-child @click.stop>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      class="h-8 w-8 p-0 hover:bg-calm-100 shrink-0"
+                      aria-label="Task actions"
+                    >
+                      <MoreVertical :size="16" class="text-calm-600" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" class="w-48">
+                    <DropdownMenuItem
+                      @click.stop="handleToggleToday"
+                      :disabled="togglingToday"
+                    >
+                      <Check v-if="isOnToday" :size="16" class="mr-2" />
+                      <ArrowRight v-else :size="16" class="mr-2" />
+                      {{
+                        showRemoveFromToday
+                          ? isOnToday
+                            ? "Remove from Today"
+                            : "Add to Today"
+                          : isOnToday
+                          ? "Remove from Today"
+                          : "Add to Today"
+                      }}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem @click.stop="editingTask = true">
+                      <Pencil :size="16" class="mr-2" />
+                      Edit task
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      @click.stop="handleDeleteTask"
+                      class="text-red-600 focus:text-red-600 focus:bg-red-50"
+                    >
+                      <Trash2 :size="16" class="mr-2" />
+                      Delete task
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              <!-- Today badge on its own line, right-aligned -->
+              <div v-if="isOnToday && !showRemoveFromToday" class="flex mt-1.5">
+                <Badge
+                  variant="secondary"
+                  class="bg-calm-100 text-calm-700 border-calm-300 hover:bg-calm-100 text-xs"
+                  title="On Today's list"
+                >
+                  <Check :size="12" />
+                  <span>Today</span>
+                </Badge>
+              </div>
             </div>
           </div>
         </AccordionTrigger>
@@ -268,63 +327,20 @@ const onAccordionChange = (value: string | string[] | undefined) => {
             "
             @subtask-completed="celebrateSubtask()"
           />
-
-          <!-- Task actions footer -->
-          <div class="flex gap-3 mt-8 pt-6 border-t border-calm-200/60">
-            <Sheet>
-              <SheetTrigger as-child>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  class="flex-1 gap-2 text-calm-700 border-calm-300 hover:bg-calm-50 hover:border-calm-400 rounded-lg h-10 font-medium"
-                  :disabled="editingTask"
-                >
-                  <Pencil :size="16" />
-                  <span>Edit</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Edit your task</SheetTitle>
-                  <SheetDescription>
-                    <EditTask :task="props.task" @updated="handleTaskUpdated" />
-                  </SheetDescription>
-                </SheetHeader>
-              </SheetContent>
-            </Sheet>
-
-            <Button
-              variant="outline"
-              size="sm"
-              class="flex-1 gap-2 text-red-700 border-red-300 hover:bg-red-50 hover:border-red-400 rounded-lg h-10 font-medium"
-              :disabled="deletingTask"
-              @click.stop="handleDeleteTask"
-            >
-              <Trash2 :size="16" />
-              <span>Delete</span>
-            </Button>
-
-            <!-- Toggle Today button - shows current state on both pages -->
-            <Button
-              variant="outline"
-              size="sm"
-              :class="[
-                'flex-1 gap-2 rounded-lg h-10 font-medium transition-all',
-                isOnToday
-                  ? 'text-calm-700 bg-calm-100 border-calm-400 hover:bg-calm-50 hover:border-calm-300'
-                  : 'text-calm-700 border-calm-300 hover:bg-calm-50 hover:border-calm-400',
-              ]"
-              :disabled="togglingToday"
-              @click.stop="handleToggleToday"
-              :title="isOnToday ? 'Remove from Today' : 'Do Today'"
-            >
-              <Check v-if="isOnToday" :size="16" class="text-calm-600" />
-              <ArrowRight v-else :size="16" />
-              <span>{{ isOnToday ? "Do Today" : "Do Today" }}</span>
-            </Button>
-          </div>
         </AccordionContent>
       </AccordionItem>
     </Accordion>
+
+    <!-- Edit Task Sheet -->
+    <Sheet v-model:open="editingTask">
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Edit your task</SheetTitle>
+          <SheetDescription>
+            <EditTask :task="props.task" @updated="handleTaskUpdated" />
+          </SheetDescription>
+        </SheetHeader>
+      </SheetContent>
+    </Sheet>
   </ClientOnly>
 </template>
