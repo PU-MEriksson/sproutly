@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Archive } from "lucide-vue-next";
+
 const {
   allUncompletedTasks,
   loadingAllUncompletedTasks,
@@ -46,19 +48,18 @@ const handleTaskAdded = () => {
           :refresh="refreshAllUncompletedTasks"
         />
       </div>
-
-      <div v-if="allCompletedTasks?.length > 0" class="space-y-3">
-        <h2 class="text-lg font-semibold text-calm-700 px-2">Completed</h2>
-        <ViewTasks
-          :tasks="allCompletedTasks"
-          :loading="loadingAllCompletedTasks"
-          :error="
-            errorAllCompletedTasks ? errorAllCompletedTasks.message : null
-          "
-          :refresh="refreshAllCompletedTasks"
-        />
-      </div>
     </section>
+
+    <!-- Archive link -->
+    <div v-if="allCompletedTasks?.length > 0" class="px-6 py-8">
+      <NuxtLink
+        to="/archive"
+        class="inline-flex items-center gap-1.5 text-sm text-calm-500 hover:text-calm-700 transition-colors pl-2"
+      >
+        <Archive :size="16" />
+        View completed tasks
+      </NuxtLink>
+    </div>
   </div>
   <Navbar />
 </template>
