@@ -6,18 +6,12 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import {
-  WandSparkles,
   Pencil,
   Trash2,
-  Plus,
   Check,
-  X,
-  ArrowLeft,
   ArrowRight,
   MoreVertical,
 } from "lucide-vue-next";
@@ -333,7 +327,7 @@ const onAccordionChange = (value: string | string[] | undefined) => {
 
     <!-- Edit Task Sheet -->
     <Sheet v-model:open="editingTask">
-      <SheetContent>
+      <SheetContent class="overflow-auto">
         <SheetHeader>
           <SheetTitle>Edit your task</SheetTitle>
           <SheetDescription>

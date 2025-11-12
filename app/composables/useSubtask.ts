@@ -19,8 +19,8 @@ export const useSubtasks = () => {
       title: sanitizeString(st.title) as string, // ensure string, not null
     }));
 
-    const payload = sanitizedSubtasks.map((st) => ({
-      ...st,
+    const payload = sanitizedSubtasks.map(({ id, ...rest }) => ({
+      ...rest,
       task_id: taskId,
     }));
 
@@ -80,6 +80,17 @@ export const useSubtasks = () => {
     return data;
   };
 
+    const updateSubtasks = async (
+    subtasks: { id: number; title?: string }[]
+  ): Promise<SubtaskRow[]> => {
+    const updated: SubtaskRow[] = [];
+    for (const st of subtasks) {
+      const data = await updateSubtask(st.id, { title: st.title });
+      updated.push(data);
+    }
+    return updated;
+  };
+
   const deleteSubtask = async (subtaskId: number): Promise<void> => {
     const { error } = await supabase
       .from("subtasks")
@@ -94,6 +105,12 @@ export const useSubtasks = () => {
     console.debug("[useSubtasks] deleted subtask", subtaskId);
   };
 
+    const deleteSubtasks = async (ids: number[]): Promise<void> => {
+    if (ids.length === 0) return;
+    const { error } = await supabase.from("subtasks").delete().in("id", ids);
+    if (error) throw error;
+  };
+
   const toggleSubtaskCompleted = async (
     subtaskId: number,
     completed: boolean
@@ -101,11 +118,41 @@ export const useSubtasks = () => {
     return updateSubtask(subtaskId, { completed });
   };
 
+  const syncSubtasks = async (
+    taskId: number,
+    original: Array<{ id?: number; title: string; completed?: boolean }>,
+    current: Array<{ id?: number; title: string; completed?: boolean }>
+  ): Promise<void> => {
+    const origMap = new Map(original.filter(s => s.id).map(s => [s.id!, s]));
+    const currMap = new Map(current.filter(s => s.id).map(s => [s.id!, s]));
+
+    const toCreate = current.filter(s => !s.id);
+    const toUpdate = current.filter(s => {
+      if (!s.id) return false;
+      const orig = origMap.get(s.id);
+      return (
+        s.title !== orig?.title ||
+        s.completed !== orig?.completed // <- keep this
+      );
+    }) as { id: number; title: string; completed?: boolean }[];
+
+    const toDelete = original
+      .filter(s => s.id && !currMap.has(s.id))
+      .map(s => s.id!) as number[];
+
+    if (toCreate.length) await addSubtasks(taskId, toCreate);
+    if (toUpdate.length) await updateSubtasks(toUpdate);
+    if (toDelete.length) await deleteSubtasks(toDelete);
+  };
+
   return {
     addSubtasks,
     fetchSubtasks,
     updateSubtask,
+    updateSubtasks,
     deleteSubtask,
+    deleteSubtasks,
     toggleSubtaskCompleted,
+    syncSubtasks
   };
 };
