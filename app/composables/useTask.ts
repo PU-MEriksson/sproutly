@@ -2,6 +2,7 @@ import type { Database } from "~/types/database.types";
 import { useSubtasks } from "~/composables/useSubtask";
 import { useSanitize } from "./useSanitize";
 import { z } from "zod";
+import { onMounted } from 'vue';
 
 type TaskInsert = Database["public"]["Tables"]["tasks"]["Insert"];
 type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
