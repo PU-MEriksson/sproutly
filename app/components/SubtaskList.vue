@@ -269,24 +269,6 @@ defineExpose({ loadSubtasks });
 </script>
 
 <template>
-  <!-- AI and Helper Tools -->
-  <div class="mb-6 flex flex-wrap gap-2">
-    <Button
-      size="sm"
-      @click="handleGenerateSubtasks"
-      :disabled="aiLoading"
-      class="gap-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg h-9 px-4 shadow-sm hover:shadow-md transition-all"
-    >
-      <Spinner v-if="aiLoading" class="h-4 w-4" />
-      <WandSparkles v-else class="h-4 w-4" />
-      <span>{{ aiLoading ? "Thinking..." : "Break down" }}</span>
-    </Button>
-
-    <!-- Placeholder for future buttons -->
-    <!-- <Button size="sm" class="gap-2">Focus Mode</Button> -->
-    <!-- <Button size="sm" class="gap-2">Get Started</Button> -->
-  </div>
-
   <!-- Error message -->
   <div
     v-if="aiGenerationError || aiError"
@@ -305,7 +287,7 @@ defineExpose({ loadSubtasks });
 
   <!-- Subtasks section -->
   <div class="space-y-3">
-    <h4 class="text-sm font-semibold text-calm-700">Subtasks</h4>
+    <!-- <h4 class="text-sm font-semibold text-calm-700">Subtasks</h4> -->
 
     <p v-if="loadingSubtasks" class="text-sm text-calm-500">
       Loading subtasks...
@@ -390,10 +372,10 @@ defineExpose({ loadSubtasks });
         </div>
       </div>
     </div>
-
+    <!-- 
     <p v-else-if="!showAddInput" class="text-sm text-calm-500 pl-3 italic">
       No subtasks yet
-    </p>
+    </p> -->
 
     <!-- Add subtask inline input -->
     <div
@@ -426,14 +408,27 @@ defineExpose({ loadSubtasks });
       </button>
     </div>
 
-    <!-- Add subtask button -->
-    <button
-      v-else
-      @click="startAddingSubtask"
-      class="flex items-center justify-center gap-2 p-3 text-sm font-medium text-calm-600 hover:text-calm-700 bg-calm-50/30 hover:bg-calm-100/50 rounded-lg w-full transition-all duration-150 border border-dashed border-calm-300 hover:border-calm-400"
-    >
-      <Plus :size="18" />
-      <span>Add a subtask</span>
-    </button>
+    <!-- Add subtask buttons -->
+    <div v-else class="space-y-2">
+      <button
+        @click="startAddingSubtask"
+        class="w-full flex items-center justify-center gap-2 p-3 text-sm font-medium text-calm-600 hover:text-calm-700 bg-calm-50/30 hover:bg-calm-100/50 rounded-lg transition-all duration-150 border border-dashed border-calm-300 hover:border-calm-400"
+      >
+        <Plus :size="18" />
+        <span>Add a subtask</span>
+      </button>
+
+      <button
+        @click="handleGenerateSubtasks"
+        :disabled="aiLoading"
+        class="w-full flex items-center justify-center gap-2 p-3 text-sm font-medium text-calm-700 hover:text-calm-800 bg-white hover:bg-calm-50 rounded-lg transition-all duration-150 border border-calm-200 hover:border-calm-300 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <Spinner v-if="aiLoading" class="h-4 w-4" />
+        <WandSparkles v-else class="h-4 w-4" />
+        <span>{{
+          aiLoading ? "Thinking..." : "Help me break down this task"
+        }}</span>
+      </button>
+    </div>
   </div>
 </template>

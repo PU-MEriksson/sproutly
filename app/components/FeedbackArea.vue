@@ -9,12 +9,24 @@ const props = defineProps<{
   timeOfDay: "morning" | "afternoon" | "evening";
 }>();
 
+const { profile, fetchProfile } = useUserProfile()
+
+onMounted(async () => {
+  await fetchProfile()
+})
+
+const username = computed(() => {
+  const name = profile.value?.username?.trim();
+  if (!name) return "friend";
+  return name.charAt(0).toUpperCase() + name.slice(1);
+});
+
 const feedbackMessage = computed(() => {
   // Celebrate when a task was just completed - highest priority feedback
   if (props.lastCompletedTask) {
     return {
       emoji: "🎉",
-      message: `Amazing! You completed "${props.lastCompletedTask}". You should be proud of yourself!`,
+      message: `Amazing ${username.value}! You completed "${props.lastCompletedTask}". You should be proud of yourself!`,
       type: "celebration",
     };
   }
@@ -23,7 +35,7 @@ const feedbackMessage = computed(() => {
   if (props.completedTasksToday >= 3) {
     return {
       emoji: "⭐",
-      message: `You've completed ${props.completedTasksToday} tasks today! You're doing great!`,
+      message: `You've completed ${props.completedTasksToday} tasks today! You're doing great${", " + username.value}!`,
       type: "celebration",
     };
   }
@@ -34,7 +46,7 @@ const feedbackMessage = computed(() => {
       emoji: "✨",
       message: `${props.completedTasksToday} task${
         props.completedTasksToday > 1 ? "s" : ""
-      } done! Keep going, you've got this!`,
+      } done ${username.value}! Keep going, you've got this!`,
       type: "celebration",
     };
   }
@@ -63,7 +75,7 @@ const feedbackMessage = computed(() => {
   if (props.timeOfDay === "morning") {
     return {
       emoji: "☀️",
-      message: "Good morning! What's one thing you'd like to accomplish today?",
+      message: `Good morning ${username.value}! What's one thing you'd like to accomplish today?`,
       type: "neutral",
     };
   }
@@ -81,7 +93,7 @@ const feedbackMessage = computed(() => {
   // Default fallback message - general encouragement
   return {
     emoji: "💫",
-    message: "You've got this. One step at a time.",
+    message: `You've got this ${username.value}. One step at a time.`,
     type: "neutral",
   };
 });
