@@ -67,36 +67,43 @@ const todaysTotalTasks = computed(
   <div class="flex flex-col min-h-screen bg-white">
     <TopNavbar />
     <div class="flex-1 pt-20 pb-20">
-      <!-- Page heading -->
-      <div class="page-heading px-6 pt-6 pb-2">
-        <h1 class="text-2xl font-bold text-calm-800">
-          Today
-          <span class="text-calm-600 font-normal text-lg"
-            >• {{ formattedDate }}</span
-          >
-        </h1>
+      <div class="max-w-2xl mx-auto">
+        <!-- Page heading -->
+        <div class="page-heading px-6 pt-6 pb-2">
+          <h1 class="text-2xl font-bold text-calm-800">
+            Today
+            <span class="text-calm-600 font-normal text-lg"
+              >• {{ formattedDate }}</span
+            >
+          </h1>
+        </div>
+
+        <FeedbackArea
+          :total-tasks="todaysTotalTasks"
+          :completed-tasks-today="completedTasksToday.length"
+          :last-completed-task="lastCompletedTask"
+          :time-of-day="timeOfDay"
+        />
+        <QuickAddTask
+          :default-date="todaysDate"
+          @task-added="handleTaskAdded"
+        />
+
+        <ViewTodaysTasks
+          @task-completed="handleTaskCompleted"
+          :todays-uncompleted="todaysUncompletedTasks"
+          :loading-todays-uncompleted="loadingTodaysUncompletedTasks"
+          :error-todays-uncompleted="
+            errorTodaysUncompletedTasks?.message || null
+          "
+          :refresh-todays-uncompleted="refreshTodaysUncompletedTasks"
+          :todays-completed="todaysCompletedTasks"
+          :loading-todays-completed="loadingTodaysCompletedTasks"
+          :refresh-todays-completed="refreshTodaysCompletedTasks"
+          :error-todays-completed="errorTodaysCompletedTasks?.message || null"
+          :todays-total="todaysTotalTasks"
+        />
       </div>
-
-      <FeedbackArea
-        :total-tasks="todaysTotalTasks"
-        :completed-tasks-today="completedTasksToday.length"
-        :last-completed-task="lastCompletedTask"
-        :time-of-day="timeOfDay"
-      />
-      <QuickAddTask :default-date="todaysDate" @task-added="handleTaskAdded" />
-
-      <ViewTodaysTasks
-        @task-completed="handleTaskCompleted"
-        :todays-uncompleted="todaysUncompletedTasks"
-        :loading-todays-uncompleted="loadingTodaysUncompletedTasks"
-        :error-todays-uncompleted="errorTodaysUncompletedTasks?.message || null"
-        :refresh-todays-uncompleted="refreshTodaysUncompletedTasks"
-        :todays-completed="todaysCompletedTasks"
-        :loading-todays-completed="loadingTodaysCompletedTasks"
-        :refresh-todays-completed="refreshTodaysCompletedTasks"
-        :error-todays-completed="errorTodaysCompletedTasks?.message || null"
-        :todays-total="todaysTotalTasks"
-      />
     </div>
     <Navbar />
   </div>

@@ -237,11 +237,26 @@ const onAccordionChange = (value: string | string[] | undefined) => {
             />
             <div class="flex-1 min-w-0">
               <div class="flex items-start justify-between gap-2">
-                <span
-                  class="text-base text-calm-800 font-normal group-hover:text-calm-700 text-left break-words flex-1"
+                <div
+                  class="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
                 >
-                  {{ props.task.title }}
-                </span>
+                  <span
+                    class="text-base text-calm-800 font-normal group-hover:text-calm-700 text-left break-words"
+                  >
+                    {{ props.task.title }}
+                  </span>
+
+                  <!-- Today badge - inline on tablet/desktop, own line on mobile -->
+                  <Badge
+                    v-if="isOnToday && !showRemoveFromToday"
+                    variant="secondary"
+                    class="bg-calm-100 text-calm-700 border-calm-300 hover:bg-calm-100 text-xs w-fit"
+                    title="On Today's list"
+                  >
+                    <Check :size="12" />
+                    <span>Today</span>
+                  </Badge>
+                </div>
 
                 <!-- More actions menu -->
                 <DropdownMenu>
@@ -287,18 +302,6 @@ const onAccordionChange = (value: string | string[] | undefined) => {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </div>
-
-              <!-- Today badge on its own line, right-aligned -->
-              <div v-if="isOnToday && !showRemoveFromToday" class="flex mt-1.5">
-                <Badge
-                  variant="secondary"
-                  class="bg-calm-100 text-calm-700 border-calm-300 hover:bg-calm-100 text-xs"
-                  title="On Today's list"
-                >
-                  <Check :size="12" />
-                  <span>Today</span>
-                </Badge>
               </div>
             </div>
           </div>
