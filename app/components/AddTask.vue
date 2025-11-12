@@ -15,20 +15,17 @@ import {
   getLocalTimeZone,
   parseDate,
 } from "@internationalized/date";
-import { CalendarIcon, Trash2 } from "lucide-vue-next";
+import { CalendarIcon } from "lucide-vue-next";
 import { ref, watch, onMounted } from "vue";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import {
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-
-import type { Database } from "~/types/database.types";
 
 const props = defineProps<{
   defaultDate?: string;
@@ -68,8 +65,6 @@ const form = useForm({
     subtasks: [],
   },
 });
-
-const { fields, push, remove } = useFieldArray("subtasks");
 
 const { addTask } = useTasks();
 
@@ -179,8 +174,9 @@ const onSubmit = form.handleSubmit(async (values) => {
         <FormMessage />
       </FormItem>
     </FormField>
+    <AddSubtask/>
 
-    <FormField name="subtasks">
+ <!--    <FormField name="subtasks">
       <FormItem>
         <FormLabel>Subtasks</FormLabel>
 
@@ -224,7 +220,7 @@ const onSubmit = form.handleSubmit(async (values) => {
 
         <FormMessage />
       </FormItem>
-    </FormField>
+    </FormField> -->
 
     <FormField v-slot="{ componentField }" name="startdate">
       <FormItem>

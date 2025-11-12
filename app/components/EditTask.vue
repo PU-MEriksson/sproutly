@@ -74,7 +74,9 @@ watch(
 );
 
 const subtaskSchema = z.object({
+  id: z.number().optional(),
   title: z.string().min(1, "Subtask title is required"),
+  completed: z.boolean().default(false),
 });
 
 const taskSchema = toTypedSchema(
@@ -100,13 +102,28 @@ const form = useForm({
   },
 });
 
+const { fetchSubtasks, syncSubtasks } = useSubtasks();
+
+const originalSubtasks = ref<{ id?: number; title: string }[]>([]);
+
+onMounted(async () => {
+  const rows = await fetchSubtasks(props.task.id);
+  const mapped = rows.map(r => 
+  ({ id: r.id, 
+    title: r.title,
+    completed: r.completed ?? false,
+  }));
+  form.setFieldValue("subtasks", mapped);
+  originalSubtasks.value = JSON.parse(JSON.stringify(mapped));
+});
+
 const isSubmitting = ref(false);
 const errorMsg = ref("");
 const { updateTask } = useTasks();
+const { addSubtasks } = useSubtasks()
 
 const onSubmit = form.handleSubmit(async (values) => {
   isSubmitting.value = true;
-  errorMsg.value = "";
   try {
     const updated = await updateTask(props.task.id, {
       title: values.title,
@@ -115,14 +132,23 @@ const onSubmit = form.handleSubmit(async (values) => {
       enddate: values.enddate,
       deadline: values.deadline,
     });
+
+    await syncSubtasks(updated.id, originalSubtasks.value, values.subtasks);
+    originalSubtasks.value = JSON.parse(JSON.stringify(values.subtasks));
+
     emit("updated", updated);
-  } catch (error) {
-    errorMsg.value = "Failed to update task.";
-    console.error(error);
+  } catch (err) {
+    console.error("Failed to update", err);
   } finally {
     isSubmitting.value = false;
   }
 });
+
+const handleSubtaskCompleted = (title: string) => {
+  console.log(`Subtask completed: ${title}`);
+  // Optional: Celebrate or update progress here
+};
+
 </script>
 
 <template>
@@ -178,6 +204,9 @@ const onSubmit = form.handleSubmit(async (values) => {
         <FormMessage />
       </FormItem>
     </FormField>
+    <div class="mt-6">
+      <EditSubtask />
+    </div>
 
     <div v-if="errorMsg" class="text-red-500 text-sm">{{ errorMsg }}</div>
 
