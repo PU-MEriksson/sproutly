@@ -1,14 +1,21 @@
 <script setup lang="ts">
 import { useFieldArray, useFormValues } from "vee-validate";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-vue-next";
 
 const { fields, push, remove } = useFieldArray("subtasks");
 
-const values = useFormValues<{ subtasks: Array<{ id?: number; title: string; completed?: boolean }> }>();
-
+const values = useFormValues<{
+  subtasks: Array<{ id?: number; title: string; completed?: boolean }>;
+}>();
 </script>
 
 <template>
@@ -23,16 +30,25 @@ const values = useFormValues<{ subtasks: Array<{ id?: number; title: string; com
           class="flex items-center gap-2"
         >
           <!-- Hidden ID -->
-          <FormField :name="`subtasks[${index}].id`" v-slot="{ componentField }">
+          <FormField
+            :name="`subtasks[${index}].id`"
+            v-slot="{ componentField }"
+          >
             <input type="hidden" v-bind="componentField" />
           </FormField>
 
           <!-- Hidden completed flag -->
-          <FormField :name="`subtasks[${index}].completed`" v-slot="{ componentField }">
+          <FormField
+            :name="`subtasks[${index}].completed`"
+            v-slot="{ componentField }"
+          >
             <input type="hidden" v-bind="componentField" />
           </FormField>
 
-          <FormField :name="`subtasks[${index}].title`" v-slot="{ componentField }">
+          <FormField
+            :name="`subtasks[${index}].title`"
+            v-slot="{ componentField }"
+          >
             <FormItem class="flex-1">
               <FormControl>
                 <Input
@@ -40,7 +56,8 @@ const values = useFormValues<{ subtasks: Array<{ id?: number; title: string; com
                   :aria-label="`Step ${index + 1}`"
                   v-bind="componentField"
                   :class="{
-                    'line-through text-muted-foreground': values.subtasks?.[index]?.completed,
+                    'line-through text-muted-foreground':
+                      values.subtasks?.[index]?.completed,
                   }"
                 />
               </FormControl>
@@ -50,16 +67,21 @@ const values = useFormValues<{ subtasks: Array<{ id?: number; title: string; com
 
           <Button
             type="button"
-            variant="destructive"
+            variant="ghost"
             size="icon"
             @click="remove(index)"
+            class="text-calm-600 hover:text-calm-800 hover:bg-calm-100"
           >
             <Trash2 class="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      <Button type="button" variant="outline" @click="push({ title: '', completed: false })">
+      <Button
+        type="button"
+        variant="outline"
+        @click="push({ title: '', completed: false })"
+      >
         + Add Subtask
       </Button>
 

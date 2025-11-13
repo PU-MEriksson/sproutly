@@ -233,7 +233,7 @@ const onAccordionChange = (value: string | string[] | undefined) => {
               v-model="localCompleted"
               :disabled="updatingTask"
               @click.stop
-              class="m-1 shrink-0 data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-calm-500 data-[state=checked]:to-calm-600 data-[state=checked]:border-calm-500"
+              class="m-1 shrink-0"
             />
             <div class="flex-1 min-w-0">
               <div class="flex items-start justify-between gap-2">
@@ -250,7 +250,7 @@ const onAccordionChange = (value: string | string[] | undefined) => {
                   <Badge
                     v-if="isOnToday && !showRemoveFromToday"
                     variant="secondary"
-                    class="bg-calm-100 text-calm-700 border-calm-300 hover:bg-calm-100 text-xs w-fit"
+                    class="text-xs w-fit"
                     title="On Today's list"
                   >
                     <Check :size="12" />
