@@ -51,6 +51,8 @@ const emit = defineEmits<{
   updated: [task: Database["public"]["Tables"]["tasks"]["Row"]];
 }>();
 
+const { success: showSuccess, error: showError, promise } = useAppToast()
+
 // Calendar value for start date
 const startDateValue = ref<DateValue | undefined>(
   toCalendarDate(props.task.startdate ?? undefined)
@@ -143,19 +145,15 @@ const onSubmit = form.handleSubmit(async (values) => {
 
     await syncSubtasks(updated.id, originalSubtasks.value, values.subtasks);
     originalSubtasks.value = JSON.parse(JSON.stringify(values.subtasks));
-
+    showSuccess("Task updated!")
     emit("updated", updated);
   } catch (err) {
-    console.error("Failed to update", err);
+    showError("Failed to update task. Please try again!")
   } finally {
     isSubmitting.value = false;
   }
 });
 
-const handleSubtaskCompleted = (title: string) => {
-  console.log(`Subtask completed: ${title}`);
-  // Optional: Celebrate or update progress here
-};
 </script>
 
 <template>

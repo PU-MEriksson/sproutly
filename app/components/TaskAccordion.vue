@@ -54,9 +54,10 @@ const emit = defineEmits<{
 const { updateTask, deleteTask, removeFromToday, addToToday } = useTasks();
 const { celebrateTask, celebrateSubtask } = useCelebration();
 const { isOnline } = useOnlineStatus();
+const { success: showSuccess, error: showError } = useAppToast()
+
 
 const updatingTask = ref(false);
-const updateError = ref<string | null>(null);
 const localCompleted = ref(props.task.completed ?? false);
 const isRollingBack = ref(false);
 
@@ -137,7 +138,6 @@ watch(localCompleted, async (checked) => {
   }
 
   updatingTask.value = true;
-  updateError.value = null;
   try {
     await updateTask(props.task.id, {
       completed: checked,
@@ -149,12 +149,14 @@ watch(localCompleted, async (checked) => {
     if (checked) {
       emit("task-completed", props.task.title);
       celebrateTask();
+      showSuccess("Task completed!", `"${props.task.title}" marked as done.`)
+
     }
   } catch (error) {
     isRollingBack.value = true;
     localCompleted.value = !checked; // rollback
-    updateError.value = "Failed to update task";
     console.error("Failed to toggle task:", error);
+    showError("Failed to update task")
   } finally {
     updatingTask.value = false;
   }
@@ -168,7 +170,6 @@ const handleTaskUpdated = (updatedTask: Task) => {
 };
 
 const deletingTask = ref(false);
-const deleteError = ref<string | null>(null);
 
 const handleDeleteTask = async () => {
   if (!isOnline.value) {
@@ -179,14 +180,13 @@ const handleDeleteTask = async () => {
   if (!confirm("Are you sure you want to delete this task?")) return;
 
   deletingTask.value = true;
-  deleteError.value = null;
   try {
     await deleteTask(props.task.id);
-    toast.success("Task removed!");
+    showSuccess("Task deleted!");
     emit("delete", props.task.id);
   } catch (error) {
     console.error("Failed to delete task:", error);
-    deleteError.value = "Failed to delete task";
+    showError("Failed to delete task")
   } finally {
     deletingTask.value = false;
   }
@@ -213,7 +213,7 @@ const handleToggleToday = async () => {
       // Remove from Today
       await removeFromToday(props.task.id);
       console.log("Task removed from today");
-      toast.success("Task removed from Today");
+      showSuccess("Task removed from Today");
       // Only emit delete if we're on the Today page
       if (props.showRemoveFromToday) {
         emit("delete", props.task.id);
@@ -222,11 +222,11 @@ const handleToggleToday = async () => {
       // Add to Today
       await addToToday(props.task.id);
       console.log("Task added to today");
-      toast.success("Task added to Today");
+      showSuccess("Task added to Today");
     }
   } catch (error) {
     console.error("Failed to toggle task today status:", error);
-    toast.error(
+    showError(
       isOnToday.value ? "Failed to remove from today" : "Failed to add to today"
     );
   } finally {

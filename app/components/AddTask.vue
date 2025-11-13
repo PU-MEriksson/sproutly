@@ -1,4 +1,5 @@
 <script setup lang="ts">
+
 import { toTypedSchema } from "@vee-validate/zod";
 import * as z from "zod";
 import { useForm } from "vee-validate";
@@ -27,11 +28,20 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { string } from "zod/v4";
 
 const props = defineProps<{
   title?: string;
   defaultDate?: string;
 }>();
+
+const emit = defineEmits<{
+  'update:title': [string];
+  taskAdded: [];
+}>();
+
+const { success: showSuccess, error: showError, promise } = useAppToast()
+
 
 const df = new DateFormatter("sv-SE", {
   dateStyle: "long",
@@ -144,6 +154,8 @@ const onSubmit = form.handleSubmit(async (values) => {
       values.subtasks
     );
 
+    showSuccess("Task added!");
+
     // Reset the form
     form.resetForm();
 
@@ -156,7 +168,7 @@ const onSubmit = form.handleSubmit(async (values) => {
     emit("taskAdded");
   } catch (error) {
     console.error("Failed to add task:", error);
-    alert("Failed to add task. Please try again.");
+    showError("Failed to add task. Please try again.")
   } finally {
     isSubmitting.value = false;
   }
