@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { toTypedSchema } from "@vee-validate/zod";
 import * as z from "zod";
-import { useForm, useFieldArray } from "vee-validate";
+import { useForm } from "vee-validate";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/form";
 
 const props = defineProps<{
+  title?: string;
   defaultDate?: string;
 }>();
 
@@ -41,6 +42,7 @@ const deadlineValue = ref<DateValue | undefined>();
 const isSubmitting = ref(false);
 
 const emit = defineEmits<{
+  'update:title': [string];
   taskAdded: [];
 }>();
 
@@ -113,6 +115,14 @@ onMounted(() => {
   }
 });
 
+onMounted(() => {
+  // Initialize title on mount
+  if (props.title) {
+    localTitle.value = props.title;
+    form.setFieldValue("title", props.title);
+  }
+});
+
 const onSubmit = form.handleSubmit(async (values) => {
   isSubmitting.value = true;
 
@@ -143,6 +153,28 @@ const onSubmit = form.handleSubmit(async (values) => {
     isSubmitting.value = false;
   }
 });
+
+const localTitle = ref(props.title ?? "");
+
+// Sync localTitle <-> props.title (parent)
+watch(localTitle, (val) => emit("update:title", val ?? ""));
+
+watch(() => props.title, (val) => {
+  if (val !== localTitle.value) {
+    localTitle.value = val ?? "";
+    form.setFieldValue("title", val ?? ""); // Keep VeeValidate in sync
+  }
+});
+
+// Keep localTitle in sync when user types into the validated field
+watch(
+  () => form.values.title,
+  (val) => {
+    if (val !== localTitle.value) {
+      localTitle.value = val ?? "";
+    }
+  }
+);
 </script>
 
 <template>
@@ -174,53 +206,8 @@ const onSubmit = form.handleSubmit(async (values) => {
         <FormMessage />
       </FormItem>
     </FormField>
+
     <AddSubtask/>
-
- <!--    <FormField name="subtasks">
-      <FormItem>
-        <FormLabel>Subtasks</FormLabel>
-
-        <div class="space-y-3">
-          <div
-            v-for="(field, index) in fields"
-            :key="field.key"
-            class="flex items-center gap-2"
-          >
-            <FormField
-              :name="`subtasks[${index}].title`"
-              v-slot="{ componentField }"
-            >
-              <FormItem class="flex-1">
-                <FormControl>
-                  <Input
-                    placeholder="What's the next small step?"
-                    :aria-label="`Step ${index + 1}`"
-                    v-bind="componentField"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            </FormField>
-
-            <Button
-              type="button"
-              variant="destructive"
-              size="icon"
-              @click="remove(index)"
-              :aria-label="`Delete step ${index + 1}`"
-            >
-              <Trash2 class="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        <Button type="button" variant="outline" @click="push({ title: '' })">
-          + Add Subtask
-        </Button>
-
-        <FormMessage />
-      </FormItem>
-    </FormField> -->
 
     <FormField v-slot="{ componentField }" name="startdate">
       <FormItem>

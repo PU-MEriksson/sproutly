@@ -49,6 +49,11 @@ const form = useForm({
   },
 });
 
+const title = computed({
+  get: () => form.values.title,
+  set: (val) => form.setFieldValue("title", val),
+});
+
 const handleQuickAdd = form.handleSubmit(async (values) => {
   isSubmitting.value = true;
 
@@ -149,6 +154,7 @@ onUnmounted(() => {
         <SheetContent side="bottom">
           <div class="mt-4 max-h-[75vh] overflow-y-auto">
             <AddTask
+              v-model:title="title"
               :default-date="defaultDate"
               @task-added="handleExpandedTaskAdded"
             />
