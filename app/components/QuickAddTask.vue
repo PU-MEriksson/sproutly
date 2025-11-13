@@ -6,6 +6,7 @@ import { useForm } from "vee-validate";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-vue-next";
+import { toast } from "vue-sonner";
 import {
   Sheet,
   SheetContent,
@@ -30,6 +31,7 @@ const props = defineProps<{
 const isExpanded = ref(false);
 const isSubmitting = ref(false);
 const formRef = ref<HTMLFormElement | null>(null);
+const { isOnline } = useOnlineStatus();
 
 const emit = defineEmits<{
   taskAdded: [];
@@ -55,6 +57,12 @@ const title = computed({
 });
 
 const handleQuickAdd = form.handleSubmit(async (values) => {
+  // Prevent submission when offline
+  if (!isOnline.value) {
+    toast.error("You're offline. Please reconnect to add a task.");
+    return;
+  }
+
   isSubmitting.value = true;
 
   const { addTask } = useTasks();
@@ -124,6 +132,7 @@ onUnmounted(() => {
                 @focus="handleInputFocus"
                 aria-label="Quick add task"
                 class="h-12 text-base border-calm-200/50 focus:border-calm-400 bg-white/80"
+                :disabled="!isOnline"
               />
             </FormControl>
             <FormMessage />
@@ -132,7 +141,7 @@ onUnmounted(() => {
 
         <Button
           type="submit"
-          :disabled="isSubmitting"
+          :disabled="isSubmitting || !isOnline"
           class="h-12 px-5 gap-2 bg-gradient-to-br from-calm-500 to-calm-600 hover:from-calm-600 hover:to-calm-700 text-white rounded-xl transition-all duration-200 shadow-sm hover:shadow-md font-medium"
         >
           <Plus class="h-5 w-5" />

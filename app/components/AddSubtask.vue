@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/form";
 
 const { fields, push, remove } = useFieldArray("subtasks");
+const { isOnline } = useOnlineStatus();
 </script>
 
 <template>
@@ -34,6 +35,7 @@ const { fields, push, remove } = useFieldArray("subtasks");
                   placeholder="What's the next small step?"
                   :aria-label="`Step ${index + 1}`"
                   v-bind="componentField"
+                  :disabled="!isOnline"
                 />
               </FormControl>
               <FormMessage />
@@ -47,13 +49,19 @@ const { fields, push, remove } = useFieldArray("subtasks");
             @click="remove(index)"
             :aria-label="`Delete step ${index + 1}`"
             class="text-calm-600 hover:text-calm-800 hover:bg-calm-100"
+            :disabled="!isOnline"
           >
             <Trash2 class="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      <Button type="button" variant="outline" @click="push({ title: '' })">
+      <Button
+        type="button"
+        variant="outline"
+        @click="push({ title: '' })"
+        :disabled="!isOnline"
+      >
         + Add Subtask
       </Button>
 

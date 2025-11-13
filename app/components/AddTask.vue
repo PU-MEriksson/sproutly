@@ -19,6 +19,7 @@ import { CalendarIcon } from "lucide-vue-next";
 import { ref, watch, onMounted } from "vue";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { toast } from "vue-sonner";
 import {
   FormControl,
   FormField,
@@ -40,9 +41,10 @@ const startDateValue = ref<DateValue | undefined>();
 const endDateValue = ref<DateValue | undefined>();
 const deadlineValue = ref<DateValue | undefined>();
 const isSubmitting = ref(false);
+const { isOnline } = useOnlineStatus();
 
 const emit = defineEmits<{
-  'update:title': [string];
+  "update:title": [string];
   taskAdded: [];
 }>();
 
@@ -124,6 +126,12 @@ onMounted(() => {
 });
 
 const onSubmit = form.handleSubmit(async (values) => {
+  // Prevent submission when offline
+  if (!isOnline.value) {
+    toast.error("You're offline. Please reconnect to add a task.");
+    return;
+  }
+
   isSubmitting.value = true;
 
   try {
@@ -159,12 +167,15 @@ const localTitle = ref(props.title ?? "");
 // Sync localTitle <-> props.title (parent)
 watch(localTitle, (val) => emit("update:title", val ?? ""));
 
-watch(() => props.title, (val) => {
-  if (val !== localTitle.value) {
-    localTitle.value = val ?? "";
-    form.setFieldValue("title", val ?? ""); // Keep VeeValidate in sync
+watch(
+  () => props.title,
+  (val) => {
+    if (val !== localTitle.value) {
+      localTitle.value = val ?? "";
+      form.setFieldValue("title", val ?? ""); // Keep VeeValidate in sync
+    }
   }
-});
+);
 
 // Keep localTitle in sync when user types into the validated field
 watch(
@@ -202,6 +213,7 @@ watch(
               placeholder="I want to..."
               v-bind="componentField"
               class="bg-white w-full"
+              :disabled="!isOnline"
             />
           </FormControl>
           <FormMessage />
@@ -218,6 +230,7 @@ watch(
               placeholder="Add more details here..."
               class="resize-none bg-white min-h-24"
               v-bind="componentField"
+              :disabled="!isOnline"
             />
           </FormControl>
           <FormMessage />
@@ -227,18 +240,13 @@ watch(
 
     <!-- Subtasks Section -->
     <div class="space-y-4">
-      <div>
-        <h3 class="text-lg font-medium text-calm-800 mb-1">Break it down</h3>
-        <p class="text-sm text-calm-600">
-          Add small steps to make this task easier
-        </p>
-      </div>
-      <AddSubtask />
+      <h3 class="text-lg font-medium text-calm-800 mb-1">Break it down</h3>
+      <p class="text-sm text-calm-600">
+        Add small steps to make this task easier
+      </p>
     </div>
 
-   
-
-    <AddSubtask/>
+    <AddSubtask />
 
     <!-- Timeline Section -->
     <div class="space-y-4">
@@ -261,6 +269,7 @@ watch(
                       !startDateValue && 'text-calm-400'
                     )
                   "
+                  :disabled="!isOnline"
                 >
                   <CalendarIcon class="mr-2 h-4 w-4 text-calm-500" />
                   {{
@@ -347,7 +356,11 @@ watch(
 
     <!-- Submit Button -->
     <div class="pt-4 border-t border-calm-200">
-      <Button type="submit" :disabled="isSubmitting" class="min-w-32">
+      <Button
+        type="submit"
+        :disabled="isSubmitting || !isOnline"
+        class="min-w-32"
+      >
         {{ isSubmitting ? "Adding..." : "Add Task" }}
       </Button>
     </div>

@@ -25,6 +25,7 @@ import { getLocalTimeZone, DateFormatter } from "@internationalized/date";
 import type { DateValue } from "@internationalized/date";
 import { CalendarDate } from "@internationalized/date";
 import { ref, watch } from "vue";
+import { toast } from "vue-sonner";
 
 // Helper to convert date string (YYYY-MM-DD) to CalendarDate (DateValue)
 function toCalendarDate(dateString?: string | null): DateValue | undefined {
@@ -121,8 +122,15 @@ const isSubmitting = ref(false);
 const errorMsg = ref("");
 const { updateTask } = useTasks();
 const { addSubtasks } = useSubtasks();
+const { isOnline } = useOnlineStatus();
 
 const onSubmit = form.handleSubmit(async (values) => {
+  // Prevent submission when offline
+  if (!isOnline.value) {
+    toast.error("You're offline. Please reconnect to save changes.");
+    return;
+  }
+
   isSubmitting.value = true;
   try {
     const updated = await updateTask(props.task.id, {
@@ -171,6 +179,7 @@ const handleSubtaskCompleted = (title: string) => {
               placeholder="Task title"
               v-bind="componentField"
               class="bg-white w-full"
+              :disabled="!isOnline"
             />
           </FormControl>
           <FormMessage />
@@ -185,6 +194,7 @@ const handleSubtaskCompleted = (title: string) => {
               placeholder="Add details..."
               v-bind="componentField"
               class="bg-white min-h-24 resize-none"
+              :disabled="!isOnline"
             />
           </FormControl>
           <FormMessage />
@@ -213,6 +223,7 @@ const handleSubtaskCompleted = (title: string) => {
                       !startDateValue && 'text-calm-400'
                     )
                   "
+                  :disabled="!isOnline"
                 >
                   <CalendarIcon class="mr-2 h-4 w-4 text-calm-500" />
                   {{
@@ -248,7 +259,11 @@ const handleSubtaskCompleted = (title: string) => {
 
     <!-- Submit Button -->
     <div class="pt-4 border-t border-calm-200">
-      <Button type="submit" :disabled="isSubmitting" class="min-w-32">
+      <Button
+        type="submit"
+        :disabled="isSubmitting || !isOnline"
+        class="min-w-32"
+      >
         {{ isSubmitting ? "Saving..." : "Save Changes" }}
       </Button>
     </div>
