@@ -146,37 +146,65 @@ const onSubmit = form.handleSubmit(async (values) => {
 </script>
 
 <template>
-  <form @submit.prevent="onSubmit" class="max-w-2xl mx-auto space-y-6 p-6">
-    <FormField v-slot="{ componentField }" name="title">
-      <FormItem>
-        <FormLabel>What would you like to do?</FormLabel>
-        <FormControl>
-          <Input
-            type="text"
-            placeholder="I want to..."
-            v-bind="componentField"
-          />
-        </FormControl>
-        <FormMessage />
-      </FormItem>
-    </FormField>
+  <form @submit.prevent="onSubmit" class="max-w-2xl mx-auto space-y-8 p-6">
+    <!-- Header -->
+    <div class="space-y-2">
+      <h2 class="text-2xl font-semibold text-calm-800">Add a New Task</h2>
+      <p class="text-sm text-calm-600">
+        Break it down into small, manageable steps
+      </p>
+    </div>
 
-    <FormField v-slot="{ componentField }" name="description">
-      <FormItem>
-        <FormLabel>More details (optional)</FormLabel>
-        <FormControl>
-          <Textarea
-            placeholder="Add more details here..."
-            class="resize-none"
-            v-bind="componentField"
-          />
-        </FormControl>
-        <FormMessage />
-      </FormItem>
-    </FormField>
-    <AddSubtask/>
+    <!-- Main Task Details -->
+    <div
+      class="space-y-6 p-6 bg-calm-50/30 rounded-xl border border-calm-200/50"
+    >
+      <FormField v-slot="{ componentField }" name="title">
+        <FormItem>
+          <FormLabel class="text-calm-800 font-medium"
+            >What would you like to do?</FormLabel
+          >
+          <FormControl>
+            <Input
+              type="text"
+              placeholder="I want to..."
+              v-bind="componentField"
+              class="bg-white"
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      </FormField>
 
- <!--    <FormField name="subtasks">
+      <FormField v-slot="{ componentField }" name="description">
+        <FormItem>
+          <FormLabel class="text-calm-800 font-medium"
+            >More details (optional)</FormLabel
+          >
+          <FormControl>
+            <Textarea
+              placeholder="Add more details here..."
+              class="resize-none bg-white min-h-24"
+              v-bind="componentField"
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      </FormField>
+    </div>
+
+    <!-- Subtasks Section -->
+    <div class="space-y-4">
+      <div>
+        <h3 class="text-lg font-medium text-calm-800 mb-1">Break it down</h3>
+        <p class="text-sm text-calm-600">
+          Add small steps to make this task easier
+        </p>
+      </div>
+      <AddSubtask />
+    </div>
+
+    <!--    <FormField name="subtasks">
       <FormItem>
         <FormLabel>Subtasks</FormLabel>
 
@@ -222,37 +250,45 @@ const onSubmit = form.handleSubmit(async (values) => {
       </FormItem>
     </FormField> -->
 
-    <FormField v-slot="{ componentField }" name="startdate">
-      <FormItem>
-        <FormLabel>Start date (optional)</FormLabel>
-        <FormControl>
-          <Popover>
-            <PopoverTrigger as-child>
-              <Button
-                variant="outline"
-                :class="
-                  cn(
-                    'w-[280px] justify-start text-left font-normal',
-                    !startDateValue && 'text-muted-foreground'
-                  )
-                "
-              >
-                <CalendarIcon class="mr-2 h-4 w-4" />
-                {{
-                  startDateValue
-                    ? df.format(startDateValue.toDate(getLocalTimeZone()))
-                    : "Pick a date"
-                }}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent class="w-auto p-0">
-              <Calendar v-model="startDateValue" initial-focus />
-            </PopoverContent>
-          </Popover>
-        </FormControl>
-        <FormMessage />
-      </FormItem>
-    </FormField>
+    <!-- Timeline Section -->
+    <div class="space-y-4">
+      <div>
+        <h3 class="text-lg font-medium text-calm-800 mb-1">Timeline</h3>
+        <p class="text-sm text-calm-600">When do you want to start?</p>
+      </div>
+
+      <FormField v-slot="{ componentField }" name="startdate">
+        <FormItem>
+          <FormLabel class="text-calm-700">Start date (optional)</FormLabel>
+          <FormControl>
+            <Popover>
+              <PopoverTrigger as-child>
+                <Button
+                  variant="outline"
+                  :class="
+                    cn(
+                      'w-full sm:w-[280px] justify-start text-left font-normal bg-white',
+                      !startDateValue && 'text-calm-400'
+                    )
+                  "
+                >
+                  <CalendarIcon class="mr-2 h-4 w-4 text-calm-500" />
+                  {{
+                    startDateValue
+                      ? df.format(startDateValue.toDate(getLocalTimeZone()))
+                      : "Pick a date"
+                  }}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent class="w-auto p-0">
+                <Calendar v-model="startDateValue" initial-focus />
+              </PopoverContent>
+            </Popover>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      </FormField>
+    </div>
 
     <!-- <FormField v-slot="{ componentField }" name="enddate">
       <FormItem>
@@ -319,8 +355,11 @@ const onSubmit = form.handleSubmit(async (values) => {
       </FormItem>
     </FormField> -->
 
-    <Button type="submit" :disabled="isSubmitting">
-      {{ isSubmitting ? "Adding..." : "Add Task" }}
-    </Button>
+    <!-- Submit Button -->
+    <div class="flex justify-end pt-4 border-t border-calm-200">
+      <Button type="submit" :disabled="isSubmitting" class="min-w-32">
+        {{ isSubmitting ? "Adding..." : "Add Task" }}
+      </Button>
+    </div>
   </form>
 </template>
