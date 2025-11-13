@@ -356,7 +356,7 @@ const onSubmit = form.handleSubmit(async (values) => {
     </FormField> -->
 
     <!-- Submit Button -->
-    <div class="flex justify-end pt-4 border-t border-calm-200">
+    <div class="pt-4 border-t border-calm-200">
       <Button type="submit" :disabled="isSubmitting" class="min-w-32">
         {{ isSubmitting ? "Adding..." : "Add Task" }}
       </Button>

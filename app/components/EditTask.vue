@@ -247,7 +247,7 @@ const handleSubtaskCompleted = (title: string) => {
     </div>
 
     <!-- Submit Button -->
-    <div class="flex justify-end pt-4 border-t border-calm-200">
+    <div class="pt-4 border-t border-calm-200">
       <Button type="submit" :disabled="isSubmitting" class="min-w-32">
         {{ isSubmitting ? "Saving..." : "Save Changes" }}
       </Button>
