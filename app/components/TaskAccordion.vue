@@ -53,11 +53,13 @@ const emit = defineEmits<{
 
 const { updateTask, deleteTask, removeFromToday, addToToday } = useTasks();
 const { celebrateTask, celebrateSubtask } = useCelebration();
+const { isOnline } = useOnlineStatus();
 const { success: showSuccess, error: showError } = useAppToast()
 
 
 const updatingTask = ref(false);
 const localCompleted = ref(props.task.completed ?? false);
+const isRollingBack = ref(false);
 
 const subtaskListRef = ref<InstanceType<typeof SubtaskList> | null>(null);
 
@@ -121,6 +123,20 @@ watch(
 
 // Watch for checkbox changes and update DB
 watch(localCompleted, async (checked) => {
+  // Skip if we're rolling back to prevent infinite loop
+  if (isRollingBack.value) {
+    isRollingBack.value = false;
+    return;
+  }
+
+  // Prevent changes when offline
+  if (!isOnline.value) {
+    isRollingBack.value = true;
+    localCompleted.value = !checked; // rollback immediately
+    toast.error("You're offline. Please reconnect to make changes.");
+    return;
+  }
+
   updatingTask.value = true;
   try {
     await updateTask(props.task.id, {
@@ -137,6 +153,7 @@ watch(localCompleted, async (checked) => {
 
     }
   } catch (error) {
+    isRollingBack.value = true;
     localCompleted.value = !checked; // rollback
     console.error("Failed to toggle task:", error);
     showError("Failed to update task")
@@ -155,6 +172,11 @@ const handleTaskUpdated = (updatedTask: Task) => {
 const deletingTask = ref(false);
 
 const handleDeleteTask = async () => {
+  if (!isOnline.value) {
+    toast.error("You're offline. Please reconnect to delete tasks.");
+    return;
+  }
+
   if (!confirm("Are you sure you want to delete this task?")) return;
 
   deletingTask.value = true;
@@ -180,6 +202,11 @@ const isOnToday = computed(() => {
 });
 
 const handleToggleToday = async () => {
+  if (!isOnline.value) {
+    toast.error("You're offline. Please reconnect to manage your tasks.");
+    return;
+  }
+
   togglingToday.value = true;
   try {
     if (isOnToday.value) {
