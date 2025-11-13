@@ -163,14 +163,14 @@ const handleSubtaskCompleted = (title: string) => {
       class="space-y-6 p-6 bg-calm-50/30 rounded-xl border border-calm-200/50"
     >
       <FormField v-slot="{ componentField }" name="title">
-        <FormItem>
+        <FormItem class="flex-1">
           <FormLabel class="text-calm-800 font-medium">Title</FormLabel>
           <FormControl>
             <Input
               type="text"
               placeholder="Task title"
               v-bind="componentField"
-              class="bg-white"
+              class="bg-white w-full"
             />
           </FormControl>
           <FormMessage />
