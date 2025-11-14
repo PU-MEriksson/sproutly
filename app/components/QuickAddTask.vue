@@ -6,6 +6,7 @@ import { useForm } from "vee-validate";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-vue-next";
+import { toast } from "vue-sonner";
 import {
   Sheet,
   SheetContent,
@@ -27,9 +28,12 @@ const props = defineProps<{
   defaultDate?: string;
 }>();
 
+const { success: showSuccess, error: showError } = useAppToast()
+
 const isExpanded = ref(false);
 const isSubmitting = ref(false);
 const formRef = ref<HTMLFormElement | null>(null);
+const { isOnline } = useOnlineStatus();
 
 const emit = defineEmits<{
   taskAdded: [];
@@ -49,7 +53,18 @@ const form = useForm({
   },
 });
 
+const title = computed({
+  get: () => form.values.title,
+  set: (val) => form.setFieldValue("title", val),
+});
+
 const handleQuickAdd = form.handleSubmit(async (values) => {
+  // Prevent submission when offline
+  if (!isOnline.value) {
+    toast.error("You're offline. Please reconnect to add a task.");
+    return;
+  }
+
   isSubmitting.value = true;
 
   const { addTask } = useTasks();
@@ -57,10 +72,10 @@ const handleQuickAdd = form.handleSubmit(async (values) => {
   try {
     await addTask(values.title.trim(), undefined, props.defaultDate);
     form.resetForm();
+    showSuccess("Task added!")
     emit("taskAdded");
   } catch (error) {
-    console.error("Failed to add task:", error);
-    alert("Failed to add task. Please try again.");
+    showError("Failed to add task. Please try again.")
   } finally {
     isSubmitting.value = false;
   }
@@ -119,6 +134,7 @@ onUnmounted(() => {
                 @focus="handleInputFocus"
                 aria-label="Quick add task"
                 class="h-12 text-base border-calm-200/50 focus:border-calm-400 bg-white/80"
+                :disabled="!isOnline"
               />
             </FormControl>
             <FormMessage />
@@ -127,7 +143,7 @@ onUnmounted(() => {
 
         <Button
           type="submit"
-          :disabled="isSubmitting"
+          :disabled="isSubmitting || !isOnline"
           class="h-12 px-5 gap-2 bg-gradient-to-br from-calm-500 to-calm-600 hover:from-calm-600 hover:to-calm-700 text-white rounded-xl transition-all duration-200 shadow-sm hover:shadow-md font-medium"
         >
           <Plus class="h-5 w-5" />
@@ -149,6 +165,7 @@ onUnmounted(() => {
         <SheetContent side="bottom">
           <div class="mt-4 max-h-[75vh] overflow-y-auto">
             <AddTask
+              v-model:title="title"
               :default-date="defaultDate"
               @task-added="handleExpandedTaskAdded"
             />

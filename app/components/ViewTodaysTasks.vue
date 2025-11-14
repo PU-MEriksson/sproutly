@@ -26,6 +26,8 @@ const emit = defineEmits<{
   "task-completed": [taskTitle: string];
 }>();
 
+const { success: showSuccess, error: showError } = useAppToast()
+
 const handleTaskCompleted = (taskTitle: string) => {
   emit("task-completed", taskTitle);
 };
@@ -40,8 +42,10 @@ const handleUncompleteTask = async (task: Task) => {
     });
     pros.refreshTodaysUncompleted();
     pros.refreshTodaysCompleted();
+    showSuccess("Task moved back to To-do", `"${task.title}" is now uncompleted.`)
   } catch (error) {
     console.error("Failed to uncomplete task:", error);
+    showError("Couldn't update task", "Please try again later.")
   }
 };
 

@@ -48,6 +48,7 @@ const emit = defineEmits<{
 type Subtask = Database["public"]["Tables"]["subtasks"]["Row"];
 
 const { celebrateTask, celebrateSubtask } = useCelebration();
+const { isOnline } = useOnlineStatus();
 
 const {
   fetchSubtasks,
@@ -96,6 +97,17 @@ const handleSubtaskToggle = async (
   subtaskId: number,
   completed: boolean | string
 ) => {
+  if (!isOnline.value) {
+    // Revert the checkbox immediately
+    const subtask = subtasks.value.find((st) => st.id === subtaskId);
+    if (subtask) {
+      subtask.completed = !subtask.completed;
+      subtasks.value = [...subtasks.value];
+    }
+    toast.error("You're offline. Please reconnect to make changes.");
+    return;
+  }
+
   // Convert to boolean in case the checkbox returns a string
   const isCompleted = completed === true || completed === "true";
 
@@ -133,6 +145,11 @@ const handleSubtaskToggle = async (
 };
 
 const handleDeleteSubtask = async (subtaskId: number) => {
+  if (!isOnline.value) {
+    toast.error("You're offline. Please reconnect to delete subtasks.");
+    return;
+  }
+
   try {
     await deleteSubtask(subtaskId);
     // Remove from local state
@@ -143,6 +160,11 @@ const handleDeleteSubtask = async (subtaskId: number) => {
 };
 
 const handleAddSubtask = async () => {
+  if (!isOnline.value) {
+    toast.error("You're offline. Please reconnect to add subtasks.");
+    return;
+  }
+
   if (!newSubtaskTitle.value.trim()) return;
 
   isAddingSubtask.value = true;
@@ -219,6 +241,12 @@ onMounted(() => {
 
 // Generate subtasks with AI
 const handleGenerateSubtasks = async () => {
+  if (!isOnline.value) {
+    aiGenerationError.value =
+      "You're offline. AI features require an internet connection.";
+    return;
+  }
+
   aiGenerationError.value = null; // Clear previous errors
 
   try {
@@ -389,11 +417,11 @@ defineExpose({ loadSubtasks });
         class="flex-1 h-9 text-sm border-calm-300 focus:border-calm-500 bg-white"
         @keyup.enter="handleAddSubtask"
         @keyup.esc="cancelAddingSubtask"
-        :disabled="isAddingSubtask"
+        :disabled="isAddingSubtask || !isOnline"
       />
       <button
         @click="handleAddSubtask"
-        :disabled="isAddingSubtask || !newSubtaskTitle.trim()"
+        :disabled="isAddingSubtask || !newSubtaskTitle.trim() || !isOnline"
         class="p-2 text-calm-600 hover:text-calm-700 hover:bg-calm-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         title="Add subtask"
       >
@@ -412,7 +440,8 @@ defineExpose({ loadSubtasks });
     <div v-else class="space-y-2">
       <button
         @click="startAddingSubtask"
-        class="w-full flex items-center justify-center gap-2 p-3 text-sm font-medium text-calm-600 hover:text-calm-700 bg-calm-50/30 hover:bg-calm-100/50 rounded-lg transition-all duration-150 border border-dashed border-calm-300 hover:border-calm-400"
+        :disabled="!isOnline"
+        class="w-full flex items-center justify-center gap-2 p-3 text-sm font-medium text-calm-600 hover:text-calm-700 bg-calm-50/30 hover:bg-calm-100/50 rounded-lg transition-all duration-150 border border-dashed border-calm-300 hover:border-calm-400 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <Plus :size="18" />
         <span>Add a subtask</span>
@@ -420,7 +449,7 @@ defineExpose({ loadSubtasks });
 
       <button
         @click="handleGenerateSubtasks"
-        :disabled="aiLoading"
+        :disabled="aiLoading || !isOnline"
         class="w-full flex items-center justify-center gap-2 p-3 text-sm font-medium text-calm-700 hover:text-calm-800 bg-white hover:bg-calm-50 rounded-lg transition-all duration-150 border border-calm-200 hover:border-calm-300 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <Spinner v-if="aiLoading" class="h-4 w-4" />

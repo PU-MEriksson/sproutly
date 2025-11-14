@@ -5,6 +5,7 @@ import "vue-sonner/style.css"; // vue-sonner v2 requires this import
 
 <template>
   <div>
+    <OfflineBanner />
     <NuxtRouteAnnouncer />
     <NuxtPage />
     <Toaster />

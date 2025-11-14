@@ -53,10 +53,13 @@ const emit = defineEmits<{
 
 const { updateTask, deleteTask, removeFromToday, addToToday } = useTasks();
 const { celebrateTask, celebrateSubtask } = useCelebration();
+const { isOnline } = useOnlineStatus();
+const { success: showSuccess, error: showError } = useAppToast()
+
 
 const updatingTask = ref(false);
-const updateError = ref<string | null>(null);
 const localCompleted = ref(props.task.completed ?? false);
+const isRollingBack = ref(false);
 
 const subtaskListRef = ref<InstanceType<typeof SubtaskList> | null>(null);
 
@@ -120,8 +123,21 @@ watch(
 
 // Watch for checkbox changes and update DB
 watch(localCompleted, async (checked) => {
+  // Skip if we're rolling back to prevent infinite loop
+  if (isRollingBack.value) {
+    isRollingBack.value = false;
+    return;
+  }
+
+  // Prevent changes when offline
+  if (!isOnline.value) {
+    isRollingBack.value = true;
+    localCompleted.value = !checked; // rollback immediately
+    toast.error("You're offline. Please reconnect to make changes.");
+    return;
+  }
+
   updatingTask.value = true;
-  updateError.value = null;
   try {
     await updateTask(props.task.id, {
       completed: checked,
@@ -133,11 +149,14 @@ watch(localCompleted, async (checked) => {
     if (checked) {
       emit("task-completed", props.task.title);
       celebrateTask();
+      showSuccess("Task completed!", `"${props.task.title}" marked as done.`)
+
     }
   } catch (error) {
+    isRollingBack.value = true;
     localCompleted.value = !checked; // rollback
-    updateError.value = "Failed to update task";
     console.error("Failed to toggle task:", error);
+    showError("Failed to update task")
   } finally {
     updatingTask.value = false;
   }
@@ -151,20 +170,23 @@ const handleTaskUpdated = (updatedTask: Task) => {
 };
 
 const deletingTask = ref(false);
-const deleteError = ref<string | null>(null);
 
 const handleDeleteTask = async () => {
+  if (!isOnline.value) {
+    toast.error("You're offline. Please reconnect to delete tasks.");
+    return;
+  }
+
   if (!confirm("Are you sure you want to delete this task?")) return;
 
   deletingTask.value = true;
-  deleteError.value = null;
   try {
     await deleteTask(props.task.id);
-    toast.success("Task removed!");
+    showSuccess("Task deleted!");
     emit("delete", props.task.id);
   } catch (error) {
     console.error("Failed to delete task:", error);
-    deleteError.value = "Failed to delete task";
+    showError("Failed to delete task")
   } finally {
     deletingTask.value = false;
   }
@@ -180,13 +202,18 @@ const isOnToday = computed(() => {
 });
 
 const handleToggleToday = async () => {
+  if (!isOnline.value) {
+    toast.error("You're offline. Please reconnect to manage your tasks.");
+    return;
+  }
+
   togglingToday.value = true;
   try {
     if (isOnToday.value) {
       // Remove from Today
       await removeFromToday(props.task.id);
       console.log("Task removed from today");
-      toast.success("Task removed from Today");
+      showSuccess("Task removed from Today");
       // Only emit delete if we're on the Today page
       if (props.showRemoveFromToday) {
         emit("delete", props.task.id);
@@ -195,11 +222,11 @@ const handleToggleToday = async () => {
       // Add to Today
       await addToToday(props.task.id);
       console.log("Task added to today");
-      toast.success("Task added to Today");
+      showSuccess("Task added to Today");
     }
   } catch (error) {
     console.error("Failed to toggle task today status:", error);
-    toast.error(
+    showError(
       isOnToday.value ? "Failed to remove from today" : "Failed to add to today"
     );
   } finally {
@@ -233,7 +260,7 @@ const onAccordionChange = (value: string | string[] | undefined) => {
               v-model="localCompleted"
               :disabled="updatingTask"
               @click.stop
-              class="m-1 shrink-0 data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-calm-500 data-[state=checked]:to-calm-600 data-[state=checked]:border-calm-500"
+              class="m-1 shrink-0"
             />
             <div class="flex-1 min-w-0">
               <div class="flex items-start justify-between gap-2">
@@ -250,7 +277,7 @@ const onAccordionChange = (value: string | string[] | undefined) => {
                   <Badge
                     v-if="isOnToday && !showRemoveFromToday"
                     variant="secondary"
-                    class="bg-calm-100 text-calm-700 border-calm-300 hover:bg-calm-100 text-xs w-fit"
+                    class="text-xs w-fit"
                     title="On Today's list"
                   >
                     <Check :size="12" />

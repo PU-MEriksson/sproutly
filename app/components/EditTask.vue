@@ -25,6 +25,7 @@ import { getLocalTimeZone, DateFormatter } from "@internationalized/date";
 import type { DateValue } from "@internationalized/date";
 import { CalendarDate } from "@internationalized/date";
 import { ref, watch } from "vue";
+import { toast } from "vue-sonner";
 
 // Helper to convert date string (YYYY-MM-DD) to CalendarDate (DateValue)
 function toCalendarDate(dateString?: string | null): DateValue | undefined {
@@ -49,6 +50,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   updated: [task: Database["public"]["Tables"]["tasks"]["Row"]];
 }>();
+
+const { success: showSuccess, error: showError, promise } = useAppToast()
 
 // Calendar value for start date
 const startDateValue = ref<DateValue | undefined>(
@@ -108,8 +111,8 @@ const originalSubtasks = ref<{ id?: number; title: string }[]>([]);
 
 onMounted(async () => {
   const rows = await fetchSubtasks(props.task.id);
-  const mapped = rows.map(r => 
-  ({ id: r.id, 
+  const mapped = rows.map((r) => ({
+    id: r.id,
     title: r.title,
     completed: r.completed ?? false,
   }));
@@ -120,9 +123,16 @@ onMounted(async () => {
 const isSubmitting = ref(false);
 const errorMsg = ref("");
 const { updateTask } = useTasks();
-const { addSubtasks } = useSubtasks()
+const { addSubtasks } = useSubtasks();
+const { isOnline } = useOnlineStatus();
 
 const onSubmit = form.handleSubmit(async (values) => {
+  // Prevent submission when offline
+  if (!isOnline.value) {
+    toast.error("You're offline. Please reconnect to save changes.");
+    return;
+  }
+
   isSubmitting.value = true;
   try {
     const updated = await updateTask(props.task.id, {
@@ -135,83 +145,125 @@ const onSubmit = form.handleSubmit(async (values) => {
 
     await syncSubtasks(updated.id, originalSubtasks.value, values.subtasks);
     originalSubtasks.value = JSON.parse(JSON.stringify(values.subtasks));
-
+    showSuccess("Task updated!")
     emit("updated", updated);
   } catch (err) {
-    console.error("Failed to update", err);
+    showError("Failed to update task. Please try again!")
   } finally {
     isSubmitting.value = false;
   }
 });
 
-const handleSubtaskCompleted = (title: string) => {
-  console.log(`Subtask completed: ${title}`);
-  // Optional: Celebrate or update progress here
-};
-
 </script>
 
 <template>
-  <form @submit.prevent="onSubmit" class="space-y-6">
-    <FormField v-slot="{ componentField }" name="title">
-      <FormItem>
-        <FormLabel>Title</FormLabel>
-        <FormControl>
-          <Input type="text" placeholder="Task title" v-bind="componentField" />
-        </FormControl>
-        <FormMessage />
-      </FormItem>
-    </FormField>
+  <form @submit.prevent="onSubmit" class="space-y-8">
+    <!-- Header -->
+    <div class="space-y-2">
+      <h2 class="text-2xl font-semibold text-calm-800">Edit Task</h2>
+      <p class="text-sm text-calm-600">Update your task details</p>
+    </div>
 
-    <FormField v-slot="{ componentField }" name="description">
-      <FormItem>
-        <FormLabel>Description</FormLabel>
-        <FormControl>
-          <Textarea placeholder="Add details..." v-bind="componentField" />
-        </FormControl>
-        <FormMessage />
-      </FormItem>
-    </FormField>
+    <!-- Main Task Details -->
+    <div
+      class="space-y-6 p-6 bg-calm-50/30 rounded-xl border border-calm-200/50"
+    >
+      <FormField v-slot="{ componentField }" name="title">
+        <FormItem class="flex-1">
+          <FormLabel class="text-calm-800 font-medium">Title</FormLabel>
+          <FormControl>
+            <Input
+              type="text"
+              placeholder="Task title"
+              v-bind="componentField"
+              class="bg-white w-full"
+              :disabled="!isOnline"
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      </FormField>
 
-    <FormField v-slot="{ componentField }" name="startdate">
-      <FormItem>
-        <FormLabel>Start date</FormLabel>
-        <FormControl>
-          <Popover>
-            <PopoverTrigger as-child>
-              <Button
-                variant="outline"
-                :class="
-                  cn(
-                    'w-[280px] justify-start text-left font-normal',
-                    !startDateValue && 'text-muted-foreground'
-                  )
-                "
-              >
-                <CalendarIcon class="mr-2 h-4 w-4" />
-                {{
-                  startDateValue
-                    ? df.format(startDateValue.toDate(getLocalTimeZone()))
-                    : "Pick a date"
-                }}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent class="w-auto p-0">
-              <Calendar v-model="startDateValue" initial-focus />
-            </PopoverContent>
-          </Popover>
-        </FormControl>
-        <FormMessage />
-      </FormItem>
-    </FormField>
-    <div class="mt-6">
+      <FormField v-slot="{ componentField }" name="description">
+        <FormItem>
+          <FormLabel class="text-calm-800 font-medium">Description</FormLabel>
+          <FormControl>
+            <Textarea
+              placeholder="Add details..."
+              v-bind="componentField"
+              class="bg-white min-h-24 resize-none"
+              :disabled="!isOnline"
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      </FormField>
+    </div>
+
+    <!-- Timeline Section -->
+    <div class="space-y-4">
+      <div>
+        <h3 class="text-lg font-medium text-calm-800 mb-1">Timeline</h3>
+        <p class="text-sm text-calm-600">When would you like to start?</p>
+      </div>
+
+      <FormField v-slot="{ componentField }" name="startdate">
+        <FormItem>
+          <FormLabel class="text-calm-700">Start date</FormLabel>
+          <FormControl>
+            <Popover>
+              <PopoverTrigger as-child>
+                <Button
+                  variant="outline"
+                  :class="
+                    cn(
+                      'w-full sm:w-[280px] justify-start text-left font-normal bg-white',
+                      !startDateValue && 'text-calm-400'
+                    )
+                  "
+                  :disabled="!isOnline"
+                >
+                  <CalendarIcon class="mr-2 h-4 w-4 text-calm-500" />
+                  {{
+                    startDateValue
+                      ? df.format(startDateValue.toDate(getLocalTimeZone()))
+                      : "Pick a date"
+                  }}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent class="w-auto p-0">
+                <Calendar v-model="startDateValue" initial-focus />
+              </PopoverContent>
+            </Popover>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      </FormField>
+    </div>
+
+    <!-- Subtasks Section -->
+    <div class="space-y-4">
+      <div>
+        <h3 class="text-lg font-medium text-calm-800 mb-1">Subtasks</h3>
+        <p class="text-sm text-calm-600">Break it down into smaller steps</p>
+      </div>
       <EditSubtask />
     </div>
 
-    <div v-if="errorMsg" class="text-red-500 text-sm">{{ errorMsg }}</div>
+    <!-- Error Message -->
+    <div v-if="errorMsg" class="p-4 bg-red-50 border border-red-200 rounded-lg">
+      <p class="text-red-600 text-sm">{{ errorMsg }}</p>
+    </div>
 
-    <Button type="submit" :disabled="isSubmitting">
-      {{ isSubmitting ? "Saving..." : "Save" }}
-    </Button>
+    <!-- Submit Button -->
+    <div class="pt-4 border-t border-calm-200">
+      <Button
+        type="submit"
+        :disabled="isSubmitting || !isOnline"
+        class="min-w-32"
+      >
+        {{ isSubmitting ? "Saving..." : "Save Changes" }}
+      </Button>
+    </div>
   </form>
 </template>

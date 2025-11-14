@@ -1,7 +1,8 @@
 <script setup lang="ts">
+
 import { toTypedSchema } from "@vee-validate/zod";
 import * as z from "zod";
-import { useForm, useFieldArray } from "vee-validate";
+import { useForm } from "vee-validate";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -19,6 +20,7 @@ import { CalendarIcon } from "lucide-vue-next";
 import { ref, watch, onMounted } from "vue";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { toast } from "vue-sonner";
 import {
   FormControl,
   FormField,
@@ -26,10 +28,20 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { string } from "zod/v4";
 
 const props = defineProps<{
+  title?: string;
   defaultDate?: string;
 }>();
+
+const emit = defineEmits<{
+  'update:title': [string];
+  taskAdded: [];
+}>();
+
+const { success: showSuccess, error: showError, promise } = useAppToast()
+
 
 const df = new DateFormatter("sv-SE", {
   dateStyle: "long",
@@ -39,8 +51,10 @@ const startDateValue = ref<DateValue | undefined>();
 const endDateValue = ref<DateValue | undefined>();
 const deadlineValue = ref<DateValue | undefined>();
 const isSubmitting = ref(false);
+const { isOnline } = useOnlineStatus();
 
 const emit = defineEmits<{
+  "update:title": [string];
   taskAdded: [];
 }>();
 
@@ -113,7 +127,21 @@ onMounted(() => {
   }
 });
 
+onMounted(() => {
+  // Initialize title on mount
+  if (props.title) {
+    localTitle.value = props.title;
+    form.setFieldValue("title", props.title);
+  }
+});
+
 const onSubmit = form.handleSubmit(async (values) => {
+  // Prevent submission when offline
+  if (!isOnline.value) {
+    toast.error("You're offline. Please reconnect to add a task.");
+    return;
+  }
+
   isSubmitting.value = true;
 
   try {
@@ -125,6 +153,8 @@ const onSubmit = form.handleSubmit(async (values) => {
       values.deadline,
       values.subtasks
     );
+
+    showSuccess("Task added!");
 
     // Reset the form
     form.resetForm();
@@ -138,121 +168,138 @@ const onSubmit = form.handleSubmit(async (values) => {
     emit("taskAdded");
   } catch (error) {
     console.error("Failed to add task:", error);
-    alert("Failed to add task. Please try again.");
+    showError("Failed to add task. Please try again.")
   } finally {
     isSubmitting.value = false;
   }
 });
+
+const localTitle = ref(props.title ?? "");
+
+// Sync localTitle <-> props.title (parent)
+watch(localTitle, (val) => emit("update:title", val ?? ""));
+
+watch(
+  () => props.title,
+  (val) => {
+    if (val !== localTitle.value) {
+      localTitle.value = val ?? "";
+      form.setFieldValue("title", val ?? ""); // Keep VeeValidate in sync
+    }
+  }
+);
+
+// Keep localTitle in sync when user types into the validated field
+watch(
+  () => form.values.title,
+  (val) => {
+    if (val !== localTitle.value) {
+      localTitle.value = val ?? "";
+    }
+  }
+);
 </script>
 
 <template>
-  <form @submit.prevent="onSubmit" class="max-w-2xl mx-auto space-y-6 p-6">
-    <FormField v-slot="{ componentField }" name="title">
-      <FormItem>
-        <FormLabel>What would you like to do?</FormLabel>
-        <FormControl>
-          <Input
-            type="text"
-            placeholder="I want to..."
-            v-bind="componentField"
-          />
-        </FormControl>
-        <FormMessage />
-      </FormItem>
-    </FormField>
+  <form @submit.prevent="onSubmit" class="max-w-2xl mx-auto space-y-8 p-6">
+    <!-- Header -->
+    <div class="space-y-2">
+      <h2 class="text-2xl font-semibold text-calm-800">Add a New Task</h2>
+      <p class="text-sm text-calm-600">
+        Break it down into small, manageable steps
+      </p>
+    </div>
 
-    <FormField v-slot="{ componentField }" name="description">
-      <FormItem>
-        <FormLabel>More details (optional)</FormLabel>
-        <FormControl>
-          <Textarea
-            placeholder="Add more details here..."
-            class="resize-none"
-            v-bind="componentField"
-          />
-        </FormControl>
-        <FormMessage />
-      </FormItem>
-    </FormField>
-    <AddSubtask/>
-
- <!--    <FormField name="subtasks">
-      <FormItem>
-        <FormLabel>Subtasks</FormLabel>
-
-        <div class="space-y-3">
-          <div
-            v-for="(field, index) in fields"
-            :key="field.key"
-            class="flex items-center gap-2"
+    <!-- Main Task Details -->
+    <div
+      class="space-y-6 p-6 bg-calm-50/30 rounded-xl border border-calm-200/50"
+    >
+      <FormField v-slot="{ componentField }" name="title">
+        <FormItem class="flex-1">
+          <FormLabel class="text-calm-800 font-medium"
+            >What would you like to do?</FormLabel
           >
-            <FormField
-              :name="`subtasks[${index}].title`"
-              v-slot="{ componentField }"
-            >
-              <FormItem class="flex-1">
-                <FormControl>
-                  <Input
-                    placeholder="What's the next small step?"
-                    :aria-label="`Step ${index + 1}`"
-                    v-bind="componentField"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            </FormField>
+          <FormControl>
+            <Input
+              type="text"
+              placeholder="I want to..."
+              v-bind="componentField"
+              class="bg-white w-full"
+              :disabled="!isOnline"
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      </FormField>
 
-            <Button
-              type="button"
-              variant="destructive"
-              size="icon"
-              @click="remove(index)"
-              :aria-label="`Delete step ${index + 1}`"
-            >
-              <Trash2 class="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+      <FormField v-slot="{ componentField }" name="description">
+        <FormItem>
+          <FormLabel class="text-calm-800 font-medium"
+            >More details (optional)</FormLabel
+          >
+          <FormControl>
+            <Textarea
+              placeholder="Add more details here..."
+              class="resize-none bg-white min-h-24"
+              v-bind="componentField"
+              :disabled="!isOnline"
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      </FormField>
+    </div>
 
-        <Button type="button" variant="outline" @click="push({ title: '' })">
-          + Add Subtask
-        </Button>
+    <!-- Subtasks Section -->
+    <div class="space-y-4">
+      <h3 class="text-lg font-medium text-calm-800 mb-1">Break it down</h3>
+      <p class="text-sm text-calm-600">
+        Add small steps to make this task easier
+      </p>
+    </div>
 
-        <FormMessage />
-      </FormItem>
-    </FormField> -->
+    <AddSubtask />
 
-    <FormField v-slot="{ componentField }" name="startdate">
-      <FormItem>
-        <FormLabel>Start date (optional)</FormLabel>
-        <FormControl>
-          <Popover>
-            <PopoverTrigger as-child>
-              <Button
-                variant="outline"
-                :class="
-                  cn(
-                    'w-[280px] justify-start text-left font-normal',
-                    !startDateValue && 'text-muted-foreground'
-                  )
-                "
-              >
-                <CalendarIcon class="mr-2 h-4 w-4" />
-                {{
-                  startDateValue
-                    ? df.format(startDateValue.toDate(getLocalTimeZone()))
-                    : "Pick a date"
-                }}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent class="w-auto p-0">
-              <Calendar v-model="startDateValue" initial-focus />
-            </PopoverContent>
-          </Popover>
-        </FormControl>
-        <FormMessage />
-      </FormItem>
-    </FormField>
+    <!-- Timeline Section -->
+    <div class="space-y-4">
+      <div>
+        <h3 class="text-lg font-medium text-calm-800 mb-1">Timeline</h3>
+        <p class="text-sm text-calm-600">When do you want to start?</p>
+      </div>
+
+      <FormField v-slot="{ componentField }" name="startdate">
+        <FormItem>
+          <FormLabel class="text-calm-700">Start date (optional)</FormLabel>
+          <FormControl>
+            <Popover>
+              <PopoverTrigger as-child>
+                <Button
+                  variant="outline"
+                  :class="
+                    cn(
+                      'w-full sm:w-[280px] justify-start text-left font-normal bg-white',
+                      !startDateValue && 'text-calm-400'
+                    )
+                  "
+                  :disabled="!isOnline"
+                >
+                  <CalendarIcon class="mr-2 h-4 w-4 text-calm-500" />
+                  {{
+                    startDateValue
+                      ? df.format(startDateValue.toDate(getLocalTimeZone()))
+                      : "Pick a date"
+                  }}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent class="w-auto p-0">
+                <Calendar v-model="startDateValue" initial-focus />
+              </PopoverContent>
+            </Popover>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      </FormField>
+    </div>
 
     <!-- <FormField v-slot="{ componentField }" name="enddate">
       <FormItem>
@@ -319,8 +366,15 @@ const onSubmit = form.handleSubmit(async (values) => {
       </FormItem>
     </FormField> -->
 
-    <Button type="submit" :disabled="isSubmitting">
-      {{ isSubmitting ? "Adding..." : "Add Task" }}
-    </Button>
+    <!-- Submit Button -->
+    <div class="pt-4 border-t border-calm-200">
+      <Button
+        type="submit"
+        :disabled="isSubmitting || !isOnline"
+        class="min-w-32"
+      >
+        {{ isSubmitting ? "Adding..." : "Add Task" }}
+      </Button>
+    </div>
   </form>
 </template>
