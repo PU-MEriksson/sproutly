@@ -23,6 +23,19 @@ async function logout() {
 
         <Separator />
 
+        <!-- How It Works Link -->
+        <NuxtLink
+          to="/how-it-works"
+          class="block p-4 bg-white/70 backdrop-blur-sm rounded-xl border border-calm-200/40 hover:border-calm-300 transition-all"
+        >
+          <span class="text-calm-700 font-medium"
+            >How SupportiveToDo Works</span
+          >
+          <p class="text-sm text-calm-600 mt-1">
+            Learn how to use the app and get the most out of its features
+          </p>
+        </NuxtLink>
+
         <!-- About Link -->
         <NuxtLink
           to="/about"
