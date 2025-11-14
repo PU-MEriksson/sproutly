@@ -61,9 +61,11 @@ const {
 const aiComposable = useAI();
 const {
   generateSubtasks,
+  generateFirstStep,
   loading: aiLoading,
   error: aiError,
   subtasks: aiSubtasks,
+  firstStep: aiFirstStep, // Add this to destructure firstStep
 } = aiComposable;
 
 const subtasks = ref<Subtask[]>([]);
@@ -238,6 +240,54 @@ const cancelEditingSubtask = () => {
 onMounted(() => {
   loadSubtasks();
 });
+
+// Generate first step with AI
+const handleGenerateFirstStep = async () => {
+  if (!isOnline.value) {
+    aiGenerationError.value =
+      "You're offline. AI features require an internet connection.";
+    return;
+  }
+
+  aiGenerationError.value = null; // Clear previous errors
+
+  try {
+    // Prepare existing subtasks to send to AI
+    const existingSubtasksForAI = subtasks.value.map((st) => ({
+      title: st.title,
+      completed: st.completed ?? false,
+    }));
+
+    // Call AI to generate first step, passing existing subtasks
+    await generateFirstStep(
+      props.taskTitle,
+      props.taskDescription || undefined,
+      existingSubtasksForAI
+    );
+
+    // Check if AI generation failed
+    if (aiError.value) {
+      aiGenerationError.value =
+        "Failed to generate a first step to get started. Please try again.";
+      return;
+    }
+
+    // Check if we got a first step
+    if (!aiFirstStep.value) {
+      aiGenerationError.value =
+        "No first step was generated. Please try again.";
+      return;
+    }
+
+    // Log the first step to console (not saving to database)
+    console.log("AI first step generated:", aiFirstStep.value);
+
+    toast.success(`First step: ${aiFirstStep.value.title}`);
+  } catch (error) {
+    console.error("Failed to generate a first step with AI:", error);
+    aiGenerationError.value = "An unexpected error occurred. Please try again.";
+  }
+};
 
 // Generate subtasks with AI
 const handleGenerateSubtasks = async () => {
@@ -438,26 +488,41 @@ defineExpose({ loadSubtasks });
 
     <!-- Add subtask buttons -->
     <div v-else class="space-y-2">
-      <button
+      <Button
         @click="startAddingSubtask"
+        size="lg"
         :disabled="!isOnline"
-        class="w-full flex items-center justify-center gap-2 p-3 text-sm font-medium text-calm-600 hover:text-calm-700 bg-calm-50/30 hover:bg-calm-100/50 rounded-lg transition-all duration-150 border border-dashed border-calm-300 hover:border-calm-400 disabled:opacity-50 disabled:cursor-not-allowed"
+        variant="outline"
+        class="w-full flex items-center justify-center gap-2 border-dashed"
       >
         <Plus :size="18" />
         <span>Add a subtask</span>
-      </button>
+      </Button>
 
-      <button
-        @click="handleGenerateSubtasks"
-        :disabled="aiLoading || !isOnline"
-        class="w-full flex items-center justify-center gap-2 p-3 text-sm font-medium text-calm-700 hover:text-calm-800 bg-white hover:bg-calm-50 rounded-lg transition-all duration-150 border border-calm-200 hover:border-calm-300 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <Spinner v-if="aiLoading" class="h-4 w-4" />
-        <WandSparkles v-else class="h-4 w-4" />
-        <span>{{
-          aiLoading ? "Thinking..." : "Help me break down this task"
-        }}</span>
-      </button>
+      <div class="grid grid-cols-2 gap-2">
+        <Button
+          @click="handleGenerateSubtasks"
+          :disabled="aiLoading || !isOnline"
+          variant="outline"
+          size="lg"
+          class="flex items-center justify-center gap-2"
+        >
+          <Spinner v-if="aiLoading" class="h-4 w-4" />
+          <WandSparkles v-else class="h-4 w-4" />
+          <span>{{ aiLoading ? "Thinking..." : "Break down task" }}</span>
+        </Button>
+        <Button
+          @click="handleGenerateFirstStep"
+          :disabled="aiLoading || !isOnline"
+          variant="outline"
+          size="lg"
+          class="flex items-center justify-center gap-2"
+        >
+          <Spinner v-if="aiLoading" class="h-4 w-4" />
+          <WandSparkles v-else class="h-4 w-4" />
+          <span>{{ aiLoading ? "Thinking..." : "Help me start" }}</span>
+        </Button>
+      </div>
     </div>
   </div>
 </template>
