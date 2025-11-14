@@ -1,38 +1,11 @@
 <script setup lang="ts">
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
-import { Badge } from "@/components/ui/badge";
-import {
-  WandSparkles,
-  Pencil,
-  Trash2,
-  Plus,
-  Check,
-  X,
-  ArrowLeft,
-  ArrowRight,
-  Rocket,
-} from "lucide-vue-next";
+import { Pencil, Trash2, Plus, Check, X } from "lucide-vue-next";
 import { toast } from "vue-sonner";
 
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-
-import SubtaskList from "./SubtaskList.vue";
+import AITaskHelper from "./AITaskHelper.vue";
 import type { Database } from "~/types/database.types";
 
 const props = defineProps<{
@@ -44,8 +17,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "subtasks-changed", subtasks: Subtask[]): void;
   (e: "subtask-completed", subtaskTitle: string): void;
-  (e: "dismiss"): void;
-  (e: "add-as-subtask"): void;
 }>();
 
 type Subtask = Database["public"]["Tables"]["subtasks"]["Row"];
@@ -61,18 +32,7 @@ const {
   updateSubtask,
 } = useSubtasks();
 
-const aiComposable = useAI();
-const {
-  generateSubtasks,
-  generateFirstStep,
-  loading: aiLoading,
-  error: aiError,
-  subtasks: aiSubtasks,
-  firstStep: aiFirstStep, // Add this to destructure firstStep
-} = aiComposable;
-
 const subtasks = ref<Subtask[]>([]);
-const aiGenerationError = ref<string | null>(null);
 const loadingSubtasks = ref(false);
 const subtasksError = ref<string | null>(null);
 const newSubtaskTitle = ref("");
@@ -82,12 +42,6 @@ const addInputRef = ref<HTMLInputElement | null>(null);
 const editingSubtaskId = ref<number | null>(null);
 const editingSubtaskTitle = ref("");
 const editInputRefs = ref<{ [key: number]: HTMLInputElement | null }>({});
-const showHint = ref(false);
-const hint = ref("");
-
-// Separate loading states for AI functions
-const isGeneratingSubtasks = ref(false);
-const isGeneratingFirstStep = ref(false);
 
 const loadSubtasks = async () => {
   loadingSubtasks.value = true;
@@ -245,46 +199,10 @@ const cancelEditingSubtask = () => {
   editingSubtaskTitle.value = "";
 };
 
-const handleDismissHint = () => {
-  // Smooth transition out
-  showHint.value = false;
-  // Clear hint text after transition completes
-  setTimeout(() => {
-    hint.value = "";
-  }, 200);
-};
-
-const handleAddFirstStepAsSubtask = async () => {
-  if (!isOnline.value) {
-    toast.error("You're offline. Please reconnect to add subtasks.");
-    return;
-  }
-
-  if (!hint.value.trim()) return;
-
-  isAddingSubtask.value = true;
-  try {
-    const newSubtasks = await addSubtasks(props.taskId, [
-      { title: hint.value.trim() },
-    ]);
-
-    // Add to local state
-    if (newSubtasks.length > 0 && newSubtasks[0]) {
-      subtasks.value.push(newSubtasks[0]);
-      toast.success("First step added as subtask!");
-    }
-
-    // Smooth close with animation
-    showHint.value = false;
-    setTimeout(() => {
-      hint.value = "";
-    }, 200);
-  } catch (error) {
-    console.error("Failed to add first step as subtask:", error);
-    toast.error("Failed to add first step as subtask");
-  } finally {
-    isAddingSubtask.value = false;
-  }
+// Handle events from AITaskHelper component
+const handleSubtasksAdded = (newSubtasks: Subtask[]) => {
+  subtasks.value.unshift(...newSubtasks);
+  emit("subtasks-changed", subtasks.value);
 };
 
 // Load subtasks on component mount
@@ -292,192 +210,20 @@ onMounted(() => {
   loadSubtasks();
 });
 
-// Generate first step with AI
-const handleGenerateFirstStep = async () => {
-  if (!isOnline.value) {
-    aiGenerationError.value =
-      "You're offline. AI features require an internet connection.";
-    return;
-  }
-
-  isGeneratingFirstStep.value = true;
-  aiGenerationError.value = null; // Clear previous errors
-
-  try {
-    // Prepare existing subtasks to send to AI
-    const existingSubtasksForAI = subtasks.value.map((st) => ({
-      title: st.title,
-      completed: st.completed ?? false,
-    }));
-
-    // Call AI to generate first step, passing existing subtasks
-    await generateFirstStep(
-      props.taskTitle,
-      props.taskDescription || undefined,
-      existingSubtasksForAI
-    );
-
-    // Check if AI generation failed
-    if (aiError.value) {
-      aiGenerationError.value =
-        "Failed to generate a first step to get started. Please try again.";
-      return;
-    }
-
-    // Check if we got a first step
-    if (!aiFirstStep.value) {
-      aiGenerationError.value =
-        "No first step was generated. Please try again.";
-      return;
-    }
-
-    // Log the first step to console (not saving to database)
-    console.log("AI first step generated:", aiFirstStep.value);
-
-    toast.success(`First step: ${aiFirstStep.value.title}`);
-
-    if (aiFirstStep.value) {
-      hint.value = aiFirstStep.value.title;
-      showHint.value = true;
-    }
-  } catch (error) {
-    console.error("Failed to generate a first step with AI:", error);
-    aiGenerationError.value = "An unexpected error occurred. Please try again.";
-  } finally {
-    isGeneratingFirstStep.value = false;
-  }
-};
-
-// Generate subtasks with AI
-const handleGenerateSubtasks = async () => {
-  if (!isOnline.value) {
-    aiGenerationError.value =
-      "You're offline. AI features require an internet connection.";
-    return;
-  }
-
-  isGeneratingSubtasks.value = true;
-  aiGenerationError.value = null; // Clear previous errors
-
-  try {
-    // Prepare existing subtasks to send to AI
-    const existingSubtasksForAI = subtasks.value.map((st) => ({
-      title: st.title,
-      completed: st.completed ?? false,
-    }));
-
-    // Call AI to generate subtasks, passing existing ones
-    await generateSubtasks(
-      props.taskTitle,
-      props.taskDescription || undefined,
-      existingSubtasksForAI
-    ); // Check if AI generation failed
-    if (aiError.value) {
-      aiGenerationError.value =
-        "Failed to generate subtasks. Please try again.";
-      return;
-    }
-
-    // Check if we got any subtasks
-    if (!aiSubtasks.value || aiSubtasks.value.length === 0) {
-      aiGenerationError.value =
-        "No subtasks were generated. The task might already be simple enough!";
-      return;
-    }
-
-    // Try to save them to the database
-    try {
-      const newSubtasks = await addSubtasks(props.taskId, aiSubtasks.value);
-
-      // Add to local state to display them
-      subtasks.value.push(...newSubtasks);
-
-      console.log("AI subtasks generated and saved!", newSubtasks);
-    } catch (dbError) {
-      console.error("Failed to save subtasks to database:", dbError);
-      aiGenerationError.value = "Failed to save subtasks. Please try again.";
-    }
-  } catch (error) {
-    console.error("Failed to generate subtasks with AI:", error);
-    aiGenerationError.value = "An unexpected error occurred. Please try again.";
-  } finally {
-    isGeneratingSubtasks.value = false;
-  }
-};
-
 defineExpose({ loadSubtasks });
 </script>
 
 <template>
-  <!-- Error message -->
-  <div
-    v-if="aiGenerationError || aiError"
-    class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl"
-  >
-    <p class="text-sm text-red-700 font-medium">
-      {{ aiGenerationError || aiError }}
-    </p>
-    <button
-      @click="handleGenerateSubtasks"
-      class="mt-2 text-sm text-red-700 hover:text-red-800 underline underline-offset-2"
-    >
-      Try again
-    </button>
-  </div>
-
   <!-- Subtasks section -->
   <div class="space-y-3">
-    <!-- <h4 class="text-sm font-semibold text-calm-700">Subtasks</h4> -->
-    <!-- FirstStepHint.vue -->
-    <Transition
-      name="hint"
-      enter-active-class="transition-all duration-300 ease-out"
-      enter-from-class="opacity-0 scale-95 -translate-y-2"
-      enter-to-class="opacity-100 scale-100 translate-y-0"
-      leave-active-class="transition-all duration-200 ease-in"
-      leave-from-class="opacity-100 scale-100 translate-y-0"
-      leave-to-class="opacity-0 scale-95 -translate-y-2"
-    >
-      <Card
-        v-if="showHint"
-        class="mb-4 bg-gradient-to-br from-calm-100 via-calm-50 to-blue-50 border border-calm-200/50 shadow-sm"
-      >
-        <CardContent class="pt-4">
-          <div class="flex items-start gap-3">
-            <Rocket class="h-5 w-5 text-calm-600 mt-0.5" />
-            <div class="flex-1">
-              <p class="font-medium text-sm text-calm-900 mb-1">
-                To get started:
-              </p>
-              <p class="text-sm text-calm-700 leading-relaxed">
-                {{ hint }}
-              </p>
-            </div>
-          </div>
-
-          <div class="flex flex-col items-start gap-2 mt-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              @click="handleDismissHint"
-              class="text-calm-600 hover:text-calm-700 hover:bg-calm-100/70 w-auto"
-            >
-              ✓ Got it, thanks
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              @click="handleAddFirstStepAsSubtask"
-              :disabled="isAddingSubtask"
-              class="border-calm-300 text-calm-700 hover:bg-calm-50 w-auto"
-            >
-              <Spinner v-if="isAddingSubtask" class="h-3 w-3 mr-1" />
-              + Add as subtask
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </Transition>
+    <!-- AI Task Helper Component -->
+    <AITaskHelper
+      :task-id="taskId"
+      :task-title="taskTitle"
+      :task-description="taskDescription"
+      :existing-subtasks="subtasks"
+      @subtasks-added="handleSubtasksAdded"
+    />
 
     <p v-if="loadingSubtasks" class="text-sm text-calm-500">
       Loading subtasks...
@@ -562,10 +308,6 @@ defineExpose({ loadSubtasks });
         </div>
       </div>
     </div>
-    <!-- 
-    <p v-else-if="!showAddInput" class="text-sm text-calm-500 pl-3 italic">
-      No subtasks yet
-    </p> -->
 
     <!-- Add subtask inline input -->
     <div
@@ -598,7 +340,7 @@ defineExpose({ loadSubtasks });
       </button>
     </div>
 
-    <!-- Add subtask buttons -->
+    <!-- Add subtask button -->
     <div v-else class="space-y-2">
       <Button
         @click="startAddingSubtask"
@@ -610,35 +352,6 @@ defineExpose({ loadSubtasks });
         <Plus :size="18" />
         <span>Add a subtask</span>
       </Button>
-
-      <div class="grid grid-cols-2 gap-2">
-        <Button
-          @click="handleGenerateSubtasks"
-          :disabled="isGeneratingSubtasks || !isOnline"
-          variant="outline"
-          size="lg"
-          class="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200 text-purple-700 hover:bg-gradient-to-r hover:from-purple-100 hover:to-indigo-100 hover:border-purple-300"
-        >
-          <Spinner v-if="isGeneratingSubtasks" class="h-4 w-4" />
-          <WandSparkles v-else class="h-4 w-4" />
-          <span>{{
-            isGeneratingSubtasks ? "Thinking..." : "Break down task"
-          }}</span>
-        </Button>
-        <Button
-          @click="handleGenerateFirstStep"
-          :disabled="isGeneratingFirstStep || !isOnline"
-          variant="outline"
-          size="lg"
-          class="flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200 text-emerald-700 hover:bg-gradient-to-r hover:from-emerald-100 hover:to-teal-100 hover:border-emerald-300"
-        >
-          <Spinner v-if="isGeneratingFirstStep" class="h-4 w-4" />
-          <Rocket v-else class="h-4 w-4" />
-          <span>{{
-            isGeneratingFirstStep ? "Thinking..." : "Help me start"
-          }}</span>
-        </Button>
-      </div>
     </div>
   </div>
 </template>
