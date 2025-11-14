@@ -1,37 +1,11 @@
 <script setup lang="ts">
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
-import { Badge } from "@/components/ui/badge";
-import {
-  WandSparkles,
-  Pencil,
-  Trash2,
-  Plus,
-  Check,
-  X,
-  ArrowLeft,
-  ArrowRight,
-} from "lucide-vue-next";
+import { Pencil, Trash2, Plus, Check, X } from "lucide-vue-next";
 import { toast } from "vue-sonner";
 
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-
-import SubtaskList from "./SubtaskList.vue";
+import AITaskHelper from "./AITaskHelper.vue";
 import type { Database } from "~/types/database.types";
 
 const props = defineProps<{
@@ -58,16 +32,7 @@ const {
   updateSubtask,
 } = useSubtasks();
 
-const aiComposable = useAI();
-const {
-  generateSubtasks,
-  loading: aiLoading,
-  error: aiError,
-  subtasks: aiSubtasks,
-} = aiComposable;
-
 const subtasks = ref<Subtask[]>([]);
-const aiGenerationError = ref<string | null>(null);
 const loadingSubtasks = ref(false);
 const subtasksError = ref<string | null>(null);
 const newSubtaskTitle = ref("");
@@ -234,88 +199,31 @@ const cancelEditingSubtask = () => {
   editingSubtaskTitle.value = "";
 };
 
+// Handle events from AITaskHelper component
+const handleSubtasksAdded = (newSubtasks: Subtask[]) => {
+  subtasks.value.unshift(...newSubtasks);
+  emit("subtasks-changed", subtasks.value);
+};
+
 // Load subtasks on component mount
 onMounted(() => {
   loadSubtasks();
 });
 
-// Generate subtasks with AI
-const handleGenerateSubtasks = async () => {
-  if (!isOnline.value) {
-    aiGenerationError.value =
-      "You're offline. AI features require an internet connection.";
-    return;
-  }
-
-  aiGenerationError.value = null; // Clear previous errors
-
-  try {
-    // Prepare existing subtasks to send to AI
-    const existingSubtasksForAI = subtasks.value.map((st) => ({
-      title: st.title,
-      completed: st.completed ?? false,
-    }));
-
-    // Call AI to generate subtasks, passing existing ones
-    await generateSubtasks(
-      props.taskTitle,
-      props.taskDescription || undefined,
-      existingSubtasksForAI
-    ); // Check if AI generation failed
-    if (aiError.value) {
-      aiGenerationError.value =
-        "Failed to generate subtasks. Please try again.";
-      return;
-    }
-
-    // Check if we got any subtasks
-    if (!aiSubtasks.value || aiSubtasks.value.length === 0) {
-      aiGenerationError.value =
-        "No subtasks were generated. The task might already be simple enough!";
-      return;
-    }
-
-    // Try to save them to the database
-    try {
-      const newSubtasks = await addSubtasks(props.taskId, aiSubtasks.value);
-
-      // Add to local state to display them
-      subtasks.value.push(...newSubtasks);
-
-      console.log("AI subtasks generated and saved!", newSubtasks);
-    } catch (dbError) {
-      console.error("Failed to save subtasks to database:", dbError);
-      aiGenerationError.value = "Failed to save subtasks. Please try again.";
-    }
-  } catch (error) {
-    console.error("Failed to generate subtasks with AI:", error);
-    aiGenerationError.value = "An unexpected error occurred. Please try again.";
-  }
-};
-
 defineExpose({ loadSubtasks });
 </script>
 
 <template>
-  <!-- Error message -->
-  <div
-    v-if="aiGenerationError || aiError"
-    class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl"
-  >
-    <p class="text-sm text-red-700 font-medium">
-      {{ aiGenerationError || aiError }}
-    </p>
-    <button
-      @click="handleGenerateSubtasks"
-      class="mt-2 text-sm text-red-700 hover:text-red-800 underline underline-offset-2"
-    >
-      Try again
-    </button>
-  </div>
-
   <!-- Subtasks section -->
   <div class="space-y-3">
-    <!-- <h4 class="text-sm font-semibold text-calm-700">Subtasks</h4> -->
+    <!-- AI Task Helper Component -->
+    <AITaskHelper
+      :task-id="taskId"
+      :task-title="taskTitle"
+      :task-description="taskDescription"
+      :existing-subtasks="subtasks"
+      @subtasks-added="handleSubtasksAdded"
+    />
 
     <p v-if="loadingSubtasks" class="text-sm text-calm-500">
       Loading subtasks...
@@ -400,10 +308,6 @@ defineExpose({ loadSubtasks });
         </div>
       </div>
     </div>
-    <!-- 
-    <p v-else-if="!showAddInput" class="text-sm text-calm-500 pl-3 italic">
-      No subtasks yet
-    </p> -->
 
     <!-- Add subtask inline input -->
     <div
@@ -436,28 +340,18 @@ defineExpose({ loadSubtasks });
       </button>
     </div>
 
-    <!-- Add subtask buttons -->
+    <!-- Add subtask button -->
     <div v-else class="space-y-2">
-      <button
+      <Button
         @click="startAddingSubtask"
+        size="lg"
         :disabled="!isOnline"
-        class="w-full flex items-center justify-center gap-2 p-3 text-sm font-medium text-calm-600 hover:text-calm-700 bg-calm-50/30 hover:bg-calm-100/50 rounded-lg transition-all duration-150 border border-dashed border-calm-300 hover:border-calm-400 disabled:opacity-50 disabled:cursor-not-allowed"
+        variant="outline"
+        class="w-full flex items-center justify-center gap-2 border-dashed"
       >
         <Plus :size="18" />
         <span>Add a subtask</span>
-      </button>
-
-      <button
-        @click="handleGenerateSubtasks"
-        :disabled="aiLoading || !isOnline"
-        class="w-full flex items-center justify-center gap-2 p-3 text-sm font-medium text-calm-700 hover:text-calm-800 bg-white hover:bg-calm-50 rounded-lg transition-all duration-150 border border-calm-200 hover:border-calm-300 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <Spinner v-if="aiLoading" class="h-4 w-4" />
-        <WandSparkles v-else class="h-4 w-4" />
-        <span>{{
-          aiLoading ? "Thinking..." : "Help me break down this task"
-        }}</span>
-      </button>
+      </Button>
     </div>
   </div>
 </template>
