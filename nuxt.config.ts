@@ -5,16 +5,23 @@ export default defineNuxtConfig({
   css: ["~/assets/css/tailwind.css"],
   vite: {
     plugins: [tailwindcss()],
+    define: {
+      __WORKBOX_DEBUG__: false,
+    },
   },
   modules: ["@nuxtjs/supabase", "shadcn-nuxt", "@vite-pwa/nuxt"],
   app: {
     head: {
-      link: [{ rel: "manifest", href: "/manifest.webmanifest" }],
+      link:
+        process.env.NODE_ENV === "production"
+          ? [{ rel: "manifest", href: "/manifest.webmanifest" }]
+          : [],
       meta: [{ name: "theme-color", content: "#ffffff" }],
     },
   },
   pwa: {
     registerType: "autoUpdate",
+    disable: process.env.NODE_ENV === "development",
     manifest: {
       name: "Supportive ToDo",
       short_name: "ToDo",
@@ -39,6 +46,11 @@ export default defineNuxtConfig({
     },
     workbox: {
       globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
+      navigateFallbackDenylist: [/^\/api\//],
+      cleanupOutdatedCaches: true,
+      clientsClaim: true,
+      skipWaiting: true,
+      sourcemap: false,
       runtimeCaching: [
         {
           urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
@@ -46,11 +58,16 @@ export default defineNuxtConfig({
         },
       ],
     },
+    registerWebManifestInRouteRules: false,
+    injectManifest: {
+      globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
+    },
     client: {
       installPrompt: true,
     },
     devOptions: {
       enabled: false, // Disable PWA in dev to reduce console noise
+      suppressWarnings: true,
       type: "module",
       navigateFallback: "/",
     },

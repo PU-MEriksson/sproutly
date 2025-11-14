@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
   });
 
   const result = await generateObject({
-    model: openai("gpt-4o-mini"),
+    model: openai("gpt-5-mini"),
     schema: z.object({
       subtasks: z.array(
         z.object({
