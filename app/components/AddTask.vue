@@ -53,11 +53,6 @@ const deadlineValue = ref<DateValue | undefined>();
 const isSubmitting = ref(false);
 const { isOnline } = useOnlineStatus();
 
-const emit = defineEmits<{
-  "update:title": [string];
-  taskAdded: [];
-}>();
-
 const subtaskSchema = z.object({
   title: z.string().min(1, "Subtask title is required"),
 });
