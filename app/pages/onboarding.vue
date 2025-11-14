@@ -34,6 +34,21 @@ const saveProfile = async () => {
   if (!success) {
     console.error("Failed to save profile");
   } else {
+    // After saving profile, offer to show instructions
+    navigateTo("/how-it-works?onboarding=true");
+  }
+};
+
+const skipToApp = async () => {
+  if (!import.meta.client) return;
+
+  loading.value = true;
+  const success = await updateUsername(username.value);
+  loading.value = false;
+
+  if (!success) {
+    console.error("Failed to save profile");
+  } else {
     navigateTo("/today");
   }
 };
@@ -88,14 +103,26 @@ const saveProfile = async () => {
             <DailyResetPreference :show-toast="false" compact show-hint />
           </div>
 
-          <Button
-            @click="saveProfile"
-            size="lg"
-            class="w-full h-12 bg-gradient-to-br from-calm-500 to-calm-600 hover:from-calm-600 hover:to-calm-700 text-white shadow-sm hover:shadow-md"
-            :disabled="!username || loading"
-          >
-            {{ loading ? "Saving..." : "Continue" }}
-          </Button>
+          <div class="space-y-3">
+            <Button
+              @click="saveProfile"
+              size="lg"
+              class="w-full h-12 bg-gradient-to-br from-calm-500 to-calm-600 hover:from-calm-600 hover:to-calm-700 text-white shadow-sm hover:shadow-md"
+              :disabled="!username || loading"
+            >
+              {{ loading ? "Saving..." : "Continue & Learn How It Works" }}
+            </Button>
+
+            <Button
+              @click="skipToApp"
+              variant="ghost"
+              size="lg"
+              class="w-full h-12 text-calm-600 hover:text-calm-700 hover:bg-calm-50"
+              :disabled="!username || loading"
+            >
+              Skip to App
+            </Button>
+          </div>
         </div>
       </div>
     </div>
