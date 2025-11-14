@@ -1,9 +1,23 @@
 <script setup lang="ts">
+
 import { toTypedSchema } from "@vee-validate/zod";
 import * as z from "zod";
 import { useForm } from "vee-validate";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { getLocalTimeZone } from "@internationalized/date";
+import type { DateValue } from "@internationalized/date";
+import { CalendarDate } from "@internationalized/date";
+import { ref, watch } from "vue";
+import { toast } from "vue-sonner";
+import { Button } from "@/components/ui/button";
+import type { Database } from "~/types/database.types";
+import { cn } from "~/lib/utils";
+import { CalendarIcon } from "lucide-vue-next";
+import { Calendar } from "@/components/ui/calendar";
+import { df } from "../utils/dates";
+
+
 import {
   FormControl,
   FormField,
@@ -11,21 +25,27 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import type { Database } from "~/types/database.types";
-import { cn } from "~/lib/utils";
-import { CalendarIcon } from "lucide-vue-next";
-import { Calendar } from "@/components/ui/calendar";
+
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { getLocalTimeZone, DateFormatter } from "@internationalized/date";
-import type { DateValue } from "@internationalized/date";
-import { CalendarDate } from "@internationalized/date";
-import { ref, watch } from "vue";
-import { toast } from "vue-sonner";
+
+const props = defineProps<{
+  task: Database["public"]["Tables"]["tasks"]["Row"];
+}>();
+
+const emit = defineEmits<{
+  updated: [task: Database["public"]["Tables"]["tasks"]["Row"]];
+}>();
+
+const { success: showSuccess, error: showError } = useAppToast();
+
+// Calendar value for start date
+const startDateValue = ref<DateValue | undefined>(
+  toCalendarDate(props.task.startdate ?? undefined)
+) as Ref<DateValue | undefined>;
 
 // Helper to convert date string (YYYY-MM-DD) to CalendarDate (DateValue)
 function toCalendarDate(dateString?: string | null): DateValue | undefined {
@@ -40,23 +60,13 @@ function toCalendarDate(dateString?: string | null): DateValue | undefined {
   return new CalendarDate(year, month, day);
 }
 
-const df = new DateFormatter("en-US", {
-  dateStyle: "long",
-});
 
-const props = defineProps<{
-  task: Database["public"]["Tables"]["tasks"]["Row"];
-}>();
-const emit = defineEmits<{
-  updated: [task: Database["public"]["Tables"]["tasks"]["Row"]];
-}>();
 
-const { success: showSuccess, error: showError, promise } = useAppToast()
 
-// Calendar value for start date
-const startDateValue = ref<DateValue | undefined>(
-  toCalendarDate(props.task.startdate ?? undefined)
-) as Ref<DateValue | undefined>;
+
+
+
+
 
 watch(startDateValue, (val) => {
   if (val) {
