@@ -66,7 +66,7 @@ const subtaskListRef = ref<InstanceType<typeof SubtaskList> | null>(null);
 // Track accordion open/closed state
 const route = useRoute();
 const accordionValue = ref<string | undefined>(undefined);
-
+/* 
 // Storage key based on route and task ID
 const storageKey = computed(() => `accordion-${route.path}-${props.task.id}`);
 
@@ -109,7 +109,7 @@ watch(
       currentPath.value = newPath;
     }
   }
-);
+); */
 
 let currentDate = new Date().toJSON().slice(0, 10);
 
