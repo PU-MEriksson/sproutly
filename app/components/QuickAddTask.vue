@@ -129,6 +129,7 @@ onUnmounted(() => {
             <FormControl>
               <Input
                 type="text"
+                maxlength="100"
                 placeholder="What needs to be done?"
                 v-bind="componentField"
                 @focus="handleInputFocus"
@@ -137,6 +138,7 @@ onUnmounted(() => {
                 :disabled="!isOnline"
               />
             </FormControl>
+            <CharCounter v-if="title?.length" :current="title?.length ?? 0" :max="100"/>
             <FormMessage />
           </FormItem>
         </FormField>

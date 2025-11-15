@@ -1,16 +1,17 @@
 <script setup lang="ts">
 
-import { useForm } from "vee-validate";
+import { useForm, useFieldValue } from "vee-validate";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-vue-next";
-import { ref, watch, onMounted } from "vue";
+import { ref, watch } from "vue";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { toast } from "vue-sonner";
 import { df } from "../utils/dates";
 import { getLocalTimeZone } from "@internationalized/date";
 import { taskSchema } from "~/schemas/task";
+import CharCounter from "@/components/CharCounter.vue"
 
 import {
   Popover,
@@ -118,6 +119,9 @@ watch(
   { immediate: true }     // This ensures initial sync correctly
 );
 
+const titleValue = useFieldValue<string>("title");
+
+const descValue = useFieldValue<string>("description");
 </script>
 
 <template>
@@ -142,12 +146,14 @@ watch(
           <FormControl>
             <Input
               type="text"
+              maxlength="100"
               placeholder="I want to..."
               v-model="titleModel"
               class="bg-white w-full"
               :disabled="!isOnline"
             />
           </FormControl>
+          <CharCounter :current="titleValue.length ?? 0" :max="100"/>
           <FormMessage />
         </FormItem>
       </FormField>
@@ -159,12 +165,14 @@ watch(
           >
           <FormControl>
             <Textarea
-              placeholder="Add more details here..."
+              placeholder="Add more details here..."¨
+              maxlength="500"
               class="resize-none bg-white min-h-24"
               v-bind="componentField"
               :disabled="!isOnline"
             />
           </FormControl>
+          <CharCounter :current="descValue.length ?? 0" :max="500"/>
           <FormMessage />
         </FormItem>
       </FormField>

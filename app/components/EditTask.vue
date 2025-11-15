@@ -2,7 +2,7 @@
 
 import { toTypedSchema } from "@vee-validate/zod";
 import * as z from "zod";
-import { useForm } from "vee-validate";
+import { useFieldValue, useForm } from "vee-validate";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { getLocalTimeZone } from "@internationalized/date";
@@ -107,6 +107,10 @@ const onSubmit = form.handleSubmit(async (values) => {
   }
 });
 
+const titleValue = useFieldValue<string>("title");
+
+const descValue = useFieldValue<string>("description");
+
 </script>
 
 <template>
@@ -127,12 +131,14 @@ const onSubmit = form.handleSubmit(async (values) => {
           <FormControl>
             <Input
               type="text"
+              maxlength="100"
               placeholder="Task title"
               v-bind="componentField"
               class="bg-white w-full"
               :disabled="!isOnline"
             />
           </FormControl>
+          <CharCounter :current="(titleValue || '').length" :max="100"/>
           <FormMessage />
         </FormItem>
       </FormField>
@@ -143,11 +149,15 @@ const onSubmit = form.handleSubmit(async (values) => {
           <FormControl>
             <Textarea
               placeholder="Add details..."
+              maxlength="500"
               v-bind="componentField"
               class="bg-white min-h-24 resize-none"
               :disabled="!isOnline"
             />
           </FormControl>
+          <CharCounter :current="(descValue || '').length" :max="500"
+          v-if="descValue"
+          />
           <FormMessage />
         </FormItem>
       </FormField>
