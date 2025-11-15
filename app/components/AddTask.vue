@@ -1,7 +1,5 @@
 <script setup lang="ts">
 
-import { toTypedSchema } from "@vee-validate/zod";
-import * as z from "zod";
 import { useForm } from "vee-validate";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
@@ -11,17 +9,14 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { toast } from "vue-sonner";
 import { df } from "../utils/dates";
+import { getLocalTimeZone } from "@internationalized/date";
+import { taskSchema } from "~/schemas/task";
 
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-
-import {
-  getLocalTimeZone,
-  parseDate,
-} from "@internationalized/date";
 
 import {
   FormControl,
@@ -49,40 +44,22 @@ const isSubmitting = ref(false);
 
 const { isOnline } = useOnlineStatus();
 
-const subtaskSchema = z.object({
-  title: z.string().min(1, "Subtask title is required"),
-});
-
-const taskSchema = toTypedSchema(
-  z.object({
-    title: z.string().min(1, "Task title is required"),
-    description: z.string().optional(),
-    startdate: z.string().date().optional(),
-    enddate: z.string().date().optional(),
-    deadline: z.string().date().optional(),
-    subtasks: z.array(subtaskSchema).default([]),
-  })
-);
-
 const form = useForm({
   validationSchema: taskSchema,
   initialValues: {
+    title: props.title ?? "",
+    description: "",
+    startdate: props.defaultDate ?? undefined,
+    enddate: undefined,
+    deadline: undefined,
     subtasks: [],
   },
 });
 
-
-
-const startDateValue = useDateField(form, "startdate", computed(() => props.defaultDate));
-
-
-onMounted(() => {
-  // Initialize title on mount
-  if (props.title) {
-    localTitle.value = props.title;
-    form.setFieldValue("title", props.title);
-  }
-});
+const startDateValue = useDateField(
+  form, 
+  "startdate", 
+  computed(() => props.defaultDate));
 
 const onSubmit = form.handleSubmit(async (values) => {
   // Prevent submission when offline
@@ -111,6 +88,8 @@ const onSubmit = form.handleSubmit(async (values) => {
     // Reset date values
     startDateValue.value = undefined;
 
+    emit("update:title", "");
+
     // Emit event to parent to refresh tasks
     emit("taskAdded");
   } catch (error) {
@@ -121,30 +100,24 @@ const onSubmit = form.handleSubmit(async (values) => {
   }
 });
 
-const localTitle = ref(props.title ?? "");
-
-// Sync localTitle <-> props.title (parent)
-watch(localTitle, (val) => emit("update:title", val ?? ""));
+const titleModel = computed({
+  get: () => form.values.title,
+  set: (val) => {
+    form.setFieldValue("title", val);
+    emit("update:title", val ?? "")
+  },
+});
 
 watch(
   () => props.title,
   (val) => {
-    if (val !== localTitle.value) {
-      localTitle.value = val ?? "";
-      form.setFieldValue("title", val ?? ""); // Keep VeeValidate in sync
+    if (val !== form.values.title) {
+      form.setFieldValue("title", val ?? "");
     }
-  }
+  },
+  { immediate: true }     // This ensures initial sync correctly
 );
 
-// Keep localTitle in sync when user types into the validated field
-watch(
-  () => form.values.title,
-  (val) => {
-    if (val !== localTitle.value) {
-      localTitle.value = val ?? "";
-    }
-  }
-);
 </script>
 
 <template>
@@ -170,7 +143,7 @@ watch(
             <Input
               type="text"
               placeholder="I want to..."
-              v-bind="componentField"
+              v-model="titleModel"
               class="bg-white w-full"
               :disabled="!isOnline"
             />
