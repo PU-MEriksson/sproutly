@@ -1,9 +1,23 @@
 <script setup lang="ts">
+
 import { toTypedSchema } from "@vee-validate/zod";
 import * as z from "zod";
 import { useForm } from "vee-validate";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { getLocalTimeZone } from "@internationalized/date";
+import { ref, computed } from "vue";
+import { toast } from "vue-sonner";
+import { Button } from "@/components/ui/button";
+import type { Database } from "~/types/database.types";
+import { cn } from "~/lib/utils";
+import { CalendarIcon } from "lucide-vue-next";
+import { Calendar } from "@/components/ui/calendar";
+import { df } from "../utils/dates";
+import { useDateField } from "@/composables/useDateField";
+import { subtaskSchema, taskSchema } from "~/schemas/task";
+
+
 import {
   FormControl,
   FormField,
@@ -11,87 +25,25 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import type { Database } from "~/types/database.types";
-import { cn } from "~/lib/utils";
-import { CalendarIcon } from "lucide-vue-next";
-import { Calendar } from "@/components/ui/calendar";
+
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { getLocalTimeZone, DateFormatter } from "@internationalized/date";
-import type { DateValue } from "@internationalized/date";
-import { CalendarDate } from "@internationalized/date";
-import { ref, watch } from "vue";
-import { toast } from "vue-sonner";
-
-// Helper to convert date string (YYYY-MM-DD) to CalendarDate (DateValue)
-function toCalendarDate(dateString?: string | null): DateValue | undefined {
-  if (!dateString) return undefined;
-  // Expecting YYYY-MM-DD
-  const parts = dateString.split("-");
-  if (parts.length !== 3) return undefined;
-  const year = Number(parts[0]);
-  const month = Number(parts[1]);
-  const day = Number(parts[2]);
-  if (!year || !month || !day) return undefined;
-  return new CalendarDate(year, month, day);
-}
-
-const df = new DateFormatter("en-US", {
-  dateStyle: "long",
-});
 
 const props = defineProps<{
   task: Database["public"]["Tables"]["tasks"]["Row"];
 }>();
+
 const emit = defineEmits<{
   updated: [task: Database["public"]["Tables"]["tasks"]["Row"]];
 }>();
 
-const { success: showSuccess, error: showError, promise } = useAppToast()
+const { success: showSuccess, error: showError } = useAppToast()
+const { fetchSubtasks, syncSubtasks } = useSubtasks();
 
-// Calendar value for start date
-const startDateValue = ref<DateValue | undefined>(
-  toCalendarDate(props.task.startdate ?? undefined)
-) as Ref<DateValue | undefined>;
-
-watch(startDateValue, (val) => {
-  if (val) {
-    const ymd = `${val.year.toString().padStart(4, "0")}-${val.month
-      .toString()
-      .padStart(2, "0")}-${val.day.toString().padStart(2, "0")}`;
-    form.setFieldValue("startdate", ymd);
-  } else {
-    form.setFieldValue("startdate", undefined);
-  }
-});
-
-watch(
-  () => props.task.startdate,
-  (val) => {
-    startDateValue.value = toCalendarDate(val ?? undefined);
-  }
-);
-
-const subtaskSchema = z.object({
-  id: z.number().optional(),
-  title: z.string().min(1, "Subtask title is required"),
-  completed: z.boolean().default(false),
-});
-
-const taskSchema = toTypedSchema(
-  z.object({
-    title: z.string().min(1, "Task title is required"),
-    description: z.string().optional(),
-    startdate: z.string().date().optional(),
-    enddate: z.string().date().optional(),
-    deadline: z.string().date().optional(),
-    subtasks: z.array(subtaskSchema).default([]),
-  })
-);
+const originalSubtasks = ref<{ id?: number; title: string }[]>([]);
 
 const form = useForm({
   validationSchema: taskSchema,
@@ -105,9 +57,11 @@ const form = useForm({
   },
 });
 
-const { fetchSubtasks, syncSubtasks } = useSubtasks();
-
-const originalSubtasks = ref<{ id?: number; title: string }[]>([]);
+const startDateValue = useDateField(
+  form,
+  "startdate",
+  computed(() => props.task.startdate ?? undefined)
+);
 
 onMounted(async () => {
   const rows = await fetchSubtasks(props.task.id);
@@ -117,13 +71,12 @@ onMounted(async () => {
     completed: r.completed ?? false,
   }));
   form.setFieldValue("subtasks", mapped);
-  originalSubtasks.value = JSON.parse(JSON.stringify(mapped));
+  originalSubtasks.value = mapped.map(s => ({ ...s }));
 });
 
 const isSubmitting = ref(false);
 const errorMsg = ref("");
 const { updateTask } = useTasks();
-const { addSubtasks } = useSubtasks();
 const { isOnline } = useOnlineStatus();
 
 const onSubmit = form.handleSubmit(async (values) => {
