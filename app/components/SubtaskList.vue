@@ -56,6 +56,8 @@ const loadSubtasks = async () => {
       // Otherwise maintain creation order
       return 0;
     });
+    // Emit the subtasks-changed event so parent components can track progress
+    emit("subtasks-changed", subtasks.value);
   } catch (error) {
     console.error("Failed to load subtasks:", error);
     subtasksError.value = "Failed to load subtasks";
@@ -97,6 +99,8 @@ const handleSubtaskToggle = async (
       subtask.completed = isCompleted;
       // Force reactivity update
       subtasks.value = [...subtasks.value];
+      // Emit updated subtasks for progress tracking
+      emit("subtasks-changed", subtasks.value);
     }
 
     // Celebrate if marking as complete
@@ -125,6 +129,8 @@ const handleDeleteSubtask = async (subtaskId: number) => {
     await deleteSubtask(subtaskId);
     // Remove from local state
     subtasks.value = subtasks.value.filter((st) => st.id !== subtaskId);
+    // Emit updated subtasks for progress tracking
+    emit("subtasks-changed", subtasks.value);
   } catch (error) {
     console.error("Failed to delete subtask:", error);
   }
