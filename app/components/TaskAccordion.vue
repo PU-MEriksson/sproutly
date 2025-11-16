@@ -34,7 +34,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
 
 import SubtaskList from "./SubtaskList.vue";
 
@@ -54,14 +54,43 @@ const emit = defineEmits<{
 const { updateTask, deleteTask, removeFromToday, addToToday } = useTasks();
 const { celebrateTask, celebrateSubtask } = useCelebration();
 const { isOnline } = useOnlineStatus();
-const { success: showSuccess, error: showError } = useAppToast()
-
+const { success: showSuccess, error: showError } = useAppToast();
+const { fetchSubtasks } = useSubtasks();
 
 const updatingTask = ref(false);
 const localCompleted = ref(props.task.completed ?? false);
 const isRollingBack = ref(false);
 
 const subtaskListRef = ref<InstanceType<typeof SubtaskList> | null>(null);
+
+// Track subtasks for progress calculation
+const subtasks = ref<Database["public"]["Tables"]["subtasks"]["Row"][]>([]);
+
+// Calculate subtask progress
+const subtaskProgress = computed(() => {
+  if (subtasks.value.length === 0) return 0;
+  const completed = subtasks.value.filter((st) => st.completed).length;
+  const progress = Math.round((completed / subtasks.value.length) * 100);
+  console.log(
+    "Subtask progress:",
+    progress,
+    "completed:",
+    completed,
+    "total:",
+    subtasks.value.length
+  );
+  return progress;
+});
+
+const hasSubtasks = computed(() => subtasks.value.length > 0);
+
+// Update subtasks when they change
+const handleSubtasksChanged = (
+  updated: Database["public"]["Tables"]["subtasks"]["Row"][]
+) => {
+  subtasks.value = updated;
+  console.log("Updated subtasks", updated);
+};
 
 // Track accordion open/closed state
 const route = useRoute();
@@ -149,14 +178,13 @@ watch(localCompleted, async (checked) => {
     if (checked) {
       emit("task-completed", props.task.title);
       celebrateTask();
-      showSuccess("Task completed!", `"${props.task.title}" marked as done.`)
-
+      showSuccess("Task completed!", `"${props.task.title}" marked as done.`);
     }
   } catch (error) {
     isRollingBack.value = true;
     localCompleted.value = !checked; // rollback
     console.error("Failed to toggle task:", error);
-    showError("Failed to update task")
+    showError("Failed to update task");
   } finally {
     updatingTask.value = false;
   }
@@ -186,7 +214,7 @@ const handleDeleteTask = async () => {
     emit("delete", props.task.id);
   } catch (error) {
     console.error("Failed to delete task:", error);
-    showError("Failed to delete task")
+    showError("Failed to delete task");
   } finally {
     deletingTask.value = false;
   }
@@ -242,6 +270,24 @@ const onAccordionChange = (value: string | string[] | undefined) => {
     subtaskListRef.value?.loadSubtasks();
   }
 };
+
+// Load subtasks on mount to show progress in closed state
+const loadSubtasksForProgress = async () => {
+  try {
+    const fetchedSubtasks = await fetchSubtasks(props.task.id);
+    subtasks.value = fetchedSubtasks.sort((a, b) => {
+      if (a.is_first_step && !b.is_first_step) return -1;
+      if (!a.is_first_step && b.is_first_step) return 1;
+      return 0;
+    });
+  } catch (error) {
+    console.error("Failed to load subtasks for progress:", error);
+  }
+};
+
+onMounted(() => {
+  loadSubtasksForProgress();
+});
 </script>
 
 <template>
@@ -330,6 +376,14 @@ const onAccordionChange = (value: string | string[] | undefined) => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
+
+              <!-- Progress bar - shown below title when accordion is closed -->
+              <div v-if="hasSubtasks" class="mt-3" @click.stop>
+                <Progress
+                  :model-value="Number(subtaskProgress)"
+                  class="h-1.5"
+                />
+              </div>
             </div>
           </div>
         </AccordionTrigger>
@@ -346,9 +400,7 @@ const onAccordionChange = (value: string | string[] | undefined) => {
             :task-id="props.task.id"
             :task-title="props.task.title"
             :task-description="props.task.description"
-            @subtasks-changed="
-              (updated) => console.log('Updated subtasks', updated)
-            "
+            @subtasks-changed="handleSubtasksChanged"
             @subtask-completed="celebrateSubtask()"
           />
         </AccordionContent>
