@@ -10,6 +10,9 @@ export default defineNuxtConfig({
     },
   },
   modules: ["@nuxtjs/supabase", "shadcn-nuxt", "@vite-pwa/nuxt"],
+  experimental: {
+    appManifest: false, // Disable app manifest to fix hydration errors in dev
+  },
   app: {
     head: {
       link:
