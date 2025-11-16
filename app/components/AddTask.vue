@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import { useForm, useFieldValue } from "vee-validate";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
@@ -11,7 +10,7 @@ import { toast } from "vue-sonner";
 import { df } from "../utils/dates";
 import { getLocalTimeZone } from "@internationalized/date";
 import { taskSchema } from "~/schemas/task";
-import CharCounter from "@/components/CharCounter.vue"
+import CharCounter from "@/components/CharCounter.vue";
 
 import {
   Popover,
@@ -33,7 +32,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  'update:title': [string];
+  "update:title": [string];
   taskAdded: [];
 }>();
 
@@ -58,9 +57,10 @@ const form = useForm({
 });
 
 const startDateValue = useDateField(
-  form, 
-  "startdate", 
-  computed(() => props.defaultDate));
+  form,
+  "startdate",
+  computed(() => props.defaultDate)
+);
 
 const onSubmit = form.handleSubmit(async (values) => {
   // Prevent submission when offline
@@ -95,7 +95,7 @@ const onSubmit = form.handleSubmit(async (values) => {
     emit("taskAdded");
   } catch (error) {
     console.error("Failed to add task:", error);
-    showError("Failed to add task. Please try again.")
+    showError("Failed to add task. Please try again.");
   } finally {
     isSubmitting.value = false;
   }
@@ -105,7 +105,7 @@ const titleModel = computed({
   get: () => form.values.title,
   set: (val) => {
     form.setFieldValue("title", val);
-    emit("update:title", val ?? "")
+    emit("update:title", val ?? "");
   },
 });
 
@@ -116,7 +116,7 @@ watch(
       form.setFieldValue("title", val ?? "");
     }
   },
-  { immediate: true }     // This ensures initial sync correctly
+  { immediate: true } // This ensures initial sync correctly
 );
 
 const titleValue = useFieldValue<string>("title");
@@ -153,7 +153,7 @@ const descValue = useFieldValue<string>("description");
               :disabled="!isOnline"
             />
           </FormControl>
-          <CharCounter :current="titleValue.length ?? 0" :max="100"/>
+          <CharCounter :current="titleValue.length ?? 0" :max="100" />
           <FormMessage />
         </FormItem>
       </FormField>
@@ -165,14 +165,14 @@ const descValue = useFieldValue<string>("description");
           >
           <FormControl>
             <Textarea
-              placeholder="Add more details here..."¨
+              placeholder="Add more details here..."
               maxlength="500"
               class="resize-none bg-white min-h-24"
               v-bind="componentField"
               :disabled="!isOnline"
             />
           </FormControl>
-          <CharCounter :current="descValue.length ?? 0" :max="500"/>
+          <CharCounter :current="descValue.length ?? 0" :max="500" />
           <FormMessage />
         </FormItem>
       </FormField>
