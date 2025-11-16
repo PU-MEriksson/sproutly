@@ -48,8 +48,14 @@ const loadSubtasks = async () => {
   subtasksError.value = null;
   try {
     const fetchedSubtasks = await fetchSubtasks(props.taskId);
-    // Explicitly maintain creation order, don't sort by completion
-    subtasks.value = fetchedSubtasks;
+    // Sort: first steps at the top, then by creation order
+    subtasks.value = fetchedSubtasks.sort((a, b) => {
+      // If one is a first step and the other isn't, first step comes first
+      if (a.is_first_step && !b.is_first_step) return -1;
+      if (!a.is_first_step && b.is_first_step) return 1;
+      // Otherwise maintain creation order
+      return 0;
+    });
   } catch (error) {
     console.error("Failed to load subtasks:", error);
     subtasksError.value = "Failed to load subtasks";
@@ -202,6 +208,12 @@ const cancelEditingSubtask = () => {
 // Handle events from AITaskHelper component
 const handleSubtasksAdded = (newSubtasks: Subtask[]) => {
   subtasks.value.unshift(...newSubtasks);
+  // Re-sort to ensure first steps stay at the top
+  subtasks.value = subtasks.value.sort((a, b) => {
+    if (a.is_first_step && !b.is_first_step) return -1;
+    if (!a.is_first_step && b.is_first_step) return 1;
+    return 0;
+  });
   emit("subtasks-changed", subtasks.value);
 };
 
