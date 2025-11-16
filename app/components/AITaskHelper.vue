@@ -166,7 +166,10 @@ const handleAddFirstStepAsSubtask = async () => {
 
   try {
     const newSubtasks = await addSubtasks(props.taskId, [
-      { title: hint.value.trim() },
+      {
+        title: hint.value.trim(),
+        is_first_step: true,
+      },
     ]);
 
     if (newSubtasks.length > 0 && newSubtasks[0]) {
