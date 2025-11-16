@@ -2,7 +2,7 @@ import type { Database } from "~/types/database.types";
 import { useSubtasks } from "~/composables/useSubtask";
 import { useSanitize } from "./useSanitize";
 import { z } from "zod";
-import { onMounted } from 'vue';
+import { onMounted } from "vue";
 
 type TaskInsert = Database["public"]["Tables"]["tasks"]["Insert"];
 type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
@@ -61,7 +61,17 @@ export const useTasks = () => {
         if (error) throw error;
         return data ?? [];
       },
-      { server: false, lazy: false }
+      {
+        server: false,
+        lazy: false,
+        immediate: true,
+        getCachedData: (key) => {
+          // Use cached data if available to avoid re-fetching
+          return (
+            useNuxtApp().payload.data[key] || useNuxtApp().static.data[key]
+          );
+        },
+      }
     );
   }
 
@@ -472,10 +482,13 @@ export const useTasks = () => {
     }
   };
 
-  // Run check when component mounts
-  onMounted(() => {
-    checkAndResetDailyTasks();
-  });
+  // Run check when composable is initialized (only on client)
+  // Note: This should be called from a component's setup or onMounted, not here
+  const initializeDailyCheck = () => {
+    if (typeof window !== "undefined") {
+      checkAndResetDailyTasks();
+    }
+  };
 
   return {
     allUncompletedTasks: computed<TaskRow[]>(
@@ -508,5 +521,6 @@ export const useTasks = () => {
     removeFromToday,
     addToToday,
     checkAndResetDailyTasks,
+    initializeDailyCheck,
   };
 };
