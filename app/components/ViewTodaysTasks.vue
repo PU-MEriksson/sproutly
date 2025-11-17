@@ -26,7 +26,7 @@ const emit = defineEmits<{
   "task-completed": [taskTitle: string];
 }>();
 
-const { success: showSuccess, error: showError } = useAppToast()
+const { success: showSuccess, error: showError } = useAppToast();
 
 const handleTaskCompleted = (taskTitle: string) => {
   emit("task-completed", taskTitle);
@@ -42,14 +42,16 @@ const handleUncompleteTask = async (task: Task) => {
     });
     props.refreshTodaysUncompleted();
     props.refreshTodaysCompleted();
-    showSuccess("Task moved back to To-do", `"${task.title}" is now uncompleted.`)
+    showSuccess(
+      "Task moved back to To-do",
+      `"${task.title}" is now uncompleted.`
+    );
   } catch (error) {
-    showError("Couldn't update task", "Please try again later.")
+    showError("Couldn't update task", "Please try again later.");
   }
 };
 
 const isCollapsibleOpen = ref(false);
-
 </script>
 
 <template>
@@ -114,7 +116,6 @@ const isCollapsibleOpen = ref(false);
             </div>
           </CollapsibleContent>
         </Collapsible>
-
       </div>
     </section>
   </ClientOnly>
