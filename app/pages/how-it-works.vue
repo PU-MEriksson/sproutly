@@ -104,14 +104,7 @@ const skipInstructions = () => {
               </div>
             </div>
             <div class="bg-calm-50 rounded-xl p-6 border border-calm-200/50">
-              <div class="text-center text-calm-500 text-sm mb-2">
-                Screenshot placeholder
-              </div>
-              <div
-                class="w-full h-32 bg-calm-100/50 rounded-lg flex items-center justify-center"
-              >
-                <Plus :size="32" class="text-calm-400" />
-              </div>
+              <img src="/images/addTask.png" alt="Add task form showing title input field, 'include more details' button and add button.">
             </div>
           </div>
         </div>
@@ -166,14 +159,7 @@ const skipInstructions = () => {
             </div>
 
             <div class="bg-calm-50 rounded-xl p-6 border border-calm-200/50">
-              <div class="text-center text-calm-500 text-sm mb-2">
-                AI breakdown example
-              </div>
-              <div
-                class="w-full h-32 bg-calm-100/50 rounded-lg flex items-center justify-center"
-              >
-                <WandSparkles :size="32" class="text-calm-400" />
-              </div>
+              <img src="/images/breakDownTask.png" alt="Example of task with subtasks generated with AI.">
             </div>
           </div>
         </div>
@@ -226,14 +212,7 @@ const skipInstructions = () => {
               </div>
             </div>
             <div class="bg-calm-50 rounded-xl p-6 border border-calm-200/50">
-              <div class="text-center text-calm-500 text-sm mb-2">
-                First step suggestion
-              </div>
-              <div
-                class="w-full h-32 bg-calm-100/50 rounded-lg flex items-center justify-center"
-              >
-                <Rocket :size="32" class="text-calm-400" />
-              </div>
+              <img src="/images/firstStep.png" alt="Example of task with AI-generated first step, to help you get started.">
             </div>
           </div>
         </div>
@@ -273,14 +252,7 @@ const skipInstructions = () => {
               </ul>
             </div>
             <div class="bg-calm-50 rounded-xl p-6 border border-calm-200/50">
-              <div class="text-center text-calm-500 text-sm mb-2">
-                Progress celebration
-              </div>
-              <div
-                class="w-full h-32 bg-calm-100/50 rounded-lg flex items-center justify-center"
-              >
-                <CheckCircle :size="32" class="text-calm-400" />
-              </div>
+              <img src="/images/celebrate.png" alt="Completion celebration with positive feedback.">
             </div>
           </div>
         </div>
