@@ -31,7 +31,7 @@ const handleTaskAdded = () => {
 
       <section
         v-if="
-          allUncompletedTasks?.length === 0 && allCompletedTasks?.length === 0
+          allUncompletedTasks?.length === 0
         "
       >
         <NoTasks />

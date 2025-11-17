@@ -10,7 +10,7 @@ import type { Database } from "~/types/database.types";
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"];
 
-const pros = defineProps<{
+const props = defineProps<{
   todaysUncompleted: Task[];
   loadingTodaysUncompleted: boolean;
   errorTodaysUncompleted: string | null;
@@ -40,8 +40,8 @@ const handleUncompleteTask = async (task: Task) => {
       completed: false,
       completed_date: null,
     });
-    pros.refreshTodaysUncompleted();
-    pros.refreshTodaysCompleted();
+    props.refreshTodaysUncompleted();
+    props.refreshTodaysCompleted();
     showSuccess("Task moved back to To-do", `"${task.title}" is now uncompleted.`)
   } catch (error) {
     showError("Couldn't update task", "Please try again later.")
@@ -73,6 +73,10 @@ const isCollapsibleOpen = ref(false);
             />
           </div>
         </div>
+
+        <p v-if="todaysTotal === 0" class="text-calm-500 text-center py-12">
+          <NoTasks />
+        </p>
 
         <!-- Completed tasks collapsible -->
         <Collapsible
@@ -111,9 +115,6 @@ const isCollapsibleOpen = ref(false);
           </CollapsibleContent>
         </Collapsible>
 
-        <p v-if="todaysTotal === 0" class="text-calm-500 text-center py-12">
-          <NoTasks />
-        </p>
       </div>
     </section>
   </ClientOnly>

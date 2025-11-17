@@ -61,6 +61,7 @@ const todaysTotalTasks = computed(
     (todaysCompletedTasks.value?.length ?? 0) +
     (todaysUncompletedTasks.value?.length ?? 0)
 );
+
 </script>
 
 <template>
