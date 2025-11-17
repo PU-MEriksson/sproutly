@@ -1,5 +1,5 @@
 import { ref, watch, type Ref } from "vue"
-import { parseDate, type DateValue } from "@internationalized/date"
+import { parseDate } from "@internationalized/date"
 import { formatDateValueToYmd } from "@/utils/dates"
 
 export function useDateField(

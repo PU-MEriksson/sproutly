@@ -83,18 +83,15 @@ const onSubmit = form.handleSubmit(async (values) => {
 
     showSuccess("Task added!");
 
-    // Reset the form
     form.resetForm();
 
     // Reset date values
     startDateValue.value = undefined;
 
     emit("update:title", "");
-
-    // Emit event to parent to refresh tasks
     emit("taskAdded");
+
   } catch (error) {
-    console.error("Failed to add task:", error);
     showError("Failed to add task. Please try again.");
   } finally {
     isSubmitting.value = false;
@@ -120,8 +117,8 @@ watch(
 );
 
 const titleValue = useFieldValue<string>("title");
-
 const descValue = useFieldValue<string>("description");
+
 </script>
 
 <template>
@@ -140,9 +137,9 @@ const descValue = useFieldValue<string>("description");
     >
       <FormField v-slot="{ componentField }" name="title">
         <FormItem class="flex-1">
-          <FormLabel class="text-calm-800 font-medium"
-            >What would you like to do?</FormLabel
-          >
+          <FormLabel class="text-calm-800 font-medium">
+            What would you like to do?
+          </FormLabel>
           <FormControl>
             <Input
               type="text"
@@ -160,9 +157,9 @@ const descValue = useFieldValue<string>("description");
 
       <FormField v-slot="{ componentField }" name="description">
         <FormItem>
-          <FormLabel class="text-calm-800 font-medium"
-            >More details (optional)</FormLabel
-          >
+          <FormLabel class="text-calm-800 font-medium">
+            More details (optional)
+          </FormLabel>
           <FormControl>
             <Textarea
               placeholder="Add more details here..."
@@ -181,9 +178,7 @@ const descValue = useFieldValue<string>("description");
     <!-- Subtasks Section -->
     <div class="space-y-4">
       <h3 class="text-lg font-medium text-calm-800 mb-1">Break it down</h3>
-      <p class="text-sm text-calm-600">
-        Add small steps to make this task easier
-      </p>
+      <p class="text-sm text-calm-600">Add small steps to make this task easier</p>
     </div>
 
     <AddSubtask />
@@ -203,12 +198,7 @@ const descValue = useFieldValue<string>("description");
               <PopoverTrigger as-child>
                 <Button
                   variant="outline"
-                  :class="
-                    cn(
-                      'w-full sm:w-[280px] justify-start text-left font-normal bg-white',
-                      !startDateValue && 'text-calm-400'
-                    )
-                  "
+                  :class="cn('w-full sm:w-[280px] justify-start text-left font-normal bg-white', !startDateValue && 'text-calm-400')"
                   :disabled="!isOnline"
                 >
                   <CalendarIcon class="mr-2 h-4 w-4 text-calm-500" />

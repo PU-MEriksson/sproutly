@@ -85,7 +85,6 @@ const handleGenerateFirstStep = async () => {
       emit("first-step-generated", aiFirstStep.value.title);
     }
   } catch (error) {
-    console.error("Failed to generate a first step with AI:", error);
     aiGenerationError.value = "An unexpected error occurred. Please try again.";
   } finally {
     isGeneratingFirstStep.value = false;
@@ -134,14 +133,11 @@ const handleGenerateSubtasks = async () => {
     // Try to save them to the database
     try {
       const newSubtasks = await addSubtasks(props.taskId, aiSubtasks.value);
-      console.log("AI subtasks generated and saved!", newSubtasks);
       emit("subtasks-added", newSubtasks);
     } catch (dbError) {
-      console.error("Failed to save subtasks to database:", dbError);
       aiGenerationError.value = "Failed to save subtasks. Please try again.";
     }
   } catch (error) {
-    console.error("Failed to generate subtasks with AI:", error);
     aiGenerationError.value = "An unexpected error occurred. Please try again.";
   } finally {
     isGeneratingSubtasks.value = false;
@@ -183,7 +179,6 @@ const handleAddFirstStepAsSubtask = async () => {
       hint.value = "";
     }, 200);
   } catch (error) {
-    console.error("Failed to add first step as subtask:", error);
     toast.error("Failed to add first step as subtask");
   }
 };

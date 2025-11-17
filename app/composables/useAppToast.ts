@@ -31,7 +31,6 @@ export function useAppToast() {
       toast.success(success)
       return result
     } catch (err) {
-      console.error(err)
       toast.error(error)
       throw err
     }
