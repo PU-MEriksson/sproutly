@@ -28,12 +28,13 @@ const props = defineProps<{
   defaultDate?: string;
 }>();
 
-const { success: showSuccess, error: showError } = useAppToast()
+const { success: showSuccess, error: showError } = useAppToast();
 
 const isExpanded = ref(false);
 const isSubmitting = ref(false);
 const formRef = ref<HTMLFormElement | null>(null);
 const { isOnline } = useOnlineStatus();
+const { addTask } = useTasks();
 
 const emit = defineEmits<{
   taskAdded: [];
@@ -67,15 +68,13 @@ const handleQuickAdd = form.handleSubmit(async (values) => {
 
   isSubmitting.value = true;
 
-  const { addTask } = useTasks();
-
   try {
     await addTask(values.title.trim(), undefined, props.defaultDate);
     form.resetForm();
-    showSuccess("Task added!")
+    showSuccess("Task added!");
     emit("taskAdded");
   } catch (error) {
-    showError("Failed to add task. Please try again.")
+    showError("Failed to add task. Please try again.");
   } finally {
     isSubmitting.value = false;
   }
