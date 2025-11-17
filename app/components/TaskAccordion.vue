@@ -135,13 +135,19 @@ onMounted(() => {
       @update:model-value="onAccordionChange"
     >
       <AccordionItem value="item-1" class="border-0">
-        <AccordionTrigger class="min-h-16 px-6 py-4 hover:no-underline group">
+        <AccordionTrigger
+          class="min-h-16 px-6 py-4 hover:no-underline group"
+          :aria-label="`Expand task: ${task.title}`"
+        >
           <div class="flex items-start gap-4 w-full">
             <Checkbox
               v-model="localCompleted"
               :disabled="updatingTask"
               @click.stop
               class="m-1 h-5 w-5 shrink-0 rounded-full"
+              :aria-label="`Mark task as ${
+                localCompleted ? 'incomplete' : 'complete'
+              }: ${task.title}`"
             />
             <div class="flex-1 min-w-0">
               <div
