@@ -306,15 +306,16 @@ onMounted(() => {
               v-model="localCompleted"
               :disabled="updatingTask"
               @click.stop
-              class="m-1 shrink-0"
+              class="m-1 h-5 w-5 shrink-0 rounded-full
+"
             />
             <div class="flex-1 min-w-0">
-              <div class="flex items-start justify-between gap-2">
+              <div class="flex items-start justify-between gap-2 flex-1 min-w-0">
                 <div
-                  class="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+                  class="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 justify-center align-middle"
                 >
                   <span
-                    class="text-base text-calm-800 font-normal group-hover:text-calm-700 text-left break-words"
+                    class="text-base text-calm-800 font-normal group-hover:text-calm-700 text-left break-word break-all leading-snug"
                   >
                     {{ props.task.title }}
                   </span>
@@ -332,6 +333,7 @@ onMounted(() => {
                 </div>
 
                 <!-- More actions menu -->
+                  <div class="flex items-center shrink-0">
                 <DropdownMenu>
                   <DropdownMenuTrigger as-child @click.stop>
                     <Button
@@ -343,7 +345,7 @@ onMounted(() => {
                       <MoreVertical :size="16" class="text-calm-600" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" class="w-48">
+                  <DropdownMenuContent align="end" class="w-48 h-full">
                     <DropdownMenuItem
                       @click.stop="handleToggleToday"
                       :disabled="togglingToday"
@@ -375,6 +377,7 @@ onMounted(() => {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+                </div>
               </div>
 
               <!-- Progress bar - shown below title when accordion is closed -->
@@ -390,7 +393,7 @@ onMounted(() => {
         <AccordionContent class="px-6 pb-6 pt-2">
           <p
             v-if="props.task.description"
-            class="text-sm text-calm-600 whitespace-pre-line mb-6 leading-relaxed"
+            class="text-sm text-calm-600 whitespace-pre-line mb-6 leading-relaxed break-word break-all"
           >
             {{ props.task.description }}
           </p>
