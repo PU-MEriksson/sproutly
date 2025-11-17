@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { Separator } from "@/components/ui/separator";
 
+useHead({
+  title: "Settings - Supportive ToDo",
+});
+
 const supabase = useSupabaseClient();
 
 async function logout() {

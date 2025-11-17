@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { Archive } from "lucide-vue-next";
 
+useHead({
+  title: "All Tasks - Supportive ToDo",
+});
+
 const {
   allUncompletedTasks,
   loadingAllUncompletedTasks,

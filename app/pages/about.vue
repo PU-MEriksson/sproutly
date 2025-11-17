@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import { Sprout } from "lucide-vue-next";
+
+useHead({
+  title: "About - Supportive ToDo",
+});
+
 const user = useSupabaseUser();
 </script>
 

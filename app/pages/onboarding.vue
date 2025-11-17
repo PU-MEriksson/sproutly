@@ -3,6 +3,10 @@ import { Sprout } from "lucide-vue-next";
 import Button from "~/components/ui/button/Button.vue";
 import Input from "~/components/ui/input/Input.vue";
 
+useHead({
+  title: "Welcome - Supportive ToDo",
+});
+
 const { updateUsername } = useUserProfile();
 const user = useSupabaseUser();
 const username = ref("");

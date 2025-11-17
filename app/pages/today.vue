@@ -1,4 +1,8 @@
 <script setup lang="ts">
+useHead({
+  title: "Today - Supportive ToDo",
+});
+
 const {
   todaysCompletedTasks,
   todaysUncompletedTasks,

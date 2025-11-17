@@ -3,6 +3,10 @@ import Button from "~/components/ui/button/Button.vue";
 import Input from "~/components/ui/input/Input.vue";
 import { Sprout } from "lucide-vue-next";
 
+useHead({
+  title: "Log In - Supportive ToDo",
+});
+
 const supabase = useSupabaseClient();
 const route = useRoute();
 
