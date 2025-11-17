@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-  Sprout,
   Plus,
   WandSparkles,
   Rocket,
@@ -37,10 +36,12 @@ const skipInstructions = () => {
     <div class="max-w-4xl mx-auto px-6 pt-24 pb-8">
       <!-- Header -->
       <div class="text-center mb-12">
-        <div class="flex items-center justify-center gap-4 mb-6">
-          <div class="text-calm-600">
-            <Sprout :size="48" :stroke-width="2" />
-          </div>
+        <div class="flex flex-col items-center mb-6">
+          <img
+            src="/pwa-192x192.svg"
+            alt="Sproutly Logo"
+            class="w-16 h-16 mb-3"
+          />
           <h1
             class="text-3xl font-bold bg-gradient-to-r from-calm-700 to-calm-600 bg-clip-text text-transparent"
           >
