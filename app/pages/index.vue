@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Sprout } from "lucide-vue-next";
-
 useHead({
   title: "Sproutly - Task Management for Everyone",
 });
@@ -35,23 +33,17 @@ if (process.client) {
 
 <template>
   <!-- Landing page for non-authenticated users only -->
-  <div
+  <main
     v-if="showContent"
     class="min-h-screen bg-gradient-to-br from-calm-50 to-white"
   >
     <div class="max-w-4xl mx-auto px-6 py-16">
       <!-- Header -->
-      <div class="text-center mb-16">
-        <div class="flex items-center justify-center gap-3 mb-4">
-          <div class="text-calm-600">
-            <Sprout :size="40" :stroke-width="2" />
-          </div>
-          <h1
-            class="text-4xl font-bold bg-gradient-to-r from-calm-700 to-calm-600 bg-clip-text text-transparent"
-          >
-            Sproutly
-          </h1>
+      <header class="text-center mb-16">
+        <div class="flex justify-center">
+          <img src="/logo512x512.svg" alt="Sproutly Logo" class="w-32 h-32" />
         </div>
+        <h1 class="sr-only">Sproutly</h1>
         <p class="text-xl text-calm-700 mb-8">
           A gentle, supportive task manager designed for everyone
         </p>
@@ -61,44 +53,47 @@ if (process.client) {
         >
           Get Started
         </NuxtLink>
-      </div>
+      </header>
 
       <!-- Features -->
-      <div class="grid md:grid-cols-3 gap-8 mb-16">
-        <div
-          class="bg-white/70 backdrop-blur-sm p-6 rounded-2xl border border-calm-200/40 shadow-sm"
-        >
-          <h3 class="text-lg font-semibold text-calm-800 mb-2">
-            Simple & Clear
-          </h3>
-          <p class="text-calm-600">
-            Clean, intuitive interface that helps you focus on what matters.
-          </p>
+      <section aria-labelledby="features-heading">
+        <h2 id="features-heading" class="sr-only">Features</h2>
+        <div class="grid md:grid-cols-3 gap-8 mb-16">
+          <div
+            class="bg-white/70 backdrop-blur-sm p-6 rounded-2xl border border-calm-200/40 shadow-sm"
+          >
+            <h3 class="text-lg font-semibold text-calm-800 mb-2">
+              Simple & Clear
+            </h3>
+            <p class="text-calm-600">
+              Clean, intuitive interface that helps you focus on what matters.
+            </p>
+          </div>
+          <div
+            class="bg-white/70 backdrop-blur-sm p-6 rounded-2xl border border-calm-200/40 shadow-sm"
+          >
+            <h3 class="text-lg font-semibold text-calm-800 mb-2">
+              Break it Down
+            </h3>
+            <p class="text-calm-600">
+              Turn overwhelming tasks into manageable steps with AI-powered
+              suggestions.
+            </p>
+          </div>
+          <div
+            class="bg-white/70 backdrop-blur-sm p-6 rounded-2xl border border-calm-200/40 shadow-sm"
+          >
+            <h3 class="text-lg font-semibold text-calm-800 mb-2">Your Pace</h3>
+            <p class="text-calm-600">
+              Designed with cognitive accessibility in mind. No pressure, just
+              progress.
+            </p>
+          </div>
         </div>
-        <div
-          class="bg-white/70 backdrop-blur-sm p-6 rounded-2xl border border-calm-200/40 shadow-sm"
-        >
-          <h3 class="text-lg font-semibold text-calm-800 mb-2">
-            Break it Down
-          </h3>
-          <p class="text-calm-600">
-            Turn overwhelming tasks into manageable steps with AI-powered
-            suggestions.
-          </p>
-        </div>
-        <div
-          class="bg-white/70 backdrop-blur-sm p-6 rounded-2xl border border-calm-200/40 shadow-sm"
-        >
-          <h3 class="text-lg font-semibold text-calm-800 mb-2">Your Pace</h3>
-          <p class="text-calm-600">
-            Designed with cognitive accessibility in mind. No pressure, just
-            progress.
-          </p>
-        </div>
-      </div>
+      </section>
 
       <!-- CTA -->
-      <div class="text-center">
+      <footer class="text-center">
         <p class="text-calm-600 mb-4">
           Already have an account?
           <NuxtLink
@@ -108,7 +103,7 @@ if (process.client) {
             Sign in
           </NuxtLink>
         </p>
-      </div>
+      </footer>
     </div>
-  </div>
+  </main>
 </template>

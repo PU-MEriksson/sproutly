@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Sprout, Loader2 } from "lucide-vue-next";
+import { Loader2 } from "lucide-vue-next";
 
 useHead({
   title: "Confirming - Sproutly",
@@ -34,9 +34,7 @@ watch(
     <div class="text-center space-y-6">
       <!-- Logo/Icon -->
       <div class="flex justify-center">
-        <div class="text-calm-600">
-          <Sprout :size="48" :stroke-width="2" />
-        </div>
+        <img src="/pwa-512x512.svg" alt="Sproutly Logo" class="w-24 h-24" />
       </div>
 
       <!-- Loading spinner -->

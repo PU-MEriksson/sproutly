@@ -1,6 +1,4 @@
-<script setup lang="ts">
-import { Sprout } from "lucide-vue-next";
-</script>
+<script setup lang="ts"></script>
 
 <template>
   <nav
@@ -12,10 +10,10 @@ import { Sprout } from "lucide-vue-next";
         <div class="flex items-center">
           <NuxtLink
             to="/"
-            class="text-calm-700 hover:text-calm-600 p-2 rounded-lg hover:bg-calm-50 transition-all duration-200"
+            class="flex flex-col items-center gap-1 text-calm-700 hover:text-calm-600 p-2 rounded-lg hover:bg-calm-50 transition-all duration-200"
             aria-label="Home"
           >
-            <Sprout :size="28" :stroke-width="2" />
+            <img src="/pwa-192x192.svg" alt="" class="w-7 h-7" />
           </NuxtLink>
         </div>
       </div>

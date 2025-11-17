@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Sprout } from "lucide-vue-next";
 import Button from "~/components/ui/button/Button.vue";
 import Input from "~/components/ui/input/Input.vue";
 
@@ -66,9 +65,7 @@ const skipToApp = async () => {
       <!-- Logo/Icon -->
       <header class="text-center">
         <div class="flex justify-center mb-6">
-          <div class="text-calm-600">
-            <Sprout :size="48" :stroke-width="2" />
-          </div>
+          <img src="/pwa-192x192.svg" alt="Sproutly Logo" class="w-24 h-24" />
         </div>
         <h1
           class="text-3xl font-bold bg-gradient-to-r from-calm-700 to-calm-600 bg-clip-text text-transparent"

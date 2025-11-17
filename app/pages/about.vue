@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Sprout } from "lucide-vue-next";
-
 useHead({
   title: "About - Sproutly",
 });
@@ -15,10 +13,12 @@ const user = useSupabaseUser();
     <div class="max-w-4xl mx-auto px-6 py-24">
       <!-- Header -->
       <div class="text-center mb-16">
-        <div class="flex items-center justify-center gap-3 mb-4">
-          <div class="text-calm-600">
-            <Sprout :size="40" :stroke-width="2" />
-          </div>
+        <div class="flex flex-col items-center mb-4">
+          <img
+            src="/pwa-192x192.svg"
+            alt="Sproutly Logo"
+            class="w-16 h-16 mb-3"
+          />
           <h1
             class="text-4xl font-bold bg-gradient-to-r from-calm-700 to-calm-600 bg-clip-text text-transparent"
           >
