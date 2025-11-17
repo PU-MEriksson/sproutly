@@ -9,6 +9,10 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 
+useHead({
+  title: "Archive - Sproutly",
+});
+
 const {
   allCompletedTasks,
   loadingAllCompletedTasks,

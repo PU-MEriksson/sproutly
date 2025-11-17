@@ -36,19 +36,12 @@ const handlePreferenceChange = async (value: string) => {
 <template>
   <section aria-labelledby="daily-reset-heading">
     <h2
-      v-if="!compact"
       id="daily-reset-heading"
-      class="text-lg font-semibold text-calm-900 mb-2"
+      :class="compact ? 'text-base' : 'text-lg'"
+      class="font-semibold text-calm-900 mb-2"
     >
       Daily reset behavior
     </h2>
-    <h3
-      v-else
-      id="daily-reset-heading"
-      class="text-base font-semibold text-calm-900 mb-2"
-    >
-      Daily reset behavior
-    </h3>
     <p class="text-sm text-calm-600 mb-4">
       How should we handle incomplete tasks at the end of each day?
     </p>

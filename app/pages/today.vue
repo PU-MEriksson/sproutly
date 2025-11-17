@@ -1,4 +1,8 @@
 <script setup lang="ts">
+useHead({
+  title: "Today - Sproutly",
+});
+
 const {
   todaysCompletedTasks,
   todaysUncompletedTasks,
@@ -61,6 +65,7 @@ const todaysTotalTasks = computed(
     (todaysCompletedTasks.value?.length ?? 0) +
     (todaysUncompletedTasks.value?.length ?? 0)
 );
+
 </script>
 
 <template>

@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { Sprout, Loader2 } from "lucide-vue-next";
 
+useHead({
+  title: "Confirming - Sproutly",
+});
+
 const { hasUsername, fetchProfile } = useUserProfile();
 const user = useSupabaseUser();
 

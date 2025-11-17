@@ -10,8 +10,15 @@ export default defineNuxtConfig({
     },
   },
   modules: ["@nuxtjs/supabase", "shadcn-nuxt", "@vite-pwa/nuxt"],
+  experimental: {
+    appManifest: false, // Disable app manifest to fix hydration errors in dev
+  },
   app: {
     head: {
+      htmlAttrs: {
+        lang: "en",
+      },
+      title: "Sproutly",
       link:
         process.env.NODE_ENV === "production"
           ? [{ rel: "manifest", href: "/manifest.webmanifest" }]
@@ -23,8 +30,8 @@ export default defineNuxtConfig({
     registerType: "autoUpdate",
     disable: process.env.NODE_ENV === "development",
     manifest: {
-      name: "Supportive ToDo",
-      short_name: "ToDo",
+      name: "Sproutly",
+      short_name: "Sproutly",
       description: "A supportive task management app",
       theme_color: "#ffffff",
       background_color: "#ffffff",

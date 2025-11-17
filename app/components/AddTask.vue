@@ -1,26 +1,23 @@
 <script setup lang="ts">
-
-import { toTypedSchema } from "@vee-validate/zod";
-import * as z from "zod";
-import { useForm } from "vee-validate";
+import { useForm, useFieldValue } from "vee-validate";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-vue-next";
+import { ref, watch } from "vue";
+import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { toast } from "vue-sonner";
+import { df } from "../utils/dates";
+import { getLocalTimeZone } from "@internationalized/date";
+import { taskSchema } from "~/schemas/task";
+import CharCounter from "@/components/CharCounter.vue";
+
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import type { DateValue } from "@internationalized/date";
-import {
-  DateFormatter,
-  getLocalTimeZone,
-  parseDate,
-} from "@internationalized/date";
-import { CalendarIcon } from "lucide-vue-next";
-import { ref, watch, onMounted } from "vue";
-import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
-import { toast } from "vue-sonner";
+
 import {
   FormControl,
   FormField,
@@ -28,7 +25,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { string } from "zod/v4";
 
 const props = defineProps<{
   title?: string;
@@ -36,99 +32,35 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  'update:title': [string];
+  "update:title": [string];
   taskAdded: [];
 }>();
 
-const { success: showSuccess, error: showError, promise } = useAppToast()
+const { addTask } = useTasks();
 
+const { success: showSuccess, error: showError } = useAppToast();
 
-const df = new DateFormatter("sv-SE", {
-  dateStyle: "long",
-});
-
-const startDateValue = ref<DateValue | undefined>();
-const endDateValue = ref<DateValue | undefined>();
-const deadlineValue = ref<DateValue | undefined>();
 const isSubmitting = ref(false);
+
 const { isOnline } = useOnlineStatus();
-
-const subtaskSchema = z.object({
-  title: z.string().min(1, "Subtask title is required"),
-});
-
-const taskSchema = toTypedSchema(
-  z.object({
-    title: z.string().min(1, "Task title is required"),
-    description: z.string().optional(),
-    startdate: z.string().date().optional(),
-    enddate: z.string().date().optional(),
-    deadline: z.string().date().optional(),
-    subtasks: z.array(subtaskSchema).default([]),
-  })
-);
 
 const form = useForm({
   validationSchema: taskSchema,
   initialValues: {
+    title: props.title ?? "",
+    description: "",
+    startdate: props.defaultDate ?? undefined,
+    enddate: undefined,
+    deadline: undefined,
     subtasks: [],
   },
 });
 
-const { addTask } = useTasks();
-
-watch(endDateValue, (val) => {
-  if (val) {
-    const ymd = `${val.year.toString().padStart(4, "0")}-${val.month
-      .toString()
-      .padStart(2, "0")}-${val.day.toString().padStart(2, "0")}`;
-    form.setFieldValue("enddate", ymd);
-  } else {
-    form.setFieldValue("enddate", undefined);
-  }
-});
-
-watch(deadlineValue, (val) => {
-  if (val) {
-    const ymd = `${val.year.toString().padStart(4, "0")}-${val.month
-      .toString()
-      .padStart(2, "0")}-${val.day.toString().padStart(2, "0")}`;
-    form.setFieldValue("deadline", ymd);
-  } else {
-    form.setFieldValue("deadline", undefined);
-  }
-});
-
-watch(startDateValue, (val) => {
-  if (val) {
-    const ymd = `${val.year.toString().padStart(4, "0")}-${val.month
-      .toString()
-      .padStart(2, "0")}-${val.day.toString().padStart(2, "0")}`;
-    form.setFieldValue("startdate", ymd);
-  } else {
-    form.setFieldValue("startdate", undefined);
-  }
-});
-
-// Set default date if provided
-onMounted(() => {
-  if (props.defaultDate) {
-    try {
-      startDateValue.value = parseDate(props.defaultDate);
-      form.setFieldValue("startdate", props.defaultDate);
-    } catch (error) {
-      console.error("Failed to parse default date:", error);
-    }
-  }
-});
-
-onMounted(() => {
-  // Initialize title on mount
-  if (props.title) {
-    localTitle.value = props.title;
-    form.setFieldValue("title", props.title);
-  }
-});
+const startDateValue = useDateField(
+  form,
+  "startdate",
+  computed(() => props.defaultDate)
+);
 
 const onSubmit = form.handleSubmit(async (values) => {
   // Prevent submission when offline
@@ -151,48 +83,42 @@ const onSubmit = form.handleSubmit(async (values) => {
 
     showSuccess("Task added!");
 
-    // Reset the form
     form.resetForm();
 
     // Reset date values
     startDateValue.value = undefined;
-    endDateValue.value = undefined;
-    deadlineValue.value = undefined;
 
-    // Emit event to parent to refresh tasks
+    emit("update:title", "");
     emit("taskAdded");
+
   } catch (error) {
-    console.error("Failed to add task:", error);
-    showError("Failed to add task. Please try again.")
+    showError("Failed to add task. Please try again.");
   } finally {
     isSubmitting.value = false;
   }
 });
 
-const localTitle = ref(props.title ?? "");
-
-// Sync localTitle <-> props.title (parent)
-watch(localTitle, (val) => emit("update:title", val ?? ""));
+const titleModel = computed({
+  get: () => form.values.title,
+  set: (val) => {
+    form.setFieldValue("title", val);
+    emit("update:title", val ?? "");
+  },
+});
 
 watch(
   () => props.title,
   (val) => {
-    if (val !== localTitle.value) {
-      localTitle.value = val ?? "";
-      form.setFieldValue("title", val ?? ""); // Keep VeeValidate in sync
+    if (val !== form.values.title) {
+      form.setFieldValue("title", val ?? "");
     }
-  }
+  },
+  { immediate: true } // This ensures initial sync correctly
 );
 
-// Keep localTitle in sync when user types into the validated field
-watch(
-  () => form.values.title,
-  (val) => {
-    if (val !== localTitle.value) {
-      localTitle.value = val ?? "";
-    }
-  }
-);
+const titleValue = useFieldValue<string>("title");
+const descValue = useFieldValue<string>("description");
+
 </script>
 
 <template>
@@ -211,35 +137,39 @@ watch(
     >
       <FormField v-slot="{ componentField }" name="title">
         <FormItem class="flex-1">
-          <FormLabel class="text-calm-800 font-medium"
-            >What would you like to do?</FormLabel
-          >
+          <FormLabel class="text-calm-800 font-medium">
+            What would you like to do?
+          </FormLabel>
           <FormControl>
             <Input
               type="text"
+              maxlength="100"
               placeholder="I want to..."
-              v-bind="componentField"
+              v-model="titleModel"
               class="bg-white w-full"
               :disabled="!isOnline"
             />
           </FormControl>
+          <CharCounter :current="titleValue.length ?? 0" :max="100" />
           <FormMessage />
         </FormItem>
       </FormField>
 
       <FormField v-slot="{ componentField }" name="description">
         <FormItem>
-          <FormLabel class="text-calm-800 font-medium"
-            >More details (optional)</FormLabel
-          >
+          <FormLabel class="text-calm-800 font-medium">
+            More details (optional)
+          </FormLabel>
           <FormControl>
             <Textarea
               placeholder="Add more details here..."
+              maxlength="500"
               class="resize-none bg-white min-h-24"
               v-bind="componentField"
               :disabled="!isOnline"
             />
           </FormControl>
+          <CharCounter :current="descValue.length ?? 0" :max="500" />
           <FormMessage />
         </FormItem>
       </FormField>
@@ -248,9 +178,7 @@ watch(
     <!-- Subtasks Section -->
     <div class="space-y-4">
       <h3 class="text-lg font-medium text-calm-800 mb-1">Break it down</h3>
-      <p class="text-sm text-calm-600">
-        Add small steps to make this task easier
-      </p>
+      <p class="text-sm text-calm-600">Add small steps to make this task easier</p>
     </div>
 
     <AddSubtask />
@@ -270,12 +198,7 @@ watch(
               <PopoverTrigger as-child>
                 <Button
                   variant="outline"
-                  :class="
-                    cn(
-                      'w-full sm:w-[280px] justify-start text-left font-normal bg-white',
-                      !startDateValue && 'text-calm-400'
-                    )
-                  "
+                  :class="cn('w-full sm:w-[280px] justify-start text-left font-normal bg-white', !startDateValue && 'text-calm-400')"
                   :disabled="!isOnline"
                 >
                   <CalendarIcon class="mr-2 h-4 w-4 text-calm-500" />
@@ -295,71 +218,6 @@ watch(
         </FormItem>
       </FormField>
     </div>
-
-    <!-- <FormField v-slot="{ componentField }" name="enddate">
-      <FormItem>
-        <FormLabel>End date</FormLabel>
-        <FormDescription> When would you like to be done? </FormDescription>
-        <FormControl>
-          <Popover>
-            <PopoverTrigger as-child>
-              <Button
-                variant="outline"
-                :class="
-                  cn(
-                    'w-[280px] justify-start text-left font-normal',
-                    !endDateValue && 'text-muted-foreground'
-                  )
-                "
-              >
-                <CalendarIcon class="mr-2 h-4 w-4" />
-                {{
-                  endDateValue
-                    ? df.format(endDateValue.toDate(getLocalTimeZone()))
-                    : "Pick a date"
-                }}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent class="w-auto p-0">
-              <Calendar v-model="endDateValue" initial-focus />
-            </PopoverContent>
-          </Popover>
-        </FormControl>
-        <FormMessage />
-      </FormItem>
-    </FormField>
-    <FormField v-slot="{ componentField }" name="deadline">
-      <FormItem>
-        <FormLabel>Deadline</FormLabel>
-        <FormDescription> Is there a deadline? </FormDescription>
-        <FormControl>
-          <Popover>
-            <PopoverTrigger as-child>
-              <Button
-                variant="outline"
-                :class="
-                  cn(
-                    'w-[280px] justify-start text-left font-normal',
-                    !deadlineValue && 'text-muted-foreground'
-                  )
-                "
-              >
-                <CalendarIcon class="mr-2 h-4 w-4" />
-                {{
-                  deadlineValue
-                    ? df.format(deadlineValue.toDate(getLocalTimeZone()))
-                    : "Pick a date"
-                }}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent class="w-auto p-0">
-              <Calendar v-model="deadlineValue" initial-focus />
-            </PopoverContent>
-          </Popover>
-        </FormControl>
-        <FormMessage />
-      </FormItem>
-    </FormField> -->
 
     <!-- Submit Button -->
     <div class="pt-4 border-t border-calm-200">

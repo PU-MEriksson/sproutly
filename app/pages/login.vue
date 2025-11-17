@@ -3,17 +3,37 @@ import Button from "~/components/ui/button/Button.vue";
 import Input from "~/components/ui/input/Input.vue";
 import { Sprout } from "lucide-vue-next";
 
+useHead({
+  title: "Log In - Sproutly",
+});
+
 const supabase = useSupabaseClient();
+const route = useRoute();
 
 const email = ref("");
 const otp = ref("");
 const otpSent = ref(false);
 const loading = ref(false);
+const resendingCode = ref(false);
 const errorMessage = ref("");
+const successMessage = ref("");
+
+// Check if user just confirmed their email
+onMounted(() => {
+  if (route.query.confirmed === "true") {
+    successMessage.value = "Email confirmed! Now request a login code below.";
+
+    // Pre-fill email if provided
+    if (route.query.email) {
+      email.value = route.query.email as string;
+    }
+  }
+});
 
 const sendOtp = async () => {
   loading.value = true;
   errorMessage.value = "";
+  successMessage.value = "";
 
   const { error } = await supabase.auth.signInWithOtp({
     email: email.value,
@@ -26,15 +46,36 @@ const sendOtp = async () => {
 
   if (error) {
     errorMessage.value = error.message;
-    console.error(error);
   } else {
     otpSent.value = true;
+  }
+};
+
+const resendOtp = async () => {
+  resendingCode.value = true;
+  errorMessage.value = "";
+  successMessage.value = "";
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email: email.value,
+    options: {
+      shouldCreateUser: false,
+    },
+  });
+
+  resendingCode.value = false;
+
+  if (error) {
+    errorMessage.value = error.message;
+  } else {
+    successMessage.value = "New code sent! Check your email.";
   }
 };
 
 const verifyOtp = async () => {
   loading.value = true;
   errorMessage.value = "";
+  successMessage.value = "";
 
   const { error } = await supabase.auth.verifyOtp({
     email: email.value,
@@ -46,7 +87,6 @@ const verifyOtp = async () => {
 
   if (error) {
     errorMessage.value = error.message;
-    console.error(error);
   } else {
     // Success! Supabase will handle the redirect
     navigateTo("/");
@@ -57,10 +97,12 @@ const resetForm = () => {
   otpSent.value = false;
   otp.value = "";
   errorMessage.value = "";
+  successMessage.value = "";
+  resendingCode.value = false;
 };
 </script>
 <template>
-  <div
+  <main
     class="flex min-h-screen items-center justify-center p-4 bg-gradient-to-br from-calm-50 to-white"
   >
     <div class="w-full max-w-md space-y-8">
@@ -74,13 +116,13 @@ const resetForm = () => {
         <h1
           class="text-3xl font-bold bg-gradient-to-r from-calm-700 to-calm-600 bg-clip-text text-transparent"
         >
-          Welcome Back
+          {{ successMessage ? "Welcome!" : "Get Started" }}
         </h1>
         <p class="text-calm-600 mt-2">
           {{
             otpSent
               ? "Enter the code from your email"
-              : "Sign in to your account"
+              : "Sign in or create your account"
           }}
         </p>
       </div>
@@ -114,6 +156,11 @@ const resetForm = () => {
             >
               {{ loading ? "Sending..." : "Send Code" }}
             </Button>
+
+            <p class="text-xs text-calm-600 text-center">
+              New user? You'll receive a confirmation email first, then you can
+              request a login code.
+            </p>
           </div>
         </div>
 
@@ -146,16 +193,35 @@ const resetForm = () => {
               {{ loading ? "Verifying..." : "Verify Code" }}
             </Button>
 
-            <Button
-              @click="resetForm"
-              variant="ghost"
-              size="sm"
-              class="w-full text-calm-600 hover:text-calm-700 hover:bg-calm-50"
-              :disabled="loading"
-            >
-              Use different email
-            </Button>
+            <div class="flex gap-2">
+              <Button
+                @click="resendOtp"
+                variant="outline"
+                size="sm"
+                class="flex-1 text-calm-600 hover:text-calm-700 hover:bg-calm-50 border-calm-200"
+                :disabled="loading || resendingCode"
+              >
+                {{ resendingCode ? "Sending..." : "Send a new code" }}
+              </Button>
+
+              <Button
+                @click="resetForm"
+                variant="ghost"
+                size="sm"
+                class="flex-1 text-calm-600 hover:text-calm-700 hover:bg-calm-50"
+                :disabled="loading || resendingCode"
+              >
+                Use different email
+              </Button>
+            </div>
           </div>
+        </div>
+
+        <div
+          v-if="successMessage"
+          class="text-sm text-green-700 bg-green-50 border border-green-200 p-3 rounded-lg text-center"
+        >
+          {{ successMessage }}
         </div>
 
         <div
@@ -166,5 +232,5 @@ const resetForm = () => {
         </div>
       </div>
     </div>
-  </div>
+  </main>
 </template>

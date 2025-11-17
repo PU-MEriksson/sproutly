@@ -1,75 +1,70 @@
-# Nuxt Minimal Starter
+# Sproutly
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+A gentle, supportive task manager designed for everyone. Sproutly helps you break down overwhelming tasks into manageable steps, with AI-powered suggestions and a focus on cognitive accessibility.
 
-## Setup
+Built as a school project with Nuxt 4, Vue 3, Typescript and Shadcn-vue components.
 
-Make sure to install dependencies:
+## Features
+
+- ✨ Clean, intuitive interface
+- 🧠 AI-powered task breakdown and suggestions
+- 📝 Subtasks and step-by-step progress
+- 📅 Schedule tasks
+- 🔔 Friendly encouragement
+- 🦾 Designed for cognitive accessibility and executive dysfunction
+- 📱 PWA: Installable on desktop and mobile
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18+ recommended)
+- npm, yarn, pnpm, or bun
+
+### Setup
+
+Install dependencies:
 
 ```bash
 # npm
 npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
 ```
 
-## Development Server
+### Development
 
-Start the development server on `http://localhost:3000`:
+Start the development server:
 
 ```bash
-# npm
 npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
+# or: yarn dev / pnpm dev / bun run dev
 ```
 
-## Production
+Visit [http://localhost:3000](http://localhost:3000) in your browser.
 
-Build the application for production:
+### Production
+
+Build for production:
 
 ```bash
-# npm
 npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
+# or: yarn build / pnpm build / bun run build
 ```
 
-Locally preview production build:
+Preview the production build:
 
 ```bash
-# npm
 npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
+# or: yarn preview / pnpm preview / bun run preview
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+## Configuration
+
+- Environment variables for Supabase and OpenAI API keys are required. See `.env.example` for details.
+
+## Contributing
+
+Pull requests and issues are welcome! Please open an issue to discuss your ideas or report bugs.
+
+## License
+
+MIT

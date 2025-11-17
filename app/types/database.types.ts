@@ -139,6 +139,7 @@ export type Database = {
           completed: boolean | null;
           created_at: string;
           id: number;
+          is_first_step: boolean | null;
           task_id: number | null;
           title: string;
         };
@@ -147,6 +148,7 @@ export type Database = {
           completed?: boolean | null;
           created_at?: string;
           id?: number;
+          is_first_step?: boolean | null;
           task_id?: number | null;
           title: string;
         };
@@ -155,6 +157,7 @@ export type Database = {
           completed?: boolean | null;
           created_at?: string;
           id?: number;
+          is_first_step?: boolean | null;
           task_id?: number | null;
           title?: string;
         };

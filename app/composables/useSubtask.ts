@@ -33,8 +33,6 @@ export const useSubtasks = () => {
       console.error("[useSubtasks] insert error", error);
       throw error;
     }
-
-    console.debug("[useSubtasks] inserted subtasks", data);
     return data ?? [];
   };
 
@@ -75,8 +73,6 @@ export const useSubtasks = () => {
       console.error("[useSubtasks] update error", error);
       throw error;
     }
-
-    console.debug("[useSubtasks] updated subtask", data);
     return data;
   };
 
@@ -101,8 +97,6 @@ export const useSubtasks = () => {
       console.error("[useSubtasks] delete error", error);
       throw error;
     }
-
-    console.debug("[useSubtasks] deleted subtask", subtaskId);
   };
 
     const deleteSubtasks = async (ids: number[]): Promise<void> => {

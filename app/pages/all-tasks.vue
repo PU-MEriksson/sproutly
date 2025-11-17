@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { Archive } from "lucide-vue-next";
 
+useHead({
+  title: "All Tasks - Sproutly",
+});
+
 const {
   allUncompletedTasks,
   loadingAllUncompletedTasks,
@@ -31,7 +35,7 @@ const handleTaskAdded = () => {
 
       <section
         v-if="
-          allUncompletedTasks?.length === 0 && allCompletedTasks?.length === 0
+          allUncompletedTasks?.length === 0
         "
       >
         <NoTasks />

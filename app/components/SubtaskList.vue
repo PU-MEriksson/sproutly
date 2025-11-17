@@ -21,7 +21,7 @@ const emit = defineEmits<{
 
 type Subtask = Database["public"]["Tables"]["subtasks"]["Row"];
 
-const { celebrateTask, celebrateSubtask } = useCelebration();
+const { celebrateSubtask } = useCelebration();
 const { isOnline } = useOnlineStatus();
 
 const {
@@ -48,10 +48,17 @@ const loadSubtasks = async () => {
   subtasksError.value = null;
   try {
     const fetchedSubtasks = await fetchSubtasks(props.taskId);
-    // Explicitly maintain creation order, don't sort by completion
-    subtasks.value = fetchedSubtasks;
+    // Sort: first steps at the top, then by creation order
+    subtasks.value = fetchedSubtasks.sort((a, b) => {
+      // If one is a first step and the other isn't, first step comes first
+      if (a.is_first_step && !b.is_first_step) return -1;
+      if (!a.is_first_step && b.is_first_step) return 1;
+      // Otherwise maintain creation order
+      return 0;
+    });
+    // Emit the subtasks-changed event so parent components can track progress
+    emit("subtasks-changed", subtasks.value);
   } catch (error) {
-    console.error("Failed to load subtasks:", error);
     subtasksError.value = "Failed to load subtasks";
   } finally {
     loadingSubtasks.value = false;
@@ -76,11 +83,6 @@ const handleSubtaskToggle = async (
   // Convert to boolean in case the checkbox returns a string
   const isCompleted = completed === true || completed === "true";
 
-  console.log("Toggling subtask:", subtaskId, "to:", isCompleted);
-
-  // Find the current index to maintain order
-  const currentIndex = subtasks.value.findIndex((st) => st.id === subtaskId);
-
   try {
     await toggleSubtaskCompleted(subtaskId, isCompleted);
 
@@ -91,15 +93,15 @@ const handleSubtaskToggle = async (
       subtask.completed = isCompleted;
       // Force reactivity update
       subtasks.value = [...subtasks.value];
+      // Emit updated subtasks for progress tracking
+      emit("subtasks-changed", subtasks.value);
     }
 
     // Celebrate if marking as complete
     if (isCompleted) {
-      console.log("Celebrating subtask completion!");
       celebrateSubtask();
     }
   } catch (error) {
-    console.error("Failed to toggle subtask:", error);
     // Revert local state on error
     const subtask = subtasks.value.find((st) => st.id === subtaskId);
     if (subtask) {
@@ -119,8 +121,10 @@ const handleDeleteSubtask = async (subtaskId: number) => {
     await deleteSubtask(subtaskId);
     // Remove from local state
     subtasks.value = subtasks.value.filter((st) => st.id !== subtaskId);
+    // Emit updated subtasks for progress tracking
+    emit("subtasks-changed", subtasks.value);
   } catch (error) {
-    console.error("Failed to delete subtask:", error);
+    toast.error("Failed to delete subtask, please try again.")
   }
 };
 
@@ -147,7 +151,7 @@ const handleAddSubtask = async () => {
     newSubtaskTitle.value = "";
     showAddInput.value = false;
   } catch (error) {
-    console.error("Failed to add subtask:", error);
+    toast.error("Failed to add subtask, please try again.")
   } finally {
     isAddingSubtask.value = false;
   }
@@ -190,7 +194,7 @@ const handleEditSubtask = async (subtaskId: number) => {
 
     cancelEditingSubtask();
   } catch (error) {
-    console.error("Failed to update subtask:", error);
+    toast.error("Failed to update subtask, please try again")
   }
 };
 
@@ -202,6 +206,12 @@ const cancelEditingSubtask = () => {
 // Handle events from AITaskHelper component
 const handleSubtasksAdded = (newSubtasks: Subtask[]) => {
   subtasks.value.unshift(...newSubtasks);
+  // Re-sort to ensure first steps stay at the top
+  subtasks.value = subtasks.value.sort((a, b) => {
+    if (a.is_first_step && !b.is_first_step) return -1;
+    if (!a.is_first_step && b.is_first_step) return 1;
+    return 0;
+  });
   emit("subtasks-changed", subtasks.value);
 };
 

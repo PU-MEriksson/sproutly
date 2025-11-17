@@ -11,6 +11,10 @@ import {
   SkipForward,
 } from "lucide-vue-next";
 
+useHead({
+  title: "How It Works - Sproutly",
+});
+
 const user = useSupabaseUser();
 
 // Check if this is being accessed from onboarding
@@ -40,7 +44,7 @@ const skipInstructions = () => {
           <h1
             class="text-3xl font-bold bg-gradient-to-r from-calm-700 to-calm-600 bg-clip-text text-transparent"
           >
-            How SupportiveToDo Works
+            How Sproutly Works
           </h1>
         </div>
         <p class="text-lg text-calm-700 max-w-2xl mx-auto">

@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { Sprout } from "lucide-vue-next";
 
+useHead({
+  title: "Sproutly - Task Management for Everyone",
+});
+
 const user = useSupabaseUser();
 const { hasUsername, fetchProfile } = useUserProfile();
 
@@ -45,7 +49,7 @@ if (process.client) {
           <h1
             class="text-4xl font-bold bg-gradient-to-r from-calm-700 to-calm-600 bg-clip-text text-transparent"
           >
-            SupportiveToDo
+            Sproutly
           </h1>
         </div>
         <p class="text-xl text-calm-700 mb-8">

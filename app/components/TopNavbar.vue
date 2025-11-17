@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { User, Sprout } from "lucide-vue-next";
+import { Sprout } from "lucide-vue-next";
 </script>
 
 <template>
@@ -18,17 +18,6 @@ import { User, Sprout } from "lucide-vue-next";
             <Sprout :size="28" :stroke-width="2" />
           </NuxtLink>
         </div>
-
-        <!-- Profile Icon to add later -->
-        <!-- <div class="flex items-center">
-          <NuxtLink
-            to="/settings"
-            class="text-calm-700 hover:text-calm-800 p-2.5 rounded-full hover:bg-calm-100/70 transition-all duration-200"
-            aria-label="Profile settings"
-          >
-            <User :size="22" />
-          </NuxtLink>
-        </div> -->
       </div>
     </div>
   </nav>

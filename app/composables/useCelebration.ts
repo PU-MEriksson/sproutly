@@ -23,22 +23,6 @@ export const useCelebration = () => {
     });
   };
 
-  const showSubtaskSparkle = (element: HTMLElement) => {
-    // Smaller, subtle effect for subtasks
-    const rect = element.getBoundingClientRect();
-    confetti({
-      particleCount: 20,
-      spread: 30,
-      origin: {
-        x: (rect.left + rect.width / 2) / window.innerWidth,
-        y: (rect.top + rect.height / 2) / window.innerHeight,
-      },
-      colors: ["#fbbf24", "#fcd34d"], // Gold sparkles
-      startVelocity: 15,
-      scalar: 0.6, // Smaller particles
-    });
-  };
-
   // Full celebration (task complete)
   const celebrateTask = () => {
     playTaskSound();

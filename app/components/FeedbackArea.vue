@@ -9,11 +9,11 @@ const props = defineProps<{
   timeOfDay: "morning" | "afternoon" | "evening";
 }>();
 
-const { profile, fetchProfile } = useUserProfile()
+const { profile, fetchProfile } = useUserProfile();
 
 onMounted(async () => {
-  await fetchProfile()
-})
+  await fetchProfile();
+});
 
 const username = computed(() => {
   const name = profile.value?.username?.trim();
@@ -35,7 +35,9 @@ const feedbackMessage = computed(() => {
   if (props.completedTasksToday >= 3) {
     return {
       emoji: "⭐",
-      message: `You've completed ${props.completedTasksToday} tasks today! You're doing great${", " + username.value}!`,
+      message: `You've completed ${
+        props.completedTasksToday
+      } tasks today! You're doing great${", " + username.value}!`,
       type: "celebration",
     };
   }
@@ -112,8 +114,14 @@ const feedbackMessage = computed(() => {
     ]"
   >
     <CardContent class="pt-8 pb-8 px-6">
-      <p class="text-base flex items-start gap-4">
-        <span class="text-3xl">{{ feedbackMessage.emoji }}</span>
+      <p
+        class="text-base flex items-start gap-4"
+        role="status"
+        aria-live="polite"
+      >
+        <span class="text-3xl" aria-hidden="true">{{
+          feedbackMessage.emoji
+        }}</span>
         <span class="flex-1 pt-1.5 text-calm-900 leading-relaxed font-medium">{{
           feedbackMessage.message
         }}</span>

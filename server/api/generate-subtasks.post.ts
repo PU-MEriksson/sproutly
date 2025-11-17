@@ -29,7 +29,10 @@ export default defineEventHandler(async (event) => {
     schema: z.object({
       subtasks: z.array(
         z.object({
-          title: z.string(),
+          title: z
+            .string()
+            .max(100)
+            .describe("One clear, concise action step (max 100 characters)"),
         })
       ),
     }),
@@ -51,18 +54,22 @@ Never exceed 10 total subtasks.
 Prefer fewer, impactful steps over excessive detail.
 Start with the easiest possible action to build momentum.
 
+CRITICAL CHARACTER LIMIT: Each subtask title MUST be 100 characters or less. Keep titles short and actionable.
+
 CRITICAL: You MUST respond in the exact same language as the task. If the task is in Swedish, respond in Swedish. If in English, respond in English. If you cannot determine the language, default to English.`,
 
     prompt: `Analyze this task and break it down appropriately. 
     
-    First, estimate the task's complexity (simple, medium, or complex).
+First, estimate the task's complexity (simple, medium, or complex). This should guide how many subtasks to create. Do not add the complexity as a subtask.
 Then, generate an appropriate number of steps based on that.
-Each subtask should represent a meaningful piece of progress.
+Each subtask should represent a meaningful piece of progress. Do not add any encouragements or extra text—just the steps.
+
+IMPORTANT: Keep each subtask title under 100 characters. Be concise and clear.
 
 Task: "${taskTitle}"
-${taskDescription ? `Additional context: ${taskDescription}` : ""}
-
-IMPORTANT: Respond in the same langage as the task is written in. If unsure, use English.
+${
+  taskDescription ? `Additional context: ${taskDescription}` : ""
+}IMPORTANT: Respond in the same langage as the task is written in. If unsure, use English.
 
 ${
   existingSubtasks.length > 0

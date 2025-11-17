@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { Separator } from "@/components/ui/separator";
 
+useHead({
+  title: "Settings - Sproutly",
+});
+
 const supabase = useSupabaseClient();
 
 async function logout() {
@@ -19,7 +23,7 @@ async function logout() {
         <Separator />
 
         <!-- Daily Reset Preference Component -->
-        <DailyResetPreference />
+        <DailyResetPreference :show-toast="true" />
 
         <Separator />
 
@@ -29,7 +33,7 @@ async function logout() {
           class="block p-4 bg-white/70 backdrop-blur-sm rounded-xl border border-calm-200/40 hover:border-calm-300 transition-all"
         >
           <span class="text-calm-700 font-medium"
-            >How SupportiveToDo Works</span
+            >How Sproutly Works</span
           >
           <p class="text-sm text-calm-600 mt-1">
             Learn how to use the app and get the most out of its features
@@ -41,7 +45,7 @@ async function logout() {
           to="/about"
           class="block p-4 bg-white/70 backdrop-blur-sm rounded-xl border border-calm-200/40 hover:border-calm-300 transition-all"
         >
-          <span class="text-calm-700 font-medium">About SupportiveToDo</span>
+          <span class="text-calm-700 font-medium">About Sproutly</span>
           <p class="text-sm text-calm-600 mt-1">
             Learn more about our mission and features
           </p>

@@ -7,14 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-vue-next";
 import { toast } from "vue-sonner";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   FormControl,
   FormField,
@@ -28,12 +21,13 @@ const props = defineProps<{
   defaultDate?: string;
 }>();
 
-const { success: showSuccess, error: showError } = useAppToast()
+const { success: showSuccess, error: showError } = useAppToast();
 
 const isExpanded = ref(false);
 const isSubmitting = ref(false);
 const formRef = ref<HTMLFormElement | null>(null);
 const { isOnline } = useOnlineStatus();
+const { addTask } = useTasks();
 
 const emit = defineEmits<{
   taskAdded: [];
@@ -67,15 +61,13 @@ const handleQuickAdd = form.handleSubmit(async (values) => {
 
   isSubmitting.value = true;
 
-  const { addTask } = useTasks();
-
   try {
     await addTask(values.title.trim(), undefined, props.defaultDate);
     form.resetForm();
-    showSuccess("Task added!")
+    showSuccess("Task added!");
     emit("taskAdded");
   } catch (error) {
-    showError("Failed to add task. Please try again.")
+    showError("Failed to add task. Please try again.");
   } finally {
     isSubmitting.value = false;
   }
@@ -117,29 +109,30 @@ onUnmounted(() => {
         @submit="handleQuickAdd"
         class="flex gap-3 items-start"
       >
-        <FormField
-          v-slot="{ componentField }"
-          name="title"
-          :validate-on-blur="false"
-          :validate-on-change="false"
-          :validate-on-input="false"
-          :validate-on-model-update="false"
-        >
-          <FormItem class="flex-1">
-            <FormControl>
-              <Input
-                type="text"
-                placeholder="What needs to be done?"
-                v-bind="componentField"
-                @focus="handleInputFocus"
-                aria-label="Quick add task"
-                class="h-12 text-base border-calm-200/50 focus:border-calm-400 bg-white/80"
-                :disabled="!isOnline"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        </FormField>
+        <div class="flex-1 space-y-2">
+          <label for="quick-add-input" class="sr-only">Task title</label>
+          <Input
+            id="quick-add-input"
+            v-model="title"
+            type="text"
+            maxlength="100"
+            placeholder="What needs to be done?"
+            @focus="handleInputFocus"
+            class="h-12 text-base border-calm-200/50 focus:border-calm-400 bg-white/80"
+            :disabled="!isOnline"
+          />
+          <CharCounter
+            v-if="title?.length"
+            :current="title?.length ?? 0"
+            :max="100"
+          />
+          <p
+            v-if="form.errors.value.title"
+            class="text-sm font-medium text-red-500"
+          >
+            {{ form.errors.value.title }}
+          </p>
+        </div>
 
         <Button
           type="submit"
