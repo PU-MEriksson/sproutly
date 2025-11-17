@@ -62,9 +62,9 @@ const skipToApp = async () => {
   <div
     class="flex min-h-screen items-center justify-center p-4 bg-gradient-to-br from-calm-50 to-white"
   >
-    <div class="w-full max-w-md space-y-8">
+    <main class="w-full max-w-md space-y-8">
       <!-- Logo/Icon -->
-      <div class="text-center">
+      <header class="text-center">
         <div class="flex justify-center mb-6">
           <div class="text-calm-600">
             <Sprout :size="48" :stroke-width="2" />
@@ -78,7 +78,7 @@ const skipToApp = async () => {
         <p class="text-calm-600 mt-2">
           Let's get started by personalizing your experience
         </p>
-      </div>
+      </header>
 
       <div
         class="bg-white/70 backdrop-blur-sm rounded-2xl border border-calm-200/40 shadow-lg p-8 space-y-6"
@@ -129,6 +129,6 @@ const skipToApp = async () => {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   </div>
 </template>
