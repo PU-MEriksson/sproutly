@@ -19,7 +19,7 @@ async function logout() {
         <Separator />
 
         <!-- Daily Reset Preference Component -->
-        <DailyResetPreference />
+        <DailyResetPreference :show-toast="true" />
 
         <Separator />
 
