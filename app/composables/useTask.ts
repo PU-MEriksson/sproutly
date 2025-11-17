@@ -2,7 +2,6 @@ import type { Database } from "~/types/database.types";
 import { useSubtasks } from "~/composables/useSubtask";
 import { useSanitize } from "./useSanitize";
 import { z } from "zod";
-import { onMounted } from "vue";
 
 type TaskInsert = Database["public"]["Tables"]["tasks"]["Insert"];
 type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
@@ -112,103 +111,6 @@ export const useTasks = () => {
     ]);
   };
 
-  /* const {
-    data: fetchedAllUncompletedTasks,
-    pending: loadingAllUncompletedTasks,
-    error: errorAllUncompletedTasks,
-    refresh: refreshAllUncompletedTasks,
-
-  } = useAsyncData<TaskRow[]>(
-    "user-tasks-all-uncompleted",
-    async () => {
-      const { data, error } = await supabase
-        .from("tasks")
-        .select("*")
-        .eq("completed", false)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data ?? [];
-    },
-    {
-      server: false, // Only fetch on client side since TaskAccordion is client-only
-      lazy: false,
-    }
-  );
-
-    const {
-    data: fetchedAllCompletedTasks,
-    pending: loadingAllCompletedTasks,
-    error: errorAllCompletedTasks,
-    refresh: refreshAllCompletedTasks,
-
-  } = useAsyncData<TaskRow[]>(
-    "user-tasks-all-completed",
-    async () => {
-      const { data, error } = await supabase
-        .from("tasks")
-        .select("*")
-        .eq("completed", true)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data ?? [];
-    },
-    {
-      server: false, // Only fetch on client side since TaskAccordion is client-only
-      lazy: false,
-    }
-  );
-
-  const {
-    data: fetchedTodaysUncompletedTasks,
-    pending: loadingTodaysUncompletedTasks,
-    error: errorTodaysUncompletedTasks,
-    refresh: refreshTodaysUncompletedTasks, 
-
-  } = useAsyncData<TaskRow[]>(
-    "user-tasks-today-uncompleted",
-    async () => {
-      const { data, error } = await supabase
-        .from("tasks")
-        .select("*")
-        .lte("startdate", currentDate)
-        .eq("completed", false)       
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data ?? [];
-    },
-    {
-      server: false,
-      lazy: false
-    }
-  )
-
-    const {
-    data: fetchedTodaysCompletedTasks,
-    pending: loadingTodaysCompletedTasks,
-    error: errorTodaysCompletedTasks,
-    refresh: refreshTodaysCompletedTasks, 
-  } = useAsyncData<TaskRow[]>(
-    "user-tasks-today-completed",
-    async () => {
-      const { data, error } = await supabase
-        .from("tasks")
-        .select("*")
-        .eq("completed", true)       
-        .eq("completed_date", currentDate)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data ?? [];
-    },
-    {
-      server: false,
-      lazy: false
-    }
-  ) */
-
   const addTask = async (
     title: string,
     description?: string,
@@ -248,11 +150,9 @@ export const useTasks = () => {
       }
 
       tasks.value.unshift(taskData);
-      console.debug("[useTasks] inserted task", taskData);
 
       return taskData;
     } catch (err) {
-      console.error("[useTasks] addTask failed", err);
       throw err;
     }
   };
@@ -287,20 +187,11 @@ export const useTasks = () => {
 
       if (updateErr) throw updateErr;
       if (!updated) throw new Error("Update returned no data");
-      /* 
-      if (fetchedAllUncompletedTasks.value) {
-        const idx = fetchedAllUncompletedTasks.value.findIndex((t) => t.id === id);
-        if (idx !== -1) {
-          fetchedAllUncompletedTasks.value.splice(idx, 1, updated);
-        }
-      } */
 
       await refreshAll();
 
-      console.debug("[useTasks] updated task", updated);
       return updated;
     } catch (err) {
-      console.error("[useTasks] updateTask failed", err);
       throw err;
     }
   };
@@ -335,14 +226,10 @@ export const useTasks = () => {
         );
         if (idx !== -1) fetchedAllUncompletedTasks.value.splice(idx, 1);
       }
-
-      console.debug("[useTasks] deleted task", id);
-
       await refreshAll();
 
       return true;
     } catch (err) {
-      console.error("[useTasks] deleteTask failed", err);
       throw err;
     }
   };
@@ -376,10 +263,8 @@ export const useTasks = () => {
 
       await refreshAll();
 
-      console.debug("[useTasks] removed task from today", updated);
       return updated;
     } catch (err) {
-      console.error("[useTasks] removeFromToday failed", err);
       throw err;
     }
   };
@@ -413,10 +298,8 @@ export const useTasks = () => {
 
       await refreshAll();
 
-      console.debug("[useTasks] added task to today", updated);
       return updated;
     } catch (err) {
-      console.error("[useTasks] addToToday failed", err);
       throw err;
     }
   };
@@ -465,14 +348,12 @@ export const useTasks = () => {
         .lte("startdate", yesterdayStr);
 
       if (error) {
-        console.error("[useTasks] Fresh start failed:", error);
         return;
       }
 
       await refreshAll();
-      console.debug("[useTasks] Fresh start completed");
     } catch (err) {
-      console.error("[useTasks] performFreshStart failed:", err);
+      throw err;
     }
   };
 

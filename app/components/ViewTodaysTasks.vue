@@ -44,12 +44,12 @@ const handleUncompleteTask = async (task: Task) => {
     pros.refreshTodaysCompleted();
     showSuccess("Task moved back to To-do", `"${task.title}" is now uncompleted.`)
   } catch (error) {
-    console.error("Failed to uncomplete task:", error);
     showError("Couldn't update task", "Please try again later.")
   }
 };
 
 const isCollapsibleOpen = ref(false);
+
 </script>
 
 <template>

@@ -36,7 +36,6 @@ export function useAI() {
     } catch (err: any) {
       error.value =
         err.message || "An error occurred while generating subtasks.";
-      console.error("[useAI] Error generating subtasks:", err);
     } finally {
       loading.value = false;
     }
@@ -66,10 +65,6 @@ export function useAI() {
       error.value =
         err.message ||
         "An error occurred while generating a first step to get started.";
-      console.error(
-        "[useAI] Error generating a first step to get started:",
-        err
-      );
     } finally {
       loading.value = false;
     }

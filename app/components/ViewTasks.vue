@@ -30,7 +30,7 @@ const handleTaskCompleted = (taskTitle: string) => {
 
       <div v-else class="space-y-3">
         <TaskAccordion
-          v-for="t in tasks"
+          v-for="t in props.tasks"
           :key="t.id"
           :task="t"
           @task-completed="handleTaskCompleted"

@@ -1,7 +1,5 @@
 <script setup lang="ts">
 
-import { toTypedSchema } from "@vee-validate/zod";
-import * as z from "zod";
 import { useFieldValue, useForm } from "vee-validate";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -15,7 +13,7 @@ import { CalendarIcon } from "lucide-vue-next";
 import { Calendar } from "@/components/ui/calendar";
 import { df } from "../utils/dates";
 import { useDateField } from "@/composables/useDateField";
-import { subtaskSchema, taskSchema } from "~/schemas/task";
+import { taskSchema } from "~/schemas/task";
 
 
 import {
