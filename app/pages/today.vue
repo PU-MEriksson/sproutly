@@ -14,7 +14,7 @@ const {
   errorTodaysUncompletedTasks,
 } = useTasks();
 
-const lastCompletedTask = ref<string | undefined>();
+const { lastCompletedTaskTitle } = useCelebration();
 
 const completedTasksToday = todaysCompletedTasks;
 
@@ -44,13 +44,6 @@ const formattedDate = computed(() => {
 });
 
 const handleTaskCompleted = (taskTitle: string) => {
-  // Show celebration for 8 seconds
-  lastCompletedTask.value = taskTitle;
-
-  setTimeout(() => {
-    lastCompletedTask.value = undefined;
-  }, 8000);
-
   refreshTodaysCompletedTasks();
   refreshTodaysUncompletedTasks();
 };
@@ -65,7 +58,6 @@ const todaysTotalTasks = computed(
     (todaysCompletedTasks.value?.length ?? 0) +
     (todaysUncompletedTasks.value?.length ?? 0)
 );
-
 </script>
 
 <template>
@@ -85,8 +77,8 @@ const todaysTotalTasks = computed(
 
         <FeedbackArea
           :total-tasks="todaysTotalTasks"
-          :completed-tasks-today="completedTasksToday.length"
-          :last-completed-task="lastCompletedTask"
+          :completed-tasks-today="completedTasksToday?.length ?? 0"
+          :last-completed-task="lastCompletedTaskTitle"
           :time-of-day="timeOfDay"
         />
         <QuickAddTask

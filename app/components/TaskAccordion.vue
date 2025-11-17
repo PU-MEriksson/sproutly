@@ -83,7 +83,7 @@ watch(localCompleted, async (checked) => {
     emit("update:completed", checked);
     if (checked) {
       emit("task-completed", props.task.title);
-      celebrateTask();
+      celebrateTask(props.task.title);
     }
   }
 });
