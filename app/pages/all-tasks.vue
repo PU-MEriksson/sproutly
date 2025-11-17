@@ -2,7 +2,7 @@
 import { Archive } from "lucide-vue-next";
 
 useHead({
-  title: "All Tasks - Supportive ToDo",
+  title: "All Tasks - Sproutly",
 });
 
 const {

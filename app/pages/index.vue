@@ -2,7 +2,7 @@
 import { Sprout } from "lucide-vue-next";
 
 useHead({
-  title: "Supportive ToDo - Task Management for Everyone",
+  title: "Sproutly - Task Management for Everyone",
 });
 
 const user = useSupabaseUser();

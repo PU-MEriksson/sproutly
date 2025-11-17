@@ -2,7 +2,7 @@
 import { Sprout } from "lucide-vue-next";
 
 useHead({
-  title: "About - Supportive ToDo",
+  title: "About - Sproutly",
 });
 
 const user = useSupabaseUser();

@@ -4,7 +4,7 @@ import Input from "~/components/ui/input/Input.vue";
 import { Sprout } from "lucide-vue-next";
 
 useHead({
-  title: "Log In - Supportive ToDo",
+  title: "Log In - Sproutly",
 });
 
 const supabase = useSupabaseClient();

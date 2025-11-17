@@ -2,7 +2,7 @@
 import { Separator } from "@/components/ui/separator";
 
 useHead({
-  title: "Settings - Supportive ToDo",
+  title: "Settings - Sproutly",
 });
 
 const supabase = useSupabaseClient();
