@@ -145,26 +145,38 @@ onUnmounted(() => {
         </Button>
       </form>
 
-      <Sheet v-model:open="isExpanded">
-        <SheetTrigger as-child>
+      <ClientOnly>
+        <template #fallback>
           <button
             type="button"
-            class="text-sm text-calm-600 hover:text-calm-700 underline-offset-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-calm-400 rounded-lg px-2 py-1 transition-colors duration-200"
+            class="text-sm text-calm-600 opacity-70 cursor-not-allowed rounded-lg px-2 py-1"
             aria-label="Add task with more details"
+            disabled
           >
             Include more details
           </button>
-        </SheetTrigger>
-        <SheetContent side="bottom">
-          <div class="mt-4 max-h-[75vh] overflow-y-auto">
-            <AddTask
-              v-model:title="title"
-              :default-date="defaultDate"
-              @task-added="handleExpandedTaskAdded"
-            />
-          </div>
-        </SheetContent>
-      </Sheet>
+        </template>
+        <Sheet v-model:open="isExpanded">
+          <SheetTrigger as-child>
+            <button
+              type="button"
+              class="text-sm text-calm-600 hover:text-calm-700 underline-offset-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-calm-400 rounded-lg px-2 py-1 transition-colors duration-200"
+              aria-label="Add task with more details"
+            >
+              Include more details
+            </button>
+          </SheetTrigger>
+          <SheetContent side="bottom">
+            <div class="mt-4 max-h-[75vh] overflow-y-auto">
+              <AddTask
+                v-model:title="title"
+                :default-date="defaultDate"
+                @task-added="handleExpandedTaskAdded"
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
+      </ClientOnly>
     </div>
   </div>
 </template>

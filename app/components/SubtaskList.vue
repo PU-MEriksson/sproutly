@@ -70,44 +70,35 @@ const handleSubtaskToggle = async (
   completed: boolean | string
 ) => {
   if (!isOnline.value) {
-    // Revert the checkbox immediately
-    const subtask = subtasks.value.find((st) => st.id === subtaskId);
-    if (subtask) {
-      subtask.completed = !subtask.completed;
-      subtasks.value = [...subtasks.value];
-    }
     toast.error("You're offline. Please reconnect to make changes.");
     return;
   }
 
-  // Convert to boolean in case the checkbox returns a string
+  const subtask = subtasks.value.find((st) => st.id === subtaskId);
+  if (!subtask) return;
+
+  const previousValue = !!subtask.completed;
   const isCompleted = completed === true || completed === "true";
+
+  if (previousValue === isCompleted) return;
+
+  // Optimistically update local state to keep checkbox + label in sync
+  subtask.completed = isCompleted;
+  subtasks.value = [...subtasks.value];
+  emit("subtasks-changed", subtasks.value);
 
   try {
     await toggleSubtaskCompleted(subtaskId, isCompleted);
 
-    // Update local state while preserving array order
-    const subtask = subtasks.value.find((st) => st.id === subtaskId);
-    if (subtask) {
-      // Update in place to maintain order
-      subtask.completed = isCompleted;
-      // Force reactivity update
-      subtasks.value = [...subtasks.value];
-      // Emit updated subtasks for progress tracking
-      emit("subtasks-changed", subtasks.value);
-    }
-
-    // Celebrate if marking as complete
     if (isCompleted) {
       celebrateSubtask();
     }
   } catch (error) {
-    // Revert local state on error
-    const subtask = subtasks.value.find((st) => st.id === subtaskId);
-    if (subtask) {
-      subtask.completed = !isCompleted;
-      subtasks.value = [...subtasks.value];
-    }
+    // Revert local state on error and notify user
+    subtask.completed = previousValue;
+    subtasks.value = [...subtasks.value];
+    emit("subtasks-changed", subtasks.value);
+    toast.error("Failed to update subtask, please try again.");
   }
 };
 
@@ -124,7 +115,7 @@ const handleDeleteSubtask = async (subtaskId: number) => {
     // Emit updated subtasks for progress tracking
     emit("subtasks-changed", subtasks.value);
   } catch (error) {
-    toast.error("Failed to delete subtask, please try again.")
+    toast.error("Failed to delete subtask, please try again.");
   }
 };
 
@@ -151,7 +142,7 @@ const handleAddSubtask = async () => {
     newSubtaskTitle.value = "";
     showAddInput.value = false;
   } catch (error) {
-    toast.error("Failed to add subtask, please try again.")
+    toast.error("Failed to add subtask, please try again.");
   } finally {
     isAddingSubtask.value = false;
   }
@@ -194,7 +185,7 @@ const handleEditSubtask = async (subtaskId: number) => {
 
     cancelEditingSubtask();
   } catch (error) {
-    toast.error("Failed to update subtask, please try again")
+    toast.error("Failed to update subtask, please try again");
   }
 };
 
@@ -250,10 +241,8 @@ defineExpose({ loadSubtasks });
       >
         <Checkbox
           :id="`subtask-${subtask.id}`"
-          :checked="subtask.completed ?? false"
-          @click.stop="
-            () => handleSubtaskToggle(subtask.id, !(subtask.completed ?? false))
-          "
+          :model-value="!!subtask.completed"
+          @update:modelValue="(value) => handleSubtaskToggle(subtask.id, value)"
           class="data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-calm-500 data-[state=checked]:to-calm-600 data-[state=checked]:border-calm-500"
         />
 
