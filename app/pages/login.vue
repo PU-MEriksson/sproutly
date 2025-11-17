@@ -42,7 +42,6 @@ const sendOtp = async () => {
 
   if (error) {
     errorMessage.value = error.message;
-    console.error(error);
   } else {
     otpSent.value = true;
   }
@@ -64,7 +63,6 @@ const resendOtp = async () => {
 
   if (error) {
     errorMessage.value = error.message;
-    console.error(error);
   } else {
     successMessage.value = "New code sent! Check your email.";
   }
@@ -85,7 +83,6 @@ const verifyOtp = async () => {
 
   if (error) {
     errorMessage.value = error.message;
-    console.error(error);
   } else {
     // Success! Supabase will handle the redirect
     navigateTo("/");
