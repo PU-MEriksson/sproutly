@@ -17,7 +17,7 @@ const user = useSupabaseUser();
           <h1
             class="text-4xl font-bold bg-gradient-to-r from-calm-700 to-calm-600 bg-clip-text text-transparent"
           >
-            About SupportiveToDo
+            About Sproutly
           </h1>
         </div>
         <p class="text-xl text-calm-700">
@@ -65,7 +65,7 @@ const user = useSupabaseUser();
       >
         <h2 class="text-2xl font-bold text-calm-800 mb-4">Our Mission</h2>
         <p class="text-calm-700 leading-relaxed mb-4">
-          SupportiveToDo is designed specifically for people with executive
+          Sproutly is designed specifically for people with executive
           dysfunction and cognitive disabilities. We believe task management
           should be supportive, not stressful.
         </p>
