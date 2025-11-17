@@ -65,12 +65,6 @@ export const useTasks = () => {
         server: false,
         lazy: false,
         immediate: true,
-        getCachedData: (key) => {
-          // Use cached data if available to avoid re-fetching
-          return (
-            useNuxtApp().payload.data[key] || useNuxtApp().static.data[key]
-          );
-        },
       }
     );
   }
