@@ -2,7 +2,7 @@
 import { Sprout, Loader2 } from "lucide-vue-next";
 
 useHead({
-  title: "Confirming - Supportive ToDo",
+  title: "Confirming - Sproutly",
 });
 
 const { hasUsername, fetchProfile } = useUserProfile();

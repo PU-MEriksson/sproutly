@@ -1,6 +1,6 @@
 <script setup lang="ts">
 useHead({
-  title: "Today - Supportive ToDo",
+  title: "Today - Sproutly",
 });
 
 const {

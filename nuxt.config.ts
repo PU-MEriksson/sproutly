@@ -18,7 +18,7 @@ export default defineNuxtConfig({
       htmlAttrs: {
         lang: "en",
       },
-      title: "Supportive ToDo",
+      title: "Sproutly",
       link:
         process.env.NODE_ENV === "production"
           ? [{ rel: "manifest", href: "/manifest.webmanifest" }]
@@ -30,8 +30,8 @@ export default defineNuxtConfig({
     registerType: "autoUpdate",
     disable: process.env.NODE_ENV === "development",
     manifest: {
-      name: "Supportive ToDo",
-      short_name: "ToDo",
+      name: "Sproutly",
+      short_name: "Sproutly",
       description: "A supportive task management app",
       theme_color: "#ffffff",
       background_color: "#ffffff",

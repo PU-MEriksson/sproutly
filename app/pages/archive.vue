@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/empty";
 
 useHead({
-  title: "Archive - Supportive ToDo",
+  title: "Archive - Sproutly",
 });
 
 const {

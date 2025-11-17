@@ -4,7 +4,7 @@ import Button from "~/components/ui/button/Button.vue";
 import Input from "~/components/ui/input/Input.vue";
 
 useHead({
-  title: "Welcome - Supportive ToDo",
+  title: "Welcome - Sproutly",
 });
 
 const { updateUsername } = useUserProfile();
