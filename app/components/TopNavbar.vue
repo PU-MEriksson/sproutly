@@ -13,7 +13,7 @@
             class="flex flex-col items-center gap-1 text-calm-700 hover:text-calm-600 p-2 rounded-lg hover:bg-calm-50 transition-all duration-200"
             aria-label="Home"
           >
-            <img src="/pwa-192x192.svg" alt="" class="w-7 h-7" />
+            <img src="/pwa-192x192.svg" alt="Sproutly logo" class="w-7 h-7" />
           </NuxtLink>
         </div>
       </div>
