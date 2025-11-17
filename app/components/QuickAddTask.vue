@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import { ref, onMounted, onUnmounted } from "vue";
 import { toTypedSchema } from "@vee-validate/zod";
 import * as z from "zod";
@@ -8,15 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-vue-next";
 import { toast } from "vue-sonner";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import AddTask from "./AddTask.vue";
@@ -113,31 +109,30 @@ onUnmounted(() => {
         @submit="handleQuickAdd"
         class="flex gap-3 items-start"
       >
-        <FormField
-          v-slot="{ componentField }"
-          name="title"
-          :validate-on-blur="false"
-          :validate-on-change="false"
-          :validate-on-input="false"
-          :validate-on-model-update="false"
-        >
-          <FormItem class="flex-1">
-            <FormControl>
-              <Input
-                type="text"
-                maxlength="100"
-                placeholder="What needs to be done?"
-                v-bind="componentField"
-                @focus="handleInputFocus"
-                aria-label="Quick add task"
-                class="h-12 text-base border-calm-200/50 focus:border-calm-400 bg-white/80"
-                :disabled="!isOnline"
-              />
-            </FormControl>
-            <CharCounter v-if="title?.length" :current="title?.length ?? 0" :max="100"/>
-            <FormMessage />
-          </FormItem>
-        </FormField>
+        <div class="flex-1 space-y-2">
+          <label for="quick-add-input" class="sr-only">Task title</label>
+          <Input
+            id="quick-add-input"
+            v-model="title"
+            type="text"
+            maxlength="100"
+            placeholder="What needs to be done?"
+            @focus="handleInputFocus"
+            class="h-12 text-base border-calm-200/50 focus:border-calm-400 bg-white/80"
+            :disabled="!isOnline"
+          />
+          <CharCounter
+            v-if="title?.length"
+            :current="title?.length ?? 0"
+            :max="100"
+          />
+          <p
+            v-if="form.errors.value.title"
+            class="text-sm font-medium text-red-500"
+          >
+            {{ form.errors.value.title }}
+          </p>
+        </div>
 
         <Button
           type="submit"

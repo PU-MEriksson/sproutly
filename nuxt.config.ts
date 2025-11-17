@@ -15,6 +15,10 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
+      htmlAttrs: {
+        lang: "en",
+      },
+      title: "Supportive ToDo",
       link:
         process.env.NODE_ENV === "production"
           ? [{ rel: "manifest", href: "/manifest.webmanifest" }]

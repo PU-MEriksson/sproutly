@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { Sprout } from "lucide-vue-next";
 
+useHead({
+  title: "Supportive ToDo - Task Management for Everyone",
+});
+
 const user = useSupabaseUser();
 const { hasUsername, fetchProfile } = useUserProfile();
 

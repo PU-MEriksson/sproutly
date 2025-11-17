@@ -3,6 +3,10 @@ import Button from "~/components/ui/button/Button.vue";
 import Input from "~/components/ui/input/Input.vue";
 import { Sprout } from "lucide-vue-next";
 
+useHead({
+  title: "Log In - Supportive ToDo",
+});
+
 const supabase = useSupabaseClient();
 const route = useRoute();
 
@@ -98,7 +102,7 @@ const resetForm = () => {
 };
 </script>
 <template>
-  <div
+  <main
     class="flex min-h-screen items-center justify-center p-4 bg-gradient-to-br from-calm-50 to-white"
   >
     <div class="w-full max-w-md space-y-8">
@@ -228,5 +232,5 @@ const resetForm = () => {
         </div>
       </div>
     </div>
-  </div>
+  </main>
 </template>

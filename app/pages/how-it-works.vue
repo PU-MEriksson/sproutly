@@ -11,6 +11,10 @@ import {
   SkipForward,
 } from "lucide-vue-next";
 
+useHead({
+  title: "How It Works - Supportive ToDo",
+});
+
 const user = useSupabaseUser();
 
 // Check if this is being accessed from onboarding

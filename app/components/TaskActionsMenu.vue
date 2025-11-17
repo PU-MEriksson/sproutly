@@ -37,7 +37,7 @@ const emit = defineEmits<{
         class="h-8 w-8 p-0 hover:bg-calm-100 shrink-0"
         aria-label="Task actions"
       >
-        <MoreVertical :size="16" class="text-calm-600" />
+        <MoreVertical :size="16" class="text-calm-600" aria-hidden="true" />
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end" class="w-48">
