@@ -378,7 +378,7 @@ onMounted(() => {
               </div>
 
               <!-- Progress bar - shown below title when accordion is closed -->
-              <div v-if="hasSubtasks" class="mt-3" @click.stop>
+              <div v-if="subtaskProgress > 0" class="mt-3" @click.stop>
                 <Progress
                   :model-value="Number(subtaskProgress)"
                   class="h-1.5"
