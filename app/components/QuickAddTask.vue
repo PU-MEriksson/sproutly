@@ -25,6 +25,7 @@ const { success: showSuccess, error: showError } = useAppToast();
 
 const isExpanded = ref(false);
 const isSubmitting = ref(false);
+const hasAttemptedSubmit = ref(false);
 const formRef = ref<HTMLFormElement | null>(null);
 const { isOnline } = useOnlineStatus();
 const { addTask } = useTasks();
@@ -45,6 +46,15 @@ const form = useForm({
   initialValues: {
     title: "",
   },
+  validateOnMount: false,
+  initialErrors: {
+    title: undefined,
+    startdate: undefined,
+  },
+  initialTouched: {
+    title: false,
+    startdate: false,
+  },
 });
 
 const title = computed({
@@ -52,26 +62,34 @@ const title = computed({
   set: (val) => form.setFieldValue("title", val),
 });
 
-const handleQuickAdd = form.handleSubmit(async (values) => {
-  // Prevent submission when offline
-  if (!isOnline.value) {
-    toast.error("You're offline. Please reconnect to add a task.");
-    return;
-  }
+const handleQuickAdd = form.handleSubmit(
+  async (values) => {
+    // Prevent submission when offline
+    if (!isOnline.value) {
+      toast.error("You're offline. Please reconnect to add a task.");
+      return;
+    }
 
-  isSubmitting.value = true;
+    hasAttemptedSubmit.value = true;
+    isSubmitting.value = true;
 
-  try {
-    await addTask(values.title.trim(), undefined, props.defaultDate);
-    form.resetForm();
-    showSuccess("Task added!");
-    emit("taskAdded");
-  } catch (error) {
-    showError("Failed to add task. Please try again.");
-  } finally {
-    isSubmitting.value = false;
+    try {
+      await addTask(values.title.trim(), undefined, props.defaultDate);
+      form.resetForm();
+      hasAttemptedSubmit.value = false;
+      showSuccess("Task added!");
+      emit("taskAdded");
+    } catch (error) {
+      showError("Failed to add task. Please try again.");
+    } finally {
+      isSubmitting.value = false;
+    }
+  },
+  () => {
+    // This callback runs when validation fails
+    hasAttemptedSubmit.value = true;
   }
-});
+);
 
 const handleExpandedTaskAdded = () => {
   isExpanded.value = false;
@@ -81,12 +99,14 @@ const handleExpandedTaskAdded = () => {
 const handleInputFocus = () => {
   // Clear error message when user focuses on the input
   form.setFieldError("title", undefined);
+  hasAttemptedSubmit.value = false;
 };
 
 const handleClickOutside = (event: MouseEvent) => {
   if (formRef.value && !formRef.value.contains(event.target as Node)) {
     // Clear error when clicking outside the form
     form.setFieldError("title", undefined);
+    hasAttemptedSubmit.value = false;
   }
 };
 
@@ -127,7 +147,7 @@ onUnmounted(() => {
             :max="100"
           />
           <p
-            v-if="form.errors.value.title"
+            v-if="hasAttemptedSubmit && form.errors.value.title"
             class="text-sm font-medium text-red-500"
           >
             {{ form.errors.value.title }}
@@ -145,26 +165,38 @@ onUnmounted(() => {
         </Button>
       </form>
 
-      <Sheet v-model:open="isExpanded">
-        <SheetTrigger as-child>
+      <ClientOnly>
+        <template #fallback>
           <button
             type="button"
-            class="text-sm text-calm-600 hover:text-calm-700 underline-offset-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-calm-400 rounded-lg px-2 py-1 transition-colors duration-200"
+            class="text-sm text-calm-600 opacity-70 cursor-not-allowed rounded-lg px-2 py-1"
             aria-label="Add task with more details"
+            disabled
           >
             Include more details
           </button>
-        </SheetTrigger>
-        <SheetContent side="bottom">
-          <div class="mt-4 max-h-[75vh] overflow-y-auto">
-            <AddTask
-              v-model:title="title"
-              :default-date="defaultDate"
-              @task-added="handleExpandedTaskAdded"
-            />
-          </div>
-        </SheetContent>
-      </Sheet>
+        </template>
+        <Sheet v-model:open="isExpanded">
+          <SheetTrigger as-child>
+            <button
+              type="button"
+              class="text-sm text-calm-600 hover:text-calm-700 underline-offset-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-calm-400 rounded-lg px-2 py-1 transition-colors duration-200"
+              aria-label="Add task with more details"
+            >
+              Include more details
+            </button>
+          </SheetTrigger>
+          <SheetContent side="bottom">
+            <div class="mt-4 max-h-[75vh] overflow-y-auto">
+              <AddTask
+                v-model:title="title"
+                :default-date="defaultDate"
+                @task-added="handleExpandedTaskAdded"
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
+      </ClientOnly>
     </div>
   </div>
 </template>

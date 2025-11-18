@@ -1,5 +1,9 @@
 import confetti from "canvas-confetti";
 
+// Global state for last completed task
+const lastCompletedTaskTitle = ref<string | undefined>();
+const lastCompletedTime = ref<number>(0);
+
 export const useCelebration = () => {
   const playSubtaskSound = () => {
     const audio = new Audio("/sounds/subtask-complete.wav");
@@ -24,9 +28,22 @@ export const useCelebration = () => {
   };
 
   // Full celebration (task complete)
-  const celebrateTask = () => {
+  const celebrateTask = (taskTitle?: string) => {
     playTaskSound();
     showConfetti();
+
+    // Set the last completed task for feedback
+    if (taskTitle) {
+      lastCompletedTaskTitle.value = taskTitle;
+      lastCompletedTime.value = Date.now();
+
+      // Clear after 8 seconds
+      setTimeout(() => {
+        if (Date.now() - lastCompletedTime.value >= 8000) {
+          lastCompletedTaskTitle.value = undefined;
+        }
+      }, 8000);
+    }
   };
 
   // Small celebration (subtask complete)
@@ -49,5 +66,6 @@ export const useCelebration = () => {
   return {
     celebrateTask,
     celebrateSubtask,
+    lastCompletedTaskTitle: readonly(lastCompletedTaskTitle),
   };
 };
