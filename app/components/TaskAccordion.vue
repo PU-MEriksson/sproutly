@@ -55,6 +55,7 @@ const isRollingBack = ref(false);
 const editingTask = ref(false);
 const accordionValue = ref<string | undefined>(undefined);
 const subtaskListRef = ref<InstanceType<typeof SubtaskList> | null>(null);
+const lastClickPosition = ref<{ x: number; y: number } | null>(null);
 
 // Sync local state with prop
 watch(
@@ -63,6 +64,11 @@ watch(
     localCompleted.value = val ?? false;
   }
 );
+
+// Capture click position on checkbox
+const handleCheckboxClick = (event: MouseEvent) => {
+  lastClickPosition.value = { x: event.clientX, y: event.clientY };
+};
 
 // Handle checkbox changes
 watch(localCompleted, async (checked) => {
@@ -83,7 +89,11 @@ watch(localCompleted, async (checked) => {
     emit("update:completed", checked);
     if (checked) {
       emit("task-completed", props.task.title);
-      celebrateTask(props.task.title);
+      celebrateTask(
+        props.task.title,
+        lastClickPosition.value?.x,
+        lastClickPosition.value?.y
+      );
     }
   }
 });
@@ -143,7 +153,7 @@ onMounted(() => {
             <Checkbox
               v-model="localCompleted"
               :disabled="updatingTask"
-              @click.stop
+              @click.stop="handleCheckboxClick"
               class="m-1 h-5 w-5 shrink-0 rounded-full"
               :aria-label="`Mark task as ${
                 localCompleted ? 'incomplete' : 'complete'
