@@ -12,13 +12,13 @@ export const useCelebration = () => {
   };
 
   const playSubtaskSound = () => {
-    const audio = new Audio("/sounds/subtask-complete.wav");
+    const audio = new Audio("/sounds/pop.mp3");
     audio.volume = 0.3;
     audio.play().catch(() => {});
   };
 
   const playTaskSound = () => {
-    const audio = new Audio("/sounds/task-complete.mp3");
+    const audio = new Audio("/sounds/success-complete.mp3");
     audio.volume = 0.5;
     audio.play().catch(() => {});
   };
@@ -64,20 +64,31 @@ export const useCelebration = () => {
   };
 
   // Small celebration (subtask complete)
-  const celebrateSubtask = (element?: HTMLElement) => {
+  const celebrateSubtask = (x?: number, y?: number) => {
     playSubtaskSound();
 
-    // // Small, subtle sparkle effect
-    // confetti({
-    //   particleCount: 15,
-    //   spread: 25,
-    //   origin: { y: 0.6, x: 0.07 },
-    //   colors: ["#fbbf24", "#fcd34d"], // Gold sparkles
-    //   startVelocity: 10,
-    //   scalar: 0.5, // Smaller particles
-    //   gravity: 1.2,
-    //   ticks: 50, // Shorter duration
-    // });
+    // Skip confetti for users who prefer reduced motion
+    if (prefersReducedMotion()) {
+      return;
+    }
+
+    // Calculate origin based on click position
+    const origin = {
+      x: x !== undefined ? x / window.innerWidth : 0.5,
+      y: y !== undefined ? y / window.innerHeight : 0.6,
+    };
+
+    // Small, subtle sparkle effect
+    confetti({
+      particleCount: 15,
+      spread: 25,
+      origin,
+      colors: ["#fbbf24", "#fcd34d"], // Gold sparkles
+      startVelocity: 10,
+      scalar: 0.5, // Smaller particles
+      gravity: 1.2,
+      ticks: 50, // Shorter duration
+    });
   };
 
   return {

@@ -65,6 +65,12 @@ const loadSubtasks = async () => {
   }
 };
 
+const lastClickPosition = ref<{ x: number; y: number } | null>(null);
+
+const handleCheckboxClick = (event: MouseEvent) => {
+  lastClickPosition.value = { x: event.clientX, y: event.clientY };
+};
+
 const handleSubtaskToggle = async (
   subtaskId: number,
   completed: boolean | string
@@ -91,7 +97,7 @@ const handleSubtaskToggle = async (
     await toggleSubtaskCompleted(subtaskId, isCompleted);
 
     if (isCompleted) {
-      celebrateSubtask();
+      celebrateSubtask(lastClickPosition.value?.x, lastClickPosition.value?.y);
     }
   } catch (error) {
     // Revert local state on error and notify user
@@ -243,6 +249,7 @@ defineExpose({ loadSubtasks });
           :id="`subtask-${subtask.id}`"
           :model-value="!!subtask.completed"
           @update:modelValue="(value) => handleSubtaskToggle(subtask.id, value)"
+          @click="handleCheckboxClick"
           class="data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-calm-500 data-[state=checked]:to-calm-600 data-[state=checked]:border-calm-500"
         />
 
