@@ -27,7 +27,7 @@ const feedbackMessage = computed(() => {
     return {
       emoji: "🎉",
       message: `Amazing ${username.value}! You completed "${props.lastCompletedTask}". You should be proud of yourself!`,
-      type: "celebration",
+      type: "task-complete",
     };
   }
 
@@ -105,6 +105,8 @@ const feedbackMessage = computed(() => {
   <Card
     :class="[
       'mx-6 my-6 border-0 shadow-md',
+      feedbackMessage.type === 'task-complete' &&
+        '!bg-gradient-to-br from-purple-100 via-violet-50 to-fuchsia-100 border border-purple-200/50',
       feedbackMessage.type === 'celebration' &&
         '!bg-gradient-to-br from-emerald-100 via-teal-50 to-cyan-100 border border-emerald-200/50',
       feedbackMessage.type === 'support' &&
