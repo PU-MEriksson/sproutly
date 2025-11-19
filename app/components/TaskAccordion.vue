@@ -157,7 +157,7 @@ onMounted(() => {
                   class="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 justify-center align-middle"
                 >
                   <span
-                    class="text-base text-calm-800 font-normal group-hover:text-calm-700 text-left break-word break-all leading-snug"
+                    class="text-base text-calm-800 font-normal group-hover:text-calm-700 text-left break-word leading-snug"
                   >
                     {{ task.title }}
                   </span>
@@ -197,7 +197,7 @@ onMounted(() => {
         <AccordionContent class="px-6 pb-6 pt-2">
           <p
             v-if="task.description"
-            class="text-sm text-calm-600 whitespace-pre-line mb-6 leading-relaxed break-word break-all"
+            class="text-sm text-calm-600 whitespace-pre-line mb-6 leading-relaxed break-word"
           >
             {{ task.description }}
           </p>
