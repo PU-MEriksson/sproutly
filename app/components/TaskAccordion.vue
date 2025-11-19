@@ -55,6 +55,7 @@ const isRollingBack = ref(false);
 const editingTask = ref(false);
 const accordionValue = ref<string | undefined>(undefined);
 const subtaskListRef = ref<InstanceType<typeof SubtaskList> | null>(null);
+const lastClickPosition = ref<{ x: number; y: number } | null>(null);
 
 // Sync local state with prop
 watch(
@@ -63,6 +64,11 @@ watch(
     localCompleted.value = val ?? false;
   }
 );
+
+// Capture click position on checkbox
+const handleCheckboxClick = (event: MouseEvent) => {
+  lastClickPosition.value = { x: event.clientX, y: event.clientY };
+};
 
 // Handle checkbox changes
 watch(localCompleted, async (checked) => {
@@ -83,7 +89,11 @@ watch(localCompleted, async (checked) => {
     emit("update:completed", checked);
     if (checked) {
       emit("task-completed", props.task.title);
-      celebrateTask(props.task.title);
+      celebrateTask(
+        props.task.title,
+        lastClickPosition.value?.x,
+        lastClickPosition.value?.y
+      );
     }
   }
 });
@@ -143,7 +153,7 @@ onMounted(() => {
             <Checkbox
               v-model="localCompleted"
               :disabled="updatingTask"
-              @click.stop
+              @click.stop="handleCheckboxClick"
               class="m-1 h-5 w-5 shrink-0 rounded-full"
               :aria-label="`Mark task as ${
                 localCompleted ? 'incomplete' : 'complete'
@@ -157,7 +167,7 @@ onMounted(() => {
                   class="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 justify-center align-middle"
                 >
                   <span
-                    class="text-base text-calm-800 font-normal group-hover:text-calm-700 text-left break-word break-all leading-snug"
+                    class="text-base text-calm-800 font-normal group-hover:text-calm-700 text-left break-word leading-snug"
                   >
                     {{ task.title }}
                   </span>
@@ -197,7 +207,7 @@ onMounted(() => {
         <AccordionContent class="px-6 pb-6 pt-2">
           <p
             v-if="task.description"
-            class="text-sm text-calm-600 whitespace-pre-line mb-6 leading-relaxed break-word break-all"
+            class="text-sm text-calm-600 whitespace-pre-line mb-6 leading-relaxed break-word"
           >
             {{ task.description }}
           </p>
